@@ -80,6 +80,28 @@ namespace MediathekArr.Controllers
             return NotFound();
         }
 
+        [HttpGet("fake_nzb_download")]
+        public IActionResult FakeNzbDownload([FromQuery] string encodedUrl)
+        {
+            string decodedUrl;
+            try
+            {
+                var base64EncodedBytes = Convert.FromBase64String(encodedUrl);
+                decodedUrl = Encoding.UTF8.GetString(base64EncodedBytes);
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid base64 string.");
+            }
+
+            // Serve the .nzb file
+            var fileName = $"mediathek-{DateTime.Now.ToLongTimeString()}.nzb";
+            var fileContent = Encoding.UTF8.GetBytes(decodedUrl);
+
+            return File(fileContent, "application/x-nzb", fileName);
+        }
+
+
         private string GetTvSearchDummyData()
         {
             var rss = new Rss

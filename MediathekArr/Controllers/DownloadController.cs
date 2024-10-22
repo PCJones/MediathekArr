@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediathekArr.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MediathekArr.Controllers
 {
@@ -9,18 +10,46 @@ namespace MediathekArr.Controllers
         [HttpGet("api")]
         public IActionResult GetVersion([FromQuery] string mode)
         {
-            switch (mode)
+            return mode switch
             {
-                case "version":
-                    return Ok(new { version = "4.3.3" });
-                case "get_config":
-                    return Content(GetConfigResponse(), "application/json");
-                default:
-                    return BadRequest(new { error = "Invalid mode" });
-            }
+                "version" => Ok(new { version = "4.3.3" }),
+                "get_config" => Content(GetConfigResponse(), "application/json"),
+                "queue" => Ok(GetDummyQueue()), // Handle the queue mode
+                _ => BadRequest(new { error = "Invalid mode" }),
+            };
         }
 
-        private static string GetConfigResponse()
+        private static QueueWrapper GetDummyQueue()
+        {
+
+            // Create a dummy queue item
+            var dummyItem = new SabnzbdQueueItem
+            {
+                Status = "Downloading", // Simulating downloading status
+                Index = 0,
+                Timeleft = "0:10:00", // 10 minutes remaining
+                Size = "1163.54", // 1163.54 MB total size
+                Title = "Dummy Title", // Dummy title
+                Category = "sonarr", // Dummy category
+                Sizeleft = "200.5", // 200.5 MB left
+                Percentage = "80", // 80% complete
+                Id = System.Guid.NewGuid().ToString() // Random ID
+            };
+
+            // Create a SabnzbdQueue object with the dummy item
+            var queue = new SabnzbdQueue
+            {
+                Items = new List<SabnzbdQueueItem> { dummyItem }
+            };
+
+            // Wrap the SabnzbdQueue inside the QueueWrapper
+            return new QueueWrapper
+            {
+                Queue = queue
+            };
+        }
+
+    private static string GetConfigResponse()
         {
             return @"{
     ""config"": {

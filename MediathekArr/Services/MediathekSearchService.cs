@@ -109,6 +109,10 @@ namespace MediathekArr.Services
         {
             var adjustedSize = (long)(item.Size * sizeMultiplier);
             var finalTitle = ParseTitle(item.Topic, item.Title, quality);
+            var encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+
+            // Generate the full URL for the fake_nzb_download endpoint
+            var fakeDownloadUrl = $"/api/fake_nzb_download?encodedUrl={encodedUrl}";
 
             return new Item
             {
@@ -125,7 +129,7 @@ namespace MediathekArr.Services
                 Description = item.Description,
                 Enclosure = new Enclosure
                 {
-                    Url = url,
+                    Url = fakeDownloadUrl,
                     Length = adjustedSize,
                     Type = "application/x-nzb"
                 },
