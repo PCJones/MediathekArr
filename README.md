@@ -34,7 +34,7 @@ Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 ![grafik](https://github.com/user-attachments/assets/364e7fae-fc51-4a4b-bc17-ded68bca30c7)
 
 ## Example Indexer
-![grafik](https://github.com/user-attachments/assets/576b55a5-79f5-4e02-89b1-4f9d3abbb454)
+![grafik](https://github.com/user-attachments/assets/23a4c00f-4b69-4486-8213-a45021c30d16)
 ![grafik](https://github.com/user-attachments/assets/eddec856-02a5-4206-a1ec-9840586cc0dd)
 
 ## Kontakt & Support
