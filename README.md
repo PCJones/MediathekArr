@@ -15,7 +15,7 @@ Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 9. URL Base (important): `download`
 10. API Key: `x` (or anything else, just can't be empty)
 11. Category: `sonarr` if Sonarr, `radarr` if Radarr
-12. Client Priority (important): `50`
+12. Client Priority (important so it won't be used by normal indexers): `50`
 13. Remove Completed: yes
 14. Remove Failed: yes
 15. Test and Save
