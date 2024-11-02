@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Xml;
+using System.Xml.Serialization;
 
 namespace MediathekArr.Models
 {
@@ -10,6 +11,12 @@ namespace MediathekArr.Models
 
         [XmlElement("channel")]
         public Channel Channel { get; set; }
+
+        [XmlNamespaceDeclarations]
+        public XmlSerializerNamespaces Xmlns { get; } = new XmlSerializerNamespaces(new[]
+        {
+            new XmlQualifiedName("newznab", "http://www.newznab.com/DTD/2010/feeds/attributes/")
+        });
     }
 
     public class Channel
