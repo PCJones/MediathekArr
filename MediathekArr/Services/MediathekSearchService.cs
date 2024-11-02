@@ -79,13 +79,6 @@ namespace MediathekArr.Services
             };
 
             return SerializeRss(rss);
-
-            string xmlWithFixedSabnzbdNamespace = XmlHelper.SerializeToXmlWithSabnzbdNamespace(rss);
-
-            // dirty quick fix TODO
-
-
-            return xmlWithFixedSabnzbdNamespace;
         }
 
         private List<Item> GenerateRssItems(ApiResultItem item, string? season)
