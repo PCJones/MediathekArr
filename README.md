@@ -47,3 +47,7 @@ Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 PayPal: https://paypal.me/pcjones1
 
 Für andere Spendenmöglichkeiten gerne auf Discord oder Telegram melden - danke!
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=pcjones/umlautadaptarr&type=Date)](https://star-history.com/#pcjones/umlautadaptarr&Date)
