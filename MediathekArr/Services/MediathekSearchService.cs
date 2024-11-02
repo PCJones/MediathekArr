@@ -51,7 +51,7 @@ namespace MediathekArr.Services
             return null;
         }
 
-        private string ConvertApiResponseToRss(string apiResponse, string? season = null)
+        private string ConvertApiResponseToRss(string apiResponse, string? season = null, bool sonarr = true)
         {
             var responseObject = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse);
 
@@ -85,19 +85,21 @@ namespace MediathekArr.Services
         {
             var items = new List<Item>();
 
+            string[] categories = ["5000", "2000"];
+
             if (!string.IsNullOrEmpty(item.UrlVideoHd))
             {
-                items.Add(CreateRssItem(item, season, "1080p", 1.6, "TV > HD", "5040", item.UrlVideoHd));
+                items.Add(CreateRssItem(item, season, "1080p", 1.6, "TV > HD", [..categories, "5040", "2040"], item.UrlVideoHd));
             }
 
             if (!string.IsNullOrEmpty(item.UrlVideo))
             {
-                items.Add(CreateRssItem(item, season, "720p", 1.0, "TV > HD", "5040", item.UrlVideo));
+                items.Add(CreateRssItem(item, season, "720p", 1.0, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideo));
             }
 
             if (!string.IsNullOrEmpty(item.UrlVideoLow))
             {
-                items.Add(CreateRssItem(item, season, "480p", 0.4, "TV > SD", "5030", item.UrlVideoLow));
+                items.Add(CreateRssItem(item, season, "480p", 0.4, "TV > SD", [.. categories, "5030", "2030"], item.UrlVideoLow));
             }
 
             return items;
@@ -123,7 +125,7 @@ namespace MediathekArr.Services
         }
 
 
-        private Item CreateRssItem(ApiResultItem item, string? season, string quality, double sizeMultiplier, string category, string categoryValue, string url)
+        private Item CreateRssItem(ApiResultItem item, string? season, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
         {
             var adjustedSize = (long)(item.Size * sizeMultiplier);
             var parsedTitle = ParseTitle(item.Topic, item.Title, quality);
@@ -153,7 +155,7 @@ namespace MediathekArr.Services
                     Length = adjustedSize,
                     Type = "application/x-nzb"
                 },
-                Attributes = GenerateAttributes(season, categoryValue)
+                Attributes = GenerateAttributes(season, categoryValues)
             };
         }
 
@@ -177,12 +179,14 @@ namespace MediathekArr.Services
             return title;
         }
 
-        private List<NewznabAttribute> GenerateAttributes(string? season, string categoryValue)
+        private List<NewznabAttribute> GenerateAttributes(string? season, string[] categoryValues)
         {
-            var attributes = new List<NewznabAttribute>
+            var attributes = new List<NewznabAttribute>();
+
+            foreach (var categoryValue in categoryValues)
             {
-                new NewznabAttribute { Name = "category", Value = categoryValue }
-            };
+                attributes.Add(new NewznabAttribute { Name = "category", Value = categoryValue });
+            }
 
             if (season != null)
             {

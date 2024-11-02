@@ -18,6 +18,7 @@ namespace MediathekArr.Controllers
             string tvdbid = HttpContext.Request.Query["tvdbid"];
             string season = HttpContext.Request.Query["season"];
             string episode = HttpContext.Request.Query["ep"];
+            string cat = HttpContext.Request.Query["cat"];
 
             if (t == "caps")
             {
@@ -54,7 +55,6 @@ namespace MediathekArr.Controllers
 
             return NotFound();
         }
-
 
 
         [HttpGet("fake_nzb_download")]
