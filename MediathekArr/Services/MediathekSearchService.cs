@@ -78,7 +78,12 @@ namespace MediathekArr.Services
                 }
             };
 
+            return SerializeRss(rss);
+
             string xmlWithFixedSabnzbdNamespace = XmlHelper.SerializeToXmlWithSabnzbdNamespace(rss);
+
+            // dirty quick fix TODO
+
 
             return xmlWithFixedSabnzbdNamespace;
         }
@@ -202,10 +207,21 @@ namespace MediathekArr.Services
         private string SerializeRss(Rss rss)
         {
             var serializer = new XmlSerializer(typeof(Rss));
+
+            // Define the namespaces and add the newznab namespace
+            var namespaces = new XmlSerializerNamespaces();
+            namespaces.Add("newznab", "http://www.newznab.com/DTD/2010/feeds/attributes/");
+
             using var stringWriter = new StringWriter();
-            serializer.Serialize(stringWriter, rss);
-            return stringWriter.ToString();
+            serializer.Serialize(stringWriter, rss, namespaces);
+
+            // TODO quick fix
+            string result = stringWriter.ToString();
+            result = result.Replace(":newznab_x003A_", ":");
+
+            return result;
         }
+
 
         [GeneratedRegex(@"[&]")]
         private static partial Regex TitleRegexUnd();
