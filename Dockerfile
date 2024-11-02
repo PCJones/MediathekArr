@@ -1,11 +1,15 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 
-COPY . ./
-RUN dotnet restore
-RUN dotnet publish -c Release -o out
+ARG PUID=1000
+ARG PGID=1000
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-WORKDIR /app
+RUN addgroup --gid $PGID appgroup && \
+    adduser --disabled-password --gecos '' --uid $PUID --gid $PGID appuser && \
+    chown -R appuser:appgroup /app
+
+USER appuser
+
 COPY --from=build-env /app/out .
+
 ENTRYPOINT ["dotnet", "MediathekArr.dll"]

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MediathekArr.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -39,9 +40,11 @@ public class ApiResultItem
     public long Timestamp { get; set; }
 
     [JsonPropertyName("duration")]
+    [JsonConverter(typeof(NumberOrEmptyConverter<int>))]
     public int Duration { get; set; }
 
     [JsonPropertyName("size")]
+    [JsonConverter(typeof(NumberOrEmptyConverter<long>))]
     public long Size { get; set; }
 
     [JsonPropertyName("url_website")]
