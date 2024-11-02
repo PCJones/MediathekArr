@@ -125,12 +125,26 @@ namespace MediathekArr.Controllers
                     ""priority"": -100
                 }},
                 {{
+                    ""name"": ""tv"",
+                    ""pp"": """",
+                    ""script"": ""Default"",
+                    ""dir"": """",
+                    ""priority"": -100
+                }},
+                {{
+                    ""name"": ""radarr"",
+                    ""pp"": """",
+                    ""script"": ""Default"",
+                    ""dir"": """",
+                    ""priority"": -100
+                }},
+                {{
                     ""name"": ""movies"",
                     ""pp"": """",
                     ""script"": ""Default"",
                     ""dir"": """",
                     ""priority"": -100
-                }}
+                }},
             ],
             ""sorters"": []
         }}
