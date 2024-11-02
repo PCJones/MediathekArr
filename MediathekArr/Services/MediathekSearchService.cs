@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArr.Models;
+using MediathekArr.Utilities;
 using Guid = MediathekArr.Models.Guid;
 
 namespace MediathekArr.Services
@@ -77,7 +78,9 @@ namespace MediathekArr.Services
                 }
             };
 
-            return SerializeRss(rss);
+            string xmlWithFixedSabnzbdNamespace = XmlHelper.SerializeToXmlWithSabnzbdNamespace(rss);
+
+            return xmlWithFixedSabnzbdNamespace;
         }
 
         private List<Item> GenerateRssItems(ApiResultItem item, string? season)
