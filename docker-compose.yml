@@ -7,9 +7,9 @@ services:
       - TZ=Europe/Berlin
       - PUID=1000
       - PGID=1000
-      - DOWNLOAD_FOLDER_PATH_MAPPING=/data/media # Change right side for correct path mapping
+      - DOWNLOAD_FOLDER_PATH_MAPPING=/downloads/completed # Change right side for correct path mapping
     volumes:
-      - .app/your_temp_downloads_folder/:/app/downloads # Change left side to your temp download folder location
+      - ./your_temp_downloads_folder/:/app/downloads # Change left side to your temp download folder location
     ports:
       - "5007:5007"                     # Port can be changed
     restart: unless-stopped
