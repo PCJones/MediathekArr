@@ -1,4 +1,5 @@
 using MediathekArr.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,8 @@ builder.Services.AddHttpClient("MediathekClient", client =>
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
 });
 builder.Services.AddScoped<MediathekSearchService>();
+builder.Services.AddSingleton<DownloadService>();
+
 
 var app = builder.Build();
 
@@ -30,9 +33,17 @@ app.Use(async (context, next) =>
     var request = context.Request;
     logger.LogInformation("Incoming Request: {method} {url}", request.Method, request.Path + request.QueryString);
 
+    // Check if the request is a POST and has a body
+    if (request.Method == HttpMethods.Post && request.ContentLength > 0)
+    {
+        // Enable buffering so the request can be read multiple times
+        request.EnableBuffering();
+    }
+
     // Call the next middleware in the pipeline
     await next.Invoke();
 });
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

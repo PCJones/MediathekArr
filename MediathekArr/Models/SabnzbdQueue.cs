@@ -21,7 +21,8 @@ namespace MediathekArr.Models
     public class SabnzbdQueueItem
     {
         [JsonPropertyName("status")]
-        public string Status { get; set; } // "Downloading" / "Completed"
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public SabnzbdDownloadStatus Status { get; set; }
 
         [JsonPropertyName("index")]
         public int Index { get; set; }
@@ -48,6 +49,6 @@ namespace MediathekArr.Models
         public string Percentage { get; set; } // "34"
 
         [JsonPropertyName("nzo_id")]
-        public string Id { get; set; } // should be initialized as random id
+        public string Id { get; set; } = System.Guid.NewGuid().ToString();
     }
 }

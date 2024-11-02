@@ -23,6 +23,7 @@ namespace MediathekArr.Models
         public string Storage { get; set; }
 
         [JsonPropertyName("status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))] 
         public SabnzbdDownloadStatus Status { get; set; }
 
         [JsonPropertyName("nzo_id")]
@@ -32,9 +33,15 @@ namespace MediathekArr.Models
         public string Title { get; set; }
     }
 
-    public enum SabnzbdDownloadStatus
+    public class HistoryWrapper
     {
-        Completed,
-        Failed
+        [JsonPropertyName("history")]
+        public SabnzbdHistory History { get; set; }
+    }
+
+    public class SabnzbdHistory
+    {
+        [JsonPropertyName("slots")]
+        public List<SabnzbdHistoryItem> Items { get; set; }
     }
 }

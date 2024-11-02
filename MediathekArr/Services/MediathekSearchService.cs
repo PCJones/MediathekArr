@@ -1,29 +1,26 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArr.Models;
 using Guid = MediathekArr.Models.Guid;
 
 namespace MediathekArr.Services
 {
-    public class MediathekSearchService
+    public partial class MediathekSearchService(IHttpClientFactory httpClientFactory)
     {
-        private readonly HttpClient _httpClient;
-        private static readonly string[] SkipKeywords = { "(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)" };
+        private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
+        private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)"];
 
-        public MediathekSearchService(IHttpClientFactory httpClientFactory)
-        {
-            _httpClient = httpClientFactory.CreateClient("MediathekClient");
-        }
-
-        public async Task<string> FetchSearchResultsFromApi(string q, string? season)
+        public async Task<string> FetchSearchResultsFromApi(string? q, string? season)
         {
             var zeroBasedSeason = season == null || season.Length >= 10 ? season : $"0{season}";
 
-            var queries = new List<object>
+            var queries = new List<object>();
+            if (q != null)
             {
-                new { fields = new[] { "topic" }, query = q }
-            };
+                queries.Add(new { fields = new[] { "topic" }, query = q });
+            }
 
             if (!string.IsNullOrEmpty(season))
             {
@@ -83,7 +80,7 @@ namespace MediathekArr.Services
             return SerializeRss(rss);
         }
 
-        private IEnumerable<Item> GenerateRssItems(ApiResultItem item, string? season)
+        private List<Item> GenerateRssItems(ApiResultItem item, string? season)
         {
             var items = new List<Item>();
 
@@ -105,18 +102,40 @@ namespace MediathekArr.Services
             return items;
         }
 
+        private static string FormatTitle(string title)
+        {
+            // Replace German Umlaute and special characters
+            title = title.Replace("ä", "ae")
+                         .Replace("ö", "oe")
+                         .Replace("ü", "ue")
+                         .Replace("ß", "ss")
+                         .Replace("Ä", "Ae")
+                         .Replace("Ö", "Oe")
+                         .Replace("Ü", "Ue");
+
+            // Remove unwanted characters
+            title = TitleRegexUnd().Replace(title, "und");
+            title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
+            title = TitleRegexWhitespace().Replace(title, ".");
+
+            return title;
+        }
+
+
         private Item CreateRssItem(ApiResultItem item, string? season, string quality, double sizeMultiplier, string category, string categoryValue, string url)
         {
             var adjustedSize = (long)(item.Size * sizeMultiplier);
-            var finalTitle = ParseTitle(item.Topic, item.Title, quality);
+            var parsedTitle = ParseTitle(item.Topic, item.Title, quality);
+            var formattedTitle = FormatTitle(parsedTitle);
+            var encodedTitle = Convert.ToBase64String(Encoding.UTF8.GetBytes(formattedTitle));
             var encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
 
             // Generate the full URL for the fake_nzb_download endpoint
-            var fakeDownloadUrl = $"/api/fake_nzb_download?encodedUrl={encodedUrl}";
+            var fakeDownloadUrl = $"/api/fake_nzb_download?encodedUrl={encodedUrl}&encodedTitle={encodedTitle}";
 
             return new Item
             {
-                Title = finalTitle,
+                Title = formattedTitle,
                 Guid = new Guid
                 {
                     IsPermaLink = true,
@@ -140,11 +159,11 @@ namespace MediathekArr.Services
         private string ParseTitle(string topic, string title, string quality)
         {
             var episodePattern = @"S\d{1,4}/E\d{1,4}";
-            var match = System.Text.RegularExpressions.Regex.Match(title, episodePattern);
+            var match = Regex.Match(title, episodePattern);
 
             if (match.Success)
             {
-                var cleanedTitle = System.Text.RegularExpressions.Regex.Replace(title, @"Folge\s*\d+:\s*", "").Replace($"({match.Value})", "").Trim();
+                var cleanedTitle = EpisodeRegex().Replace(title, "").Replace($"({match.Value})", "").Trim();
 
                 if (cleanedTitle == topic)
                 {
@@ -184,5 +203,14 @@ namespace MediathekArr.Services
             serializer.Serialize(stringWriter, rss);
             return stringWriter.ToString();
         }
+
+        [GeneratedRegex(@"[&]")]
+        private static partial Regex TitleRegexUnd();
+        [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>]")]
+        private static partial Regex TitleRegexSymbols();
+        [GeneratedRegex(@"\s+")]
+        private static partial Regex TitleRegexWhitespace();
+        [GeneratedRegex(@"Folge\s*\d+:\s*")]
+        private static partial Regex EpisodeRegex();
     }
 }
