@@ -14,7 +14,7 @@ Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 8. Use SSL: no
 9. URL Base (important): `download`
 10. API Key: `x` (or anything else, just can't be empty)
-11. Category: `sonarr` if Sonarr, `radarr` if Radarr
+11. Category: `sonarr` if Sonarr, `radarr` if Radarr (you can also use `tv` and `movies` or anything else)
 12. Client Priority (important so it won't be used by normal indexers): `50`
 13. Remove Completed: yes
 14. Remove Failed: yes
