@@ -1,12 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
 using System.Text;
-using System.Text.Json;
-using System.Xml.Serialization;
-using MediathekArr.Models;
-using System.IO;
-using Guid = MediathekArr.Models.Guid;
-using System.Reflection.Metadata;
 using MediathekArr.Services;
 
 namespace MediathekArr.Controllers
