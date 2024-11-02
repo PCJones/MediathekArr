@@ -3,9 +3,12 @@ work in progress, please report bugs and ideas
 
 Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 
+## 2024-11-02: 
+Radarr is currently broken and can't be added. Will be fixed asap.
+
 ## Install using Docker
 1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
-2. Go to Settings>Download Clients
+2. In Sonarr/Radarr go to Settings>Download Clients
 3. Enable Advanced Settings at the top
 4. Create a new `SABnzbd` download client (example screenshot at bottom)
 5. Name: `MediathekArr Downloader`
@@ -19,15 +22,15 @@ Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 13. Remove Completed: yes
 14. Remove Failed: yes
 15. Test and Save
-16. Go to Settings>Indexers
+16. In Prowlarr/Sonarr/Radarr Go to Settings>Indexers
 17. Add new NewzNAB(Sonarr/Radarr) / Newznab Generic(Prowlarr) Indexer (examlpe screenshot at bottom)
 18. Enable advanced settings at the bottom
 19. URL: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
 20. API Path: `/api`
 21. API Key: Leave blank
 22. Categories: SD, HD or both
-23. Download Client (important): `MediathekArr Downloader`
-24. Test and Save
+24. Download Client (important): `MediathekArr Downloader` - (if using Prowlarr, switch to Sonarr/Radarr for this)
+25. Test and Save
 
 ## Example Download Client
 ![grafik](https://github.com/user-attachments/assets/7da76b68-f32a-41b2-b1b8-81d0e5ed1683)
