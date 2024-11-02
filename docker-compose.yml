@@ -1,6 +1,6 @@
 services:
   mediathekarr:
-    image: pcjones/MediathekArr:latest
+    image: pcjones/mediathekarr:latest
     container_name: mediathekarr
     environment:
       - ASPNETCORE_URLS=http://+:5007   # Port can be changed
