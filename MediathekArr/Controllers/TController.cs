@@ -45,7 +45,7 @@ namespace MediathekArr.Controllers
 
                 return Content(xmlContent, "application/xml", Encoding.UTF8);
             }
-            else if (t == "tvsearch")
+            else if (t == "tvsearch" || t == "search")
             {
                 string searchResults = await _mediathekSearchService.FetchSearchResultsFromApi(q, season);
 
