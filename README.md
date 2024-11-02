@@ -50,4 +50,4 @@ Für andere Spendenmöglichkeiten gerne auf Discord oder Telegram melden - danke
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=pcjones/umlautadaptarr&type=Date)](https://star-history.com/#pcjones/umlautadaptarr&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=pcjones/mediathekarr&type=Date)](https://star-history.com/#pcjones/mediathekarr&Date)
