@@ -29,37 +29,8 @@ namespace MediathekArr.Services
             _completeDir = Path.Combine(startupPath, "downloads");
             _ffmpegPath = Path.Combine(startupPath, "ffmpeg", _isWindows ? "ffmpeg.exe" : "ffmpeg");
 
-            ClearDownloadsDirectory();
-
             // Ensure FFmpeg is available
             Task.Run(EnsureFfmpegExistsAsync).Wait();
-        }
-
-        private void ClearDownloadsDirectory()
-        {
-            if (Directory.Exists(_completeDir))
-            {
-                try
-                {
-                    Console.WriteLine($"Clearing downloads directory");
-
-                    // Delete all files in the directory
-                    foreach (var file in Directory.GetFiles(_completeDir))
-                    {
-                        File.Delete(file);
-                    }
-
-                    // Delete all subdirectories and their contents
-                    foreach (var directory in Directory.GetDirectories(_completeDir))
-                    {
-                        Directory.Delete(directory, true);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error clearing downloads directory: {ex.Message}");
-                }
-            }
         }
 
 
