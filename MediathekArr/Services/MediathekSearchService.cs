@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
@@ -12,20 +13,28 @@ namespace MediathekArr.Services
     {
         private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
         private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)"];
+        private static readonly string[] queryField = ["topic"];
 
         public async Task<string> FetchSearchResultsFromApi(string? q, string? season)
         {
-            var zeroBasedSeason = season == null || season.Length >= 10 ? season : $"0{season}";
-
+            var zeroBasedSeason = season == null || season.Length >= 2 ? season : $"0{season}";
+            // todo: die anstalt/daily
             var queries = new List<object>();
             if (q != null)
             {
-                queries.Add(new { fields = new[] { "topic" }, query = q });
+                queries.Add(new { fields = queryField, query = q });
             }
 
             if (!string.IsNullOrEmpty(season))
             {
-                queries.Add(new { fields = new[] { "title" }, query = $"S{zeroBasedSeason}" });
+                if (season.Length == 4 && season.StartsWith("20") || season.StartsWith("19"))
+                {
+                    queries.Add(new { fields = new[] { "title" }, query = $"{season}" });
+                }
+                else
+                {
+                    queries.Add(new { fields = new[] { "title" }, query = $"S{zeroBasedSeason}" });
+                }
             }
 
             var requestBody = new
@@ -89,21 +98,45 @@ namespace MediathekArr.Services
 
             if (!string.IsNullOrEmpty(item.UrlVideoHd))
             {
-                items.Add(CreateRssItem(item, season, "1080p", 1.6, "TV > HD", [..categories, "5040", "2040"], item.UrlVideoHd));
+                items.AddRange(CreateRssItems(item, season, "1080p", 1.6, "TV > HD", [..categories, "5040", "2040"], item.UrlVideoHd));
             }
 
             if (!string.IsNullOrEmpty(item.UrlVideo))
             {
-                items.Add(CreateRssItem(item, season, "720p", 1.0, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideo));
+                items.AddRange(CreateRssItems(item, season, "720p", 1.0, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideo));
             }
 
             if (!string.IsNullOrEmpty(item.UrlVideoLow))
             {
-                items.Add(CreateRssItem(item, season, "480p", 0.4, "TV > SD", [.. categories, "5030", "2030"], item.UrlVideoLow));
+                items.AddRange(CreateRssItems(item, season, "480p", 0.4, "TV > SD", [.. categories, "5030", "2030"], item.UrlVideoLow));
+
             }
 
             return items;
         }
+
+        private List<Item> CreateRssItems(ApiResultItem item, string? season, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
+        {
+            var items = new List<Item>();
+
+            // Generate title with season and formatted date
+            var formattedDate = ExtractDate(item.Title);
+
+            // Create two items if both season and formatted date are present
+            if (!string.IsNullOrEmpty(formattedDate))
+            {
+                // Title with formattedDate in it
+                if (!string.IsNullOrEmpty(formattedDate))
+                {
+                    items.Add(CreateRssItem(item, formattedDate, quality, sizeMultiplier, category, categoryValues, url, formattedDate));
+                }
+            }
+
+         items.Add(CreateRssItem(item, season, quality, sizeMultiplier, category, categoryValues, url));
+
+            return items;
+        }
+
 
         private static string FormatTitle(string title)
         {
@@ -119,16 +152,16 @@ namespace MediathekArr.Services
             // Remove unwanted characters
             title = TitleRegexUnd().Replace(title, "und");
             title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
-            title = TitleRegexWhitespace().Replace(title, ".");
+            title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
 
             return title;
         }
 
 
-        private Item CreateRssItem(ApiResultItem item, string? season, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
+        private Item CreateRssItem(ApiResultItem item, string? season, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
         {
             var adjustedSize = (long)(item.Size * sizeMultiplier);
-            var parsedTitle = ParseTitle(item.Topic, item.Title, quality);
+            var parsedTitle = GenerateTitle(item.Topic, item.Title, quality, formattedDate);
             var formattedTitle = FormatTitle(parsedTitle);
             var encodedTitle = Convert.ToBase64String(Encoding.UTF8.GetBytes(formattedTitle));
             var encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
@@ -142,7 +175,7 @@ namespace MediathekArr.Services
                 Guid = new Guid
                 {
                     IsPermaLink = true,
-                    Value = $"{item.UrlWebsite}#{quality}",
+                    Value = $"{item.UrlWebsite}#{quality}{(string.IsNullOrEmpty(formattedDate) ? "" : "-a")}",
                 },
                 Link = url,
                 Comments = item.UrlWebsite,
@@ -159,13 +192,26 @@ namespace MediathekArr.Services
             };
         }
 
-        private string ParseTitle(string topic, string title, string quality)
+        // TODO refactor and make this look good, It's too late right now:D
+        private string GenerateTitle(string topic, string title, string quality, string? formattedDate)
         {
+            if (!string.IsNullOrEmpty(formattedDate))
+            {
+                var cleanedTitle = EpisodeRegex().Replace(title, "").Trim();
+
+                if (cleanedTitle == topic)
+                {
+                    cleanedTitle = null;
+                }
+
+                return $"{topic}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
+            }
             var episodePattern = @"S\d{1,4}/E\d{1,4}";
             var match = Regex.Match(title, episodePattern);
 
             if (match.Success)
             {
+                var season = match.Value.Replace("/", "");
                 var cleanedTitle = EpisodeRegex().Replace(title, "").Replace($"({match.Value})", "").Trim();
 
                 if (cleanedTitle == topic)
@@ -173,10 +219,49 @@ namespace MediathekArr.Services
                     cleanedTitle = null;
                 }
 
-                return $"{topic}.{match.Value.Replace("/", "")}{(cleanedTitle != null ? $".{cleanedTitle}." : ".")}GERMAN.{quality}.WEB.x264-MEDiATHEK".Replace(" ", ".");
+                return $"{topic}.{season}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
             }
 
             return title;
+        }
+
+        private string ExtractDate(string title)
+        {
+            // Numeric format pattern (e.g., "24.10.2024" or "24.10.24")
+            var numericDatePattern = @"(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})";
+            // Nonth name format pattern (e.g., "16. Juli 2024")
+            var germanMonthPattern = @"(\d{1,2})\.\s*(\w+)\s+(\d{4})";
+
+            var numericDateMatch = Regex.Match(title, numericDatePattern);
+            if (numericDateMatch.Success)
+            {
+                int day = int.Parse(numericDateMatch.Groups[1].Value);
+                int month = int.Parse(numericDateMatch.Groups[2].Value);
+                int year = int.Parse(numericDateMatch.Groups[3].Value);
+
+                if (year < 100)
+                {
+                    year += 2000;
+                }
+
+                DateTime date = new DateTime(year, month, day);
+                return date.ToString("yyyy-MM-dd");
+            }
+
+            var longMonthMatch = Regex.Match(title, germanMonthPattern);
+            if (longMonthMatch.Success)
+            {
+                int day = int.Parse(longMonthMatch.Groups[1].Value);
+                string monthName = longMonthMatch.Groups[2].Value;
+                int year = int.Parse(longMonthMatch.Groups[3].Value);
+
+                var germanCulture = new CultureInfo("de-DE");
+                DateTime date = DateTime.ParseExact($"{day} {monthName} {year}", "d MMMM yyyy", germanCulture);
+
+                return date.ToString("yyyy-MM-dd");
+            }
+
+            return string.Empty;
         }
 
         private List<NewznabAttribute> GenerateAttributes(string? season, string[] categoryValues)
