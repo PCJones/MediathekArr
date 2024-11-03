@@ -27,7 +27,7 @@ namespace MediathekArr.Controllers
     <limits max=""100"" default=""100""/>
     <registration available=""no"" open=""no""/>
     <searching>
-        <search available=""no"" supportedParams=""q""/>
+        <search available=""yes"" supportedParams=""q""/>
         <tv-search available=""yes"" supportedParams=""q,season,ep""/>
         <movie-search available=""yes"" supportedParams=""q""/>
         <audio-search available=""no"" supportedParams="""" />
