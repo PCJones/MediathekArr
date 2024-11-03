@@ -145,6 +145,20 @@ namespace MediathekArr.Controllers
                     ""dir"": """",
                     ""priority"": -100
                 }},
+                {{
+                    ""name"": ""sonarr_blackhole"",
+                    ""pp"": """",
+                    ""script"": ""Default"",
+                    ""dir"": """",
+                    ""priority"": -100
+                }},
+                {{
+                    ""name"": ""radarr_blackhole"",
+                    ""pp"": """",
+                    ""script"": ""Default"",
+                    ""dir"": """",
+                    ""priority"": -100
+                }},
             ],
             ""sorters"": []
         }}
