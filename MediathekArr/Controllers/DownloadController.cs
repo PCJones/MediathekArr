@@ -105,7 +105,11 @@ namespace MediathekArr.Controllers
         private static string GetConfigResponse()
         {
             var startupPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            var completeDir = Path.Combine(startupPath, "downloads");
+            var downloadFolderPathMapping = Environment.GetEnvironmentVariable("DOWNLOAD_FOLDER_PATH_MAPPING");
+
+            var completeDir = !string.IsNullOrEmpty(downloadFolderPathMapping)
+                ? Path.Combine(downloadFolderPathMapping)
+                : Path.Combine(startupPath, "downloads"); ;
 
             return @$"{{
         ""config"": {{
