@@ -1,4 +1,7 @@
+<img width="90" alt="mediathekarr" src="https://github.com/user-attachments/assets/0e3b6d3a-214b-4382-9111-4b5c001ffc00">
+
 # MediathekArr
+
 work in progress, please report bugs and ideas
 
 Thanks to https://github.com/mediathekview/mediathekviewweb for the API
