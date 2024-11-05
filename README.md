@@ -4,7 +4,9 @@
 
 work in progress, please report bugs and ideas
 
-Thanks to https://github.com/mediathekview/mediathekviewweb for the API
+Thanks to https://github.com/mediathekview/mediathekviewweb for the Mediathek API
+Thanks to https://github.com/PCJones/UmlautAdaptarr for the German Title API
+Thanks to https://tvdb.com for the metadata API
 
 ## Install using Docker
 1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
