@@ -3,13 +3,10 @@ services:
     image: pcjones/mediathekarr:latest
     container_name: mediathekarr
     environment:
-      - ASPNETCORE_URLS=http://+:5007   # Port can be changed
       - TZ=Europe/Berlin
-      - PUID=1000
-      - PGID=1000
       - DOWNLOAD_FOLDER_PATH_MAPPING=/downloads/completed # Change right side for correct path mapping
     volumes:
-      - ./your_temp_downloads_folder/:/app/downloads # Change left side to your temp download folder location
+      - ./your_temp_downloads_folder/:/app/downloads      # Change left side to your temp download folder location
     ports:
-      - "5007:5007"                     # Port can be changed
+      - "5007:5007"                                       # Port can be changed
     restart: unless-stopped
