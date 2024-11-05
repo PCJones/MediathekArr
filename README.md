@@ -5,7 +5,9 @@
 work in progress, please report bugs and ideas
 
 Thanks to https://github.com/mediathekview/mediathekviewweb for the Mediathek API
+
 Thanks to https://github.com/PCJones/UmlautAdaptarr for the German Title API
+
 Thanks to https://tvdb.com for the metadata API
 
 ## Install using Docker
