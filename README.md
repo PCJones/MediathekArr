@@ -6,9 +6,6 @@ work in progress, please report bugs and ideas
 
 Thanks to https://github.com/mediathekview/mediathekviewweb for the API
 
-## 2024-11-02: 
-Radarr is currently broken and can't be added. Will be fixed asap.
-
 ## Install using Docker
 1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
 2. In Sonarr/Radarr go to Settings>Download Clients
