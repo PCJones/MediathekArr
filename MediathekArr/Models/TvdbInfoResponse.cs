@@ -15,6 +15,21 @@
         }
 
         /// <summary>
+        /// Finds episodes by their air month.
+        /// </summary>
+        /// <param name="year">The year of the episodes to search for.</param>
+        /// <param name="month">The month of the episodes to search for.</param>
+        /// <returns>A list of TvdbEpisode objects that aired in the specified year and month.</returns>
+        public List<TvdbEpisode>? FindEpisodeByAirMonth(int year, int month)
+        {
+            return Episodes?
+                .Where(episode => episode.Aired.HasValue &&
+                                  episode.Aired.Value.Year == year &&
+                                  episode.Aired.Value.Month == month)
+                .ToList();
+        }
+
+        /// <summary>
         /// Finds all episodes from a given season.
         /// </summary>
         /// <param name="seasonNumber">The season number to search for.</param>

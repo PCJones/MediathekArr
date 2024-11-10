@@ -29,7 +29,7 @@ namespace MediathekArr.Services
 
             // Find correct episode in tvdbData
             TvdbEpisode? episode;
-            if (season?.Length == 4)
+            if (season?.Length == 4 && episodeNumber.Contains('/'))
             {
                 var episodeNumberSplitted = episodeNumber?.Split('/');
                 if (episodeNumberSplitted?.Length == 2 && DateTime.TryParse($"{season}-{episodeNumberSplitted[0]}-{episodeNumberSplitted[1]}", out DateTime searchAirDate))
@@ -97,11 +97,17 @@ namespace MediathekArr.Services
             var resultsByTitleDate = FilterByTitleDate(initialResults, episode.Aired.Value);
             var resultsByDescriptionDate = FilterByDescriptionDate(initialResults, episode.Aired.Value);
             var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(initialResults, episode.Name);
-            var resultsBySeasonEpisodeMatch = FilterBySeasonEpisodeMatch(initialResults, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString());
+            List<ApiResultItem> resultsBySeasonEpisodeMatch = [];
             // if more than 3 results we assume episode title match wasn't correct
             if (resultsByEpisodeTitleMatch.Count > 3)
             {
                 resultsByEpisodeTitleMatch.Clear();
+            }
+
+            if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
+            {
+                // Only trust Mediathek season/episode if no other match:
+                resultsBySeasonEpisodeMatch = FilterBySeasonEpisodeMatch(initialResults, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString());
             }
 
             // HashSet to remove duplicates
