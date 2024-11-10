@@ -5,20 +5,30 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArr.Models;
 using MediathekArr.Utilities;
+using Microsoft.Extensions.Caching.Memory;
 using Guid = MediathekArr.Models.Guid;
 
 namespace MediathekArr.Services
 {
-    public partial class MediathekSearchService(IHttpClientFactory httpClientFactory)
+    public partial class MediathekSearchService(IHttpClientFactory httpClientFactory, IMemoryCache cache)
     {
+        private readonly IMemoryCache _cache = cache;
         private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
         private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)"];
         private static readonly string[] queryField = ["topic"];
 
         public async Task<string> FetchSearchResultsFromApi(string? q, string? season)
         {
+            // TODO attention, update cacheKey if arguments of this method change
+            var cacheKey = $"{q ?? "null"}_{season ?? "null"}";
+
+            if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
+            {
+                return cachedResponse ?? "";
+            }
+
             var zeroBasedSeason = season == null || season.Length >= 2 ? season : $"0{season}";
-            // todo: die anstalt/daily
+            
             var queries = new List<object>();
             if (q != null)
             {
@@ -54,7 +64,10 @@ namespace MediathekArr.Services
             if (response.IsSuccessStatusCode)
             {
                 var apiResponse = await response.Content.ReadAsStringAsync();
-                return ConvertApiResponseToRss(apiResponse, season);
+                var newznabRssResponse = ConvertApiResponseToRss(apiResponse, season);
+                _cache.Set(cacheKey, newznabRssResponse, TimeSpan.FromMinutes(10));
+
+                return newznabRssResponse;
             }
 
             return null;
