@@ -19,7 +19,8 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
 });
-builder.Services.AddScoped<MediathekSearchService>();
+builder.Services.AddSingleton<MediathekSearchService>();
+builder.Services.AddSingleton<ItemLookupService>();
 builder.Services.AddSingleton<DownloadService>();
 
 

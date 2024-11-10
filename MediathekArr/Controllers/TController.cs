@@ -6,9 +6,10 @@ namespace MediathekArr.Controllers
 {
     [ApiController]
     [Route("api")]
-    public class TController(MediathekSearchService mediathekSearchService) : ControllerBase
+    public class TController(MediathekSearchService mediathekSearchService, ItemLookupService itemLookupService) : ControllerBase
     {
         private readonly MediathekSearchService _mediathekSearchService = mediathekSearchService;
+        private readonly ItemLookupService _itemLookupService = itemLookupService;
 
         [HttpGet]
         public async Task<IActionResult> GetCapsXml([FromQuery] string t)
@@ -24,7 +25,7 @@ namespace MediathekArr.Controllers
             {
                 string xmlContent = @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <caps>
-    <limits max=""100"" default=""100""/>
+    <limits max=""5000"" default=""5000""/>
     <registration available=""no"" open=""no""/>
     <searching>
         <search available=""yes"" supportedParams=""q""/>
@@ -48,9 +49,27 @@ namespace MediathekArr.Controllers
             }
             else if (t == "tvsearch" || t == "search" || t == "movie")
             {
-                string searchResults = await _mediathekSearchService.FetchSearchResultsFromApi(q, season);
+                try
+                {
+                    if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
+                    {
+                        var tvdbData = (await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid)).Data;
 
-                return Content(searchResults, "application/xml", Encoding.UTF8);
+                        string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode);
+
+                        return Content(searchResults, "application/xml", Encoding.UTF8);
+                    }
+                    else
+                    {
+                        string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season);
+
+                        return Content(searchResults, "application/xml", Encoding.UTF8);
+                    }
+                }
+                catch (HttpRequestException ex)
+                {
+                    return BadRequest(new { error = ex.Message });
+                }
             }
 
             return NotFound();
