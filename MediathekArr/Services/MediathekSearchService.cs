@@ -29,7 +29,7 @@ namespace MediathekArr.Services
 
             // Find correct episode in tvdbData
             TvdbEpisode? episode;
-            if (season?.Length == 4 && episodeNumber.Contains('/'))
+            if (season?.Length == 4 && (episodeNumber?.Contains('/') ?? false))
             {
                 var episodeNumberSplitted = episodeNumber?.Split('/');
                 if (episodeNumberSplitted?.Length == 2 && DateTime.TryParse($"{season}-{episodeNumberSplitted[0]}-{episodeNumberSplitted[1]}", out DateTime searchAirDate))
