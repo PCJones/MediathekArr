@@ -28,8 +28,8 @@ namespace MediathekArr.Controllers
     <registration available=""no"" open=""no""/>
     <searching>
         <search available=""yes"" supportedParams=""q""/>
-        <tv-search available=""yes"" supportedParams=""q,season,ep""/>
-        <movie-search available=""yes"" supportedParams=""q""/>
+        <tv-search available=""yes"" supportedParams=""q,season,ep,tvdbid""/>
+        <movie-search available=""yes"" supportedParams=""q,imdbid""/>
         <audio-search available=""no"" supportedParams="""" />
     </searching>
     <categories>
