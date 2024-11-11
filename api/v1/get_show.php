@@ -134,11 +134,11 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
         
         $cacheExpiry = new DateTime();
         if ($lastUpdated->diff($cacheExpiry)->days < 7 ||
-            ($nextAired != new DateTime('1970-01-01') && $nextAired->diff($cacheExpiry)->days < 14) ||
+            ($nextAired != new DateTime('1970-01-01') && $nextAired->diff($cacheExpiry)->days < 6) ||
             ($lastAired != new DateTime('1970-01-01') && $lastAired->diff($cacheExpiry)->days < 3)) {
             $cacheExpiry->modify('+2 days');
         } else {
-            $cacheExpiry->modify('+14 days');
+            $cacheExpiry->modify('+6 days');
         }
 
         // Cache series data
