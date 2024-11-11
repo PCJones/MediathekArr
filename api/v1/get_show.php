@@ -109,8 +109,25 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
     try {
         $series = $data['data'];
         $germanName = $series['nameTranslations']['deu'] ?? $series['name'];
-        $germanAliases = array_filter($series['aliases'], fn($alias) => $alias['language'] === 'deu');
-
+		
+        $rawAliases = $series['aliases'] ?? [];
+        // Normalize aliases into an array
+        $germanAliases = [];
+        if (is_array($rawAliases)) {
+            foreach ($rawAliases as $alias) {
+                if (isset($alias['language']) && $alias['language'] === 'deu') {
+                    $germanAliases[] = $alias;
+                }
+            }
+        } elseif (is_object($rawAliases)) {
+            foreach ((array)$rawAliases as $alias) {
+                if (isset($alias['language']) && $alias['language'] === 'deu') {
+                    $germanAliases[] = $alias;
+                }
+            }
+        } // If neither, default to an empty array
+        $germanAliases = $germanAliases ?: [];
+		
         $nextAired = !empty($series['nextAired']) ? new DateTime($series['nextAired']) : new DateTime('1970-01-01');
         $lastAired = !empty($series['lastAired']) ? new DateTime($series['lastAired']) : new DateTime('1970-01-01');
         $lastUpdated = new DateTime($series['lastUpdated']);
