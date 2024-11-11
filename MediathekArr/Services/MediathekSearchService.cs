@@ -16,7 +16,7 @@ namespace MediathekArr.Services
         private readonly IMemoryCache _cache = cache;
         private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
         private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-        private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)"];
+        private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)", "Trailer"];
         private static readonly string[] queryField = ["topic"];
         public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber)
         {
