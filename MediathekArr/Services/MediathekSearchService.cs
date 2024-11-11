@@ -107,11 +107,8 @@ namespace MediathekArr.Services
             // if we have episode title match that is the best we got
             if (resultsByEpisodeTitleMatch.Count > 0)
             {
-                // if more than 1 for aired date we can't be sure
-                if (resultsByAiredDate.Count > 1)
-                {
-                    resultsByAiredDate.Clear();
-                }
+                // we ignore air date in this case as it is not as reliable
+                resultsByAiredDate.Clear();
             }
 
             if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
