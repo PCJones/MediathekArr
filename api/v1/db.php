@@ -46,6 +46,7 @@ function createTables($db) {
         series_id INTEGER,
         name TEXT,
         aired TEXT,
+        runtime INTEGER,
         season_number INTEGER,
         episode_number INTEGER,
         FOREIGN KEY(series_id) REFERENCES series_cache(series_id)

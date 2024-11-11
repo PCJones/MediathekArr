@@ -53,6 +53,7 @@ function getSeriesData($db, $tvdbId, $apiKey, $debug = false) {
                         return [
                             "name" => $episode['name'],
                             "aired" => $episode['aired'],
+                            "runtime" => $episode['runtime'],
                             "seasonNumber" => $episode['season_number'],
                             "episodeNumber" => $episode['episode_number'],
                         ];
@@ -157,13 +158,14 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
         ]);
 
         $db->exec("DELETE FROM episodes WHERE series_id = $tvdbId");
-        $episodesStmt = $db->prepare("INSERT INTO episodes (id, series_id, name, aired, season_number, episode_number) VALUES (:id, :tvdb_id, :name, :aired, :season_number, :episode_number)");
+        $episodesStmt = $db->prepare("INSERT INTO episodes (id, series_id, name, aired, runtime, season_number, episode_number) VALUES (:id, :tvdb_id, :name, :aired, :runtime, :season_number, :episode_number)");
         foreach ($series['episodes'] as $episode) {
             $episodesStmt->execute([
                 'id' => $episode['id'],
                 'tvdb_id' => $tvdbId,
                 'name' => $episode['name'],
                 'aired' => $episode['aired'],
+                'runtime' => $episode['runtime'],
                 'season_number' => $episode['seasonNumber'],
                 'episode_number' => $episode['number']
             ]);
@@ -181,6 +183,7 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
                     return [
                         "name" => $episode['name'],
                         "aired" => $episode['aired'],
+                        "runtime" => $episode['runtime'],
                         "seasonNumber" => $episode['seasonNumber'],
                         "episodeNumber" => $episode['number'],
                     ];
