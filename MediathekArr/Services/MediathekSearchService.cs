@@ -91,10 +91,11 @@ namespace MediathekArr.Services
             }
 
             var initialResults = responseObject.Result.Results;
-            var resultsByAiredDate = FilterByAiredDate(initialResults, episode.Aired!.Value).Where(item => !ShouldSkipItem(item)).ToList();
-            var resultsByTitleDate = FilterByTitleDate(initialResults, episode.Aired.Value).Where(item => !ShouldSkipItem(item)).ToList();
-            var resultsByDescriptionDate = FilterByDescriptionDate(initialResults, episode.Aired.Value).Where(item => !ShouldSkipItem(item)).ToList();
-            var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(initialResults, episode.Name).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsFilteredByRuntime = FilterByRuntime(initialResults, episode.Runtime);
+            var resultsByAiredDate = FilterByAiredDate(resultsFilteredByRuntime, episode.Aired!.Value).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsByTitleDate = FilterByTitleDate(resultsFilteredByRuntime, episode.Aired.Value).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsByDescriptionDate = FilterByDescriptionDate(resultsFilteredByRuntime, episode.Aired.Value).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(resultsFilteredByRuntime, episode.Name).Where(item => !ShouldSkipItem(item)).ToList();
             List<ApiResultItem> resultsBySeasonEpisodeMatch = [];
             // if more than 3 results we assume episode title match wasn't correct
             if (resultsByEpisodeTitleMatch.Count > 3)
@@ -113,7 +114,7 @@ namespace MediathekArr.Services
             {
                 // Only trust Mediathek season/episode if no other match:
                 resultsBySeasonEpisodeMatch = 
-                    FilterBySeasonEpisodeMatch(initialResults, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
+                    FilterBySeasonEpisodeMatch(resultsFilteredByRuntime, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
                     .Where(item => !ShouldSkipItem(item)).ToList(); ;
             }
 
@@ -134,6 +135,19 @@ namespace MediathekArr.Services
             return filteredApiResponse;
         }
 
+
+        private static List<ApiResultItem> FilterByRuntime(List<ApiResultItem> results, int? runtime)
+        {
+            if (runtime is null || runtime is 0)
+            {
+                return results;
+            }
+            var minRuntime = Math.Max(5, (int)(runtime * 0.65)) * 60;
+            var maxRuntime = (int)(runtime * 1.35) * 60;
+            return results.Where(item =>
+                item.Duration >= minRuntime && item.Duration <= maxRuntime)
+                .ToList();
+        }
 
         private static List<ApiResultItem> FilterByAiredDate(List<ApiResultItem> results, DateTime airedDate)
         {
