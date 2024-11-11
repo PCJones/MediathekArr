@@ -84,7 +84,7 @@
         }
     }
 
-    public record TvdbEpisode(string Name, DateTime? Aired, int SeasonNumber, int EpisodeNumber);
+    public record TvdbEpisode(string Name, DateTime? Aired, int Runtime, int SeasonNumber, int EpisodeNumber);
 
     public record TvdbAlias(string Language, string Name);
 }
