@@ -93,10 +93,10 @@ namespace MediathekArr.Services
             }
 
             var initialResults = responseObject.Result.Results;
-            var resultsByAiredDate = FilterByAiredDate(initialResults, episode.Aired!.Value);
-            var resultsByTitleDate = FilterByTitleDate(initialResults, episode.Aired.Value);
-            var resultsByDescriptionDate = FilterByDescriptionDate(initialResults, episode.Aired.Value);
-            var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(initialResults, episode.Name);
+            var resultsByAiredDate = FilterByAiredDate(initialResults, episode.Aired!.Value).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsByTitleDate = FilterByTitleDate(initialResults, episode.Aired.Value).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsByDescriptionDate = FilterByDescriptionDate(initialResults, episode.Aired.Value).Where(item => !ShouldSkipItem(item)).ToList();
+            var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(initialResults, episode.Name).Where(item => !ShouldSkipItem(item)).ToList();
             List<ApiResultItem> resultsBySeasonEpisodeMatch = [];
             // if more than 3 results we assume episode title match wasn't correct
             if (resultsByEpisodeTitleMatch.Count > 3)
@@ -114,7 +114,9 @@ namespace MediathekArr.Services
             if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
             {
                 // Only trust Mediathek season/episode if no other match:
-                resultsBySeasonEpisodeMatch = FilterBySeasonEpisodeMatch(initialResults, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString());
+                resultsBySeasonEpisodeMatch = 
+                    FilterBySeasonEpisodeMatch(initialResults, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
+                    .Where(item => !ShouldSkipItem(item)).ToList(); ;
             }
 
             // HashSet to remove duplicates
@@ -268,7 +270,7 @@ namespace MediathekArr.Services
                         Total = filteredResponse.Result.QueryInfo.ResultCount
                     },
                     Items = filteredResponse.Result.Results
-                        .Where(item => !ShouldSkipItem(item))
+                        // .Where(item => !ShouldSkipItem(item)) we already do this earlier for id searches in ApplyFilters
                         .SelectMany(item => GenerateRssItems(item, season, episode, tvdbData)) // Generate RSS items for each link
                         .ToList()
                 }
