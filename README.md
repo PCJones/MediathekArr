@@ -10,6 +10,10 @@ Thanks to https://github.com/PCJones/UmlautAdaptarr for the German Title API
 
 Thanks to https://tvdb.com for the metadata API
 
+Example screenshot:
+![grafik](https://github.com/user-attachments/assets/654c42fa-4eab-4b6e-b1c7-9b23192c7a98)
+
+
 ## Install using Docker
 1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
 2. In Sonarr/Radarr go to Settings>Download Clients
