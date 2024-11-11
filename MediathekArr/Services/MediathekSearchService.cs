@@ -1,11 +1,9 @@
 ﻿using System.Globalization;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArr.Models;
-using MediathekArr.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using Guid = MediathekArr.Models.Guid;
 
