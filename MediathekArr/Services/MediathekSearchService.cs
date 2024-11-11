@@ -268,7 +268,7 @@ namespace MediathekArr.Services
                         Total = filteredResponse.Result.QueryInfo.ResultCount
                     },
                     Items = filteredResponse.Result.Results
-                        .Where(item => !ShouldSkipItem(item.Title))
+                        .Where(item => !ShouldSkipItem(item))
                         .SelectMany(item => GenerateRssItems(item, season, episode, tvdbData)) // Generate RSS items for each link
                         .ToList()
                 }
@@ -303,7 +303,7 @@ namespace MediathekArr.Services
                         Total = responseObject.Result.QueryInfo.ResultCount
                     },
                     Items = responseObject.Result.Results
-                        .Where(item => !ShouldSkipItem(item.Title))
+                        .Where(item => !ShouldSkipItem(item))
                         .SelectMany(item => GenerateRssItems(item, season, null)) // Generate RSS items for each link
                         .ToList()
                 }
@@ -565,9 +565,9 @@ namespace MediathekArr.Services
             return attributes;
         }
 
-        private static bool ShouldSkipItem(string title)
+        private static bool ShouldSkipItem(ApiResultItem item)
         {
-            return SkipKeywords.Any(title.Contains);
+            return item.UrlVideo.EndsWith(".m3u8") || SkipKeywords.Any(item.Title.Contains);
         }
 
         private string SerializeRss(Rss rss)
