@@ -113,7 +113,7 @@ namespace MediathekArr.Services
             if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
             {
                 // Only trust Mediathek season/episode if no other match:
-                resultsBySeasonEpisodeMatch = 
+                resultsBySeasonEpisodeMatch =
                     FilterBySeasonEpisodeMatch(resultsFilteredByRuntime, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
                     .Where(item => !ShouldSkipItem(item)).ToList(); ;
             }
@@ -186,9 +186,19 @@ namespace MediathekArr.Services
             return results.Where(item =>
             {
                 var normalizedTitle = NormalizeString(item.Title);
-                return normalizedTitle.Contains(normalizedEpisodeName, StringComparison.OrdinalIgnoreCase);
+                if (normalizedTitle.Contains(normalizedEpisodeName, StringComparison.OrdinalIgnoreCase)) {
+                    return true;
+                }
+                else if (normalizedEpisodeName.Length >= 13 && normalizedTitle.Length >= 10)
+                {
+                    return normalizedEpisodeName.Contains(normalizedTitle, StringComparison.OrdinalIgnoreCase);
+				}
+                else
+                {
+                    return false;
+                }
             }).ToList();
-        }
+    }
 
         private static List<ApiResultItem> FilterBySeasonEpisodeMatch(List<ApiResultItem> results, string season, string episode)
         {
@@ -617,7 +627,7 @@ namespace MediathekArr.Services
 
         [GeneratedRegex(@"[&]")]
         private static partial Regex TitleRegexUnd();
-        [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>]")]
+        [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>,()]")]
         private static partial Regex TitleRegexSymbols();
         [GeneratedRegex(@"\s+")]
         private static partial Regex TitleRegexWhitespace();
