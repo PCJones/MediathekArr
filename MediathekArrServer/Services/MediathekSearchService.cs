@@ -88,7 +88,24 @@ namespace MediathekArrServer.Services
                 }
                 else
                 {
-                    var desiredEpisode = tvdbData.FindEpisodeBySeasonAndNumber(season, episodeNumber);
+                    TvdbEpisode? desiredEpisode;
+                    if (season?.Length == 4 && episodeNumber.Contains('/'))
+                    {
+                        var episodeNumberSplitted = episodeNumber?.Split('/');
+                        if (episodeNumberSplitted?.Length == 2 && DateTime.TryParse($"{season}-{episodeNumberSplitted[0]}-{episodeNumberSplitted[1]}", out DateTime searchAirDate))
+                        {
+                            desiredEpisode = tvdbData.FindEpisodeByAirDate(searchAirDate);
+                        }
+                        else
+                        {
+                            desiredEpisode = null;
+                        }
+                    }
+                    else
+                    {
+                        desiredEpisode = tvdbData.FindEpisodeBySeasonAndNumber(season, episodeNumber);
+                    }
+
                     if (desiredEpisode != null)
                     {
                         desiredEpisodes.Add(desiredEpisode);
@@ -239,8 +256,10 @@ namespace MediathekArrServer.Services
             }
 
             // Check if the constructed title is included in any episode title
-            var matchedEpisode = tvdbData.Episodes
-                .FirstOrDefault(episode => episode.Name.Contains(constructedTitle, StringComparison.OrdinalIgnoreCase));
+            var matchedEpisode = 
+                tvdbData.Episodes
+                .FirstOrDefault(episode => FormatTitle(episode.Name)
+                .Contains(FormatTitle(constructedTitle), StringComparison.OrdinalIgnoreCase));
 
             if (matchedEpisode is null)
             {
@@ -254,7 +273,6 @@ namespace MediathekArrServer.Services
                 MatchedTitle: constructedTitle
             );
         }
-
 
         private async Task<MatchedEpisodeInfo?> MatchesItemTitleExact(ApiResultItem item, Ruleset ruleset)
         {
@@ -275,8 +293,10 @@ namespace MediathekArrServer.Services
             }
 
             // Check if the constructed title matches any episode title exactly
-            var matchedEpisode = tvdbData.Episodes
-                .FirstOrDefault(episode => episode.Name.Equals(constructedTitle, StringComparison.OrdinalIgnoreCase));
+            var matchedEpisode =
+                tvdbData.Episodes
+                .FirstOrDefault(episode => FormatTitle(episode.Name)
+                .Equals(FormatTitle(constructedTitle), StringComparison.OrdinalIgnoreCase));
 
             if (matchedEpisode != null)
             {
@@ -291,6 +311,63 @@ namespace MediathekArrServer.Services
             return null;
         }
 
+        private async Task<MatchedEpisodeInfo?> MatchesItemTitleEqualsAirdate(ApiResultItem item, Ruleset ruleset)
+        {
+            // Fetch TVDB episode information
+            var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+
+            if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
+            {
+                return null;
+            }
+
+            // Construct the title based on ruleset
+            var constructedTitle = BuildTitleFromRegexRules(item, ruleset.TitleRegexRules);
+
+            if (constructedTitle is null)
+            {
+                return null;
+            }
+
+            if (TryParseDate(constructedTitle, out var parsedDate))
+            {
+                // Find the episode by airdate
+                var matchedEpisode = tvdbData.FindEpisodeByAirDate(parsedDate);
+
+                if (matchedEpisode != null)
+                {
+                    return new MatchedEpisodeInfo(
+                        Episode: matchedEpisode,
+                        Item: item,
+                        ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
+                        MatchedTitle: constructedTitle
+                    );
+                }
+            }
+
+            return null;
+        }
+
+        private static bool TryParseDate(string dateString, out DateTime date)
+        {
+            // Attempt parsing with various formats
+            var formats = new[]
+            {
+                "d. MMMM yyyy", // e.g., "7. Juni 2024"
+                "dd.MM.yyyy",    // e.g., "31.12.2017"
+                "yyyy-MM-dd",    // e.g., "2017-12-01"
+                "yyyyMMdd",       // e.g., "20171201"
+                "dd. MMMM yyyy", // e.g., "07. Juni 2024"
+            };
+
+            return DateTime.TryParseExact(
+                dateString,
+                formats,
+                CultureInfo.GetCultureInfo("de-DE"),
+                DateTimeStyles.None,
+                out date
+            );
+        }
 
         private static string? BuildTitleFromRegexRules(ApiResultItem item, List<TitleRegexRule> titleRegexRules)
         {
@@ -410,6 +487,9 @@ namespace MediathekArrServer.Services
                             break;
                         case MatchingStrategy.ItemTitleExact:
                             matchInfo = await MatchesItemTitleExact(item, ruleset);
+                            break;
+                        case MatchingStrategy.ItemTitleEqualsAirdate:
+                            matchInfo = await MatchesItemTitleEqualsAirdate(item, ruleset);
                             break;
                     }
 
@@ -643,6 +723,12 @@ namespace MediathekArrServer.Services
         private static string GenerateTitle(MatchedEpisodeInfo matchedEpisodeInfo, string quality)
         {
             var episode = matchedEpisodeInfo.Episode;
+
+            // Type daily
+            if (episode.SeasonNumber == episode.Aired?.Year)
+            {
+                return $"{matchedEpisodeInfo.ShowName}.{episode.Aired:yyyy-MM-dd}.{episode.Name}.GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
+            }
             return $"{matchedEpisodeInfo.ShowName}.S{episode.PaddedSeason}E{episode.PaddedEpisode}.{episode.Name}.GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
         }
 
@@ -692,7 +778,7 @@ namespace MediathekArrServer.Services
 
         [GeneratedRegex(@"[&]")]
         private static partial Regex TitleRegexUnd();
-        [GeneratedRegex(@"[/:;,""'@#?$%^*+=!<>]")]
+        [GeneratedRegex(@"[/:;,""'@#?$%^*+=!|<>]")]
         private static partial Regex TitleRegexSymbols();
         [GeneratedRegex(@"\s+")]
         private static partial Regex TitleRegexWhitespace();

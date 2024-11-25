@@ -6,6 +6,7 @@ namespace MediathekArrLib.Models.Rulesets
     {
         SeasonAndEpisodeNumber, // Use season + episode number for matching
         ItemTitleIncludes,      // Match episodes where the tvdb episode name contains this title
-        ItemTitleExact          // Match episodes with an exact itemTitle
+        ItemTitleExact,          // Match episodes with an exact itemTitle
+        ItemTitleEqualsAirdate
     }
 }
