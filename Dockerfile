@@ -29,4 +29,4 @@ COPY --from=build-env /app/out .
 # Change ownership to non-root user
 #RUN chown -R appuser:appgroup /app
 #USER appuser
-ENTRYPOINT ["dotnet", "MediathekArr.dll"]
+ENTRYPOINT ["dotnet", "MediathekArrServer.dll"]

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArr", "MediathekArr\MediathekArr.csproj", "{325043A5-5585-4C48-B947-A1E69EAE8343}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrDownloader", "MediathekArr\MediathekArrDownloader.csproj", "{325043A5-5585-4C48-B947-A1E69EAE8343}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrServer", "MediathekArrServer\MediathekArrServer.csproj", "{F6A03A18-04C6-4BC1-8969-A8BADDD64718}"
 EndProject
