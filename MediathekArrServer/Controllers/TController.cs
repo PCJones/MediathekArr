@@ -1,8 +1,8 @@
-using MediathekArr.Services;
+using MediathekArrServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
-namespace MediathekArr.Controllers
+namespace MediathekArrServer.Controllers
 {
     [ApiController]
     [Route("api")]
@@ -53,7 +53,7 @@ namespace MediathekArr.Controllers
                 {
                     if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
                     {
-                        var tvdbData = (await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid)).Data;
+                        var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
 
                         string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode);
 

@@ -3,9 +3,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
-using MediathekArr.Models;
+using MediathekArrLib.Models;
 using Microsoft.Extensions.Caching.Memory;
-using Guid = MediathekArr.Models.Guid;
+using Guid = MediathekArrLib.Models.Guid;
 
 namespace MediathekArr.Services
 {
@@ -536,7 +536,7 @@ namespace MediathekArr.Services
                     year += 2000;
                 }
 
-                DateTime date = new DateTime(year, month, day);
+                DateTime date = new(year, month, day);
                 return date.ToString("yyyy-MM-dd");
             }
 
@@ -548,12 +548,11 @@ namespace MediathekArr.Services
                 int year = int.Parse(longMonthMatch.Groups[3].Value);
 
                 var germanCulture = new CultureInfo("de-DE");
-                DateTime date;
                 if (DateTime.TryParseExact($"{day} {monthName} {year}",
                                            "d MMMM yyyy",
                                            germanCulture,
                                            DateTimeStyles.None,
-                                           out date))
+                                           out DateTime date))
                 {
                     return date.ToString("yyyy-MM-dd");
                 }

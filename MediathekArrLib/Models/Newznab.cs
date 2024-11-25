@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArr.Models
+namespace MediathekArrLib.Models
 {
     [XmlRoot("rss")]
     public class Rss
@@ -13,10 +13,10 @@ namespace MediathekArr.Models
         public Channel Channel { get; set; }
 
         [XmlNamespaceDeclarations]
-        public XmlSerializerNamespaces Xmlns { get; } = new XmlSerializerNamespaces(new[]
-        {
+        public XmlSerializerNamespaces Xmlns { get; } = new XmlSerializerNamespaces(
+        [
             new XmlQualifiedName("newznab", "http://www.newznab.com/DTD/2010/feeds/attributes/")
-        });
+        ]);
     }
 
     public class Channel
@@ -31,7 +31,7 @@ namespace MediathekArr.Models
         public NewznabResponse Response { get; set; }
 
         [XmlElement("item")]
-        public List<Item> Items { get; set; } = new List<Item>();
+        public List<Item> Items { get; set; } = [];
     }
 
     public class NewznabResponse
@@ -70,7 +70,7 @@ namespace MediathekArr.Models
         public Enclosure Enclosure { get; set; }
 
         [XmlElement("newznab:attr", Namespace = "http://www.newznab.com/DTD/2010/feeds/attributes/")]
-        public List<NewznabAttribute> Attributes { get; set; } = new List<NewznabAttribute>();
+        public List<NewznabAttribute> Attributes { get; set; } = [];
     }
 
     public class Enclosure

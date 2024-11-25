@@ -1,0 +1,30 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace MediathekArrLib.Models.Rulesets
+{
+    public class TitleRegexRule
+    {
+        [JsonPropertyName("type")]
+        public TitleRegexRuleType Type { get; set; }
+
+        [JsonPropertyName("value")]
+        public string? Value { get; set; } // For static text
+
+        [JsonPropertyName("field")]
+        public string? Field { get; set; } // API field to extract from
+
+        [JsonPropertyName("pattern")]
+        public string? Pattern { get; set; } // Regex pattern
+    }
+
+    public enum TitleRegexRuleType
+    {
+        Static, // Static text to include in the title
+        Regex   // Regex to extract text from an API field
+    }
+}

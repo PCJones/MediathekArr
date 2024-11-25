@@ -1,4 +1,4 @@
-﻿namespace MediathekArr.Models
+﻿namespace MediathekArrLib.Models
 {
     public record TvdbInfoResponse(string Status, TvdbData Data);
 
@@ -36,7 +36,7 @@
         /// <returns>A list of TvdbEpisode objects in the specified season, or an empty list if none are found.</returns>
         public List<TvdbEpisode> FindEpisodesBySeason(int seasonNumber)
         {
-            return Episodes?.Where(episode => episode.SeasonNumber == seasonNumber).ToList() ?? new List<TvdbEpisode>();
+            return Episodes?.Where(episode => episode.SeasonNumber == seasonNumber).ToList() ?? [];
         }
 
         /// <summary>
@@ -51,7 +51,7 @@
                 return FindEpisodesBySeason(parsedSeason);
             }
 
-            return new List<TvdbEpisode>();
+            return [];
         }
 
         /// <summary>
@@ -84,7 +84,11 @@
         }
     }
 
-    public record TvdbEpisode(string Name, DateTime? Aired, int Runtime, int SeasonNumber, int EpisodeNumber);
+    public record TvdbEpisode(string Name, DateTime? Aired, int? Runtime, int SeasonNumber, int EpisodeNumber)
+    {
+        public string PaddedSeason => SeasonNumber.ToString("D2");
+        public string PaddedEpisode => EpisodeNumber.ToString("D2");
+    };
 
     public record TvdbAlias(string Language, string Name);
 }
