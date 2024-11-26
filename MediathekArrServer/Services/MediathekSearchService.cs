@@ -279,44 +279,67 @@ namespace MediathekArrServer.Services
         }
 
         private async Task<MatchedEpisodeInfo?> MatchesItemTitleExact(ApiResultItem item, Ruleset ruleset, EpisodeType episodeType)
-        {
-            // Fetch TVDB episode information
-            var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+		{
+			// Fetch TVDB episode information
+			var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
 
-            if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
-            {
-                return null;
-            }
+			if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
+			{
+				return null;
+			}
 
-            // Construct the title based on ruleset
-            var constructedTitle = BuildTitleFromRegexRules(item, ruleset.TitleRegexRules);
+			// Construct the title based on ruleset
+			var constructedTitle = BuildTitleFromRegexRules(item, ruleset.TitleRegexRules);
 
-            if (constructedTitle is null)
-            {
-                return null;
-            }
+			if (constructedTitle is null)
+			{
+				return null;
+			}
 
-            // Check if the constructed title matches any episode title exactly
-            var matchedEpisode =
-                tvdbData.Episodes
-                .FirstOrDefault(episode => FormatTitle(episode.Name)
-                .Equals(FormatTitle(constructedTitle), StringComparison.OrdinalIgnoreCase));
+			// Check if the constructed title matches any episode title exactly
+			var matchedEpisodes =
+				tvdbData.Episodes
+				.Where(episode => FormatTitle(episode.Name)
+				.Equals(FormatTitle(constructedTitle), StringComparison.OrdinalIgnoreCase))
+				.ToArray();
 
-            if (matchedEpisode != null)
-            {
-                return new MatchedEpisodeInfo(
-                    Episode: matchedEpisode,
-                    Item: item,
-                    ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
-                    MatchedTitle: constructedTitle,
+            TvdbEpisode? matchedEpisode = GuessCorrectMatch(item, matchedEpisodes);
+
+			if (matchedEpisode != null)
+			{
+				return new MatchedEpisodeInfo(
+					Episode: matchedEpisode,
+					Item: item,
+					ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
+					MatchedTitle: constructedTitle,
 					episodeType: episodeType
 				);
-            }
+			}
 
-            return null;
-        }
+			return null;
+		}
 
-        private async Task<MatchedEpisodeInfo?> MatchesItemTitleEqualsAirdate(ApiResultItem item, Ruleset ruleset, EpisodeType episodeType)
+		private static TvdbEpisode? GuessCorrectMatch(ApiResultItem item, TvdbEpisode[] matchedEpisodes)
+		{
+			TvdbEpisode? matchedEpisode = null;
+			if (matchedEpisodes.Length == 1)
+			{
+				return matchedEpisodes[0];
+			}
+			else // multiple matched episodes found, we try to guess which one is the best
+			{
+				// Try to match by aired date
+				var matchedEpisodeByAirDate = matchedEpisodes.FirstOrDefault(episode => episode.Aired == DateTimeOffset.FromUnixTimeSeconds(item.Timestamp).UtcDateTime.Date);
+				if (matchedEpisodeByAirDate != null)
+				{
+					return matchedEpisodeByAirDate;
+				}
+                // chose the newest one
+                return matchedEpisodes.OrderByDescending(episode => episode.Aired).FirstOrDefault();
+			}
+		}
+
+		private async Task<MatchedEpisodeInfo?> MatchesItemTitleEqualsAirdate(ApiResultItem item, Ruleset ruleset, EpisodeType episodeType)
         {
             // Fetch TVDB episode information
             var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
@@ -542,7 +565,7 @@ namespace MediathekArrServer.Services
                 sortOrder = "desc",
                 future = false,
                 offset = 0,
-                size = 100
+                size = 500
             };
 
             var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
