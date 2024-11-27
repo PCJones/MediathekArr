@@ -732,8 +732,8 @@ namespace MediathekArrServer.Services
                 Guid = new Guid
                 {
                     IsPermaLink = true,
-                    Value = $"{item.UrlWebsite}#{quality}",
-                },
+					Value = $"{item.UrlWebsite}#{quality}{(episodeType == EpisodeType.Daily ? "" : "-d")}",
+				},
                 Link = url,
                 Comments = item.UrlWebsite,
                 PubDate = DateTimeOffset.FromUnixTimeSeconds(item.Timestamp).ToString("R"),
