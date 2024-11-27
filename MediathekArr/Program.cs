@@ -1,5 +1,4 @@
 using MediathekArr.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
