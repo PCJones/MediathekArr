@@ -1,8 +1,10 @@
-﻿namespace MediathekArrLib.Models
+﻿using System.Text.Json.Serialization;
+
+namespace MediathekArrLib.Models
 {
     public record TvdbInfoResponse(string Status, TvdbData Data);
 
-    public record TvdbData(int Id, string Name, string GermanName, List<TvdbAlias> Aliases, List<TvdbEpisode> Episodes)
+    public record TvdbData(int Id, string Name, [property: JsonPropertyName("german_name")] string GermanName, List<TvdbAlias> Aliases, List<TvdbEpisode> Episodes)
     {
         /// <summary>
         /// Finds an episode by its air date.

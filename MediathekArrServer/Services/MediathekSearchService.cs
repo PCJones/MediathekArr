@@ -19,7 +19,7 @@ namespace MediathekArrServer.Services
         private readonly ItemLookupService _itemLookupService = itemLookupService;
         private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
         private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-        private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)", "Trailer"];
+        private static readonly string[] SkipKeywords = ["Audiodeskription", "klare Sprache", "Gebärdensprache", "Trailer"];
         private static readonly string[] queryField = ["topic"];
         private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
         private ImmutableList<Ruleset> _rulesets = [];
@@ -135,7 +135,7 @@ namespace MediathekArrServer.Services
                 sortOrder = "desc",
                 future = false,
                 offset = 0,
-                size = 5000
+                size = 10000
             };
 
             var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
@@ -292,11 +292,13 @@ namespace MediathekArrServer.Services
 				return null;
 			}
 
+            var formattedConstructedTitle = FormatTitle(constructedTitle);
+
 			// Check if the constructed title matches any episode title exactly
 			var matchedEpisodes =
 				tvdbData.Episodes
 				.Where(episode => FormatTitle(episode.Name)
-				.Equals(FormatTitle(constructedTitle), StringComparison.OrdinalIgnoreCase))
+				.Equals(formattedConstructedTitle, StringComparison.OrdinalIgnoreCase))
 				.ToArray();
 
             TvdbEpisode? matchedEpisode = GuessCorrectMatch(item, matchedEpisodes);
@@ -806,7 +808,7 @@ namespace MediathekArrServer.Services
 
         [GeneratedRegex(@"[&]")]
         private static partial Regex TitleRegexUnd();
-        [GeneratedRegex(@"[/:;,""'@#?$%^*+=!|<>]")]
+        [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>]")]
         private static partial Regex TitleRegexSymbols();
         [GeneratedRegex(@"\s+")]
         private static partial Regex TitleRegexWhitespace();
