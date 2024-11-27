@@ -207,7 +207,7 @@ namespace MediathekArrServer.Services
             return new MatchedEpisodeInfo(
                 Episode: matchedEpisode,
                 Item: item,
-                ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
+                ShowName: string.IsNullOrEmpty(tvdbData.Name) ? tvdbData.GermanName : tvdbData.Name,
                 MatchedTitle: $"S{season}E{episode}"
             );
         }
@@ -269,7 +269,7 @@ namespace MediathekArrServer.Services
             return new MatchedEpisodeInfo(
                 Episode: matchedEpisode,
                 Item: item,
-                ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
+                ShowName: string.IsNullOrEmpty(tvdbData.Name) ? tvdbData.GermanName : tvdbData.Name,
                 MatchedTitle: constructedTitle
 			);
         }
@@ -306,7 +306,7 @@ namespace MediathekArrServer.Services
 				return new MatchedEpisodeInfo(
 					Episode: matchedEpisode,
 					Item: item,
-					ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
+					ShowName: string.IsNullOrEmpty(tvdbData.Name) ? tvdbData.GermanName : tvdbData.Name,
 					MatchedTitle: constructedTitle
 				);
 			}
@@ -362,7 +362,7 @@ namespace MediathekArrServer.Services
                     return new MatchedEpisodeInfo(
                         Episode: matchedEpisode,
                         Item: item,
-                        ShowName: string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName,
+                        ShowName: string.IsNullOrEmpty(tvdbData.Name) ? tvdbData.GermanName : tvdbData.Name,
                         MatchedTitle: constructedTitle
 					);
                 }
@@ -705,7 +705,7 @@ namespace MediathekArrServer.Services
                          .Replace("Ü", "Ue");
 
             // Remove unwanted characters
-            title = TitleRegexUnd().Replace(title, "und");
+            title = TitleRegexUnd().Replace(title, "and");
             title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
             title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
 
