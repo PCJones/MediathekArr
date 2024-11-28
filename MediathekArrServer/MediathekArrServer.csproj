@@ -1,17 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+		<EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+		<ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:9.0</ContainerBaseImage>
+		<UserSecretsId>6f9f5643-8dc2-4efe-8c30-608b5c2bb8c5</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+		<PackageReference Include="Scalar.AspNetCore" Version="1.2.44" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ContainerPort Include="8081" />
+	</ItemGroup>
 
 </Project>

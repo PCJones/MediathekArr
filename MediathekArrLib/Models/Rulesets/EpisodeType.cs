@@ -1,9 +1,8 @@
-﻿namespace MediathekArrLib.Models.Rulesets
+﻿namespace MediathekArrLib.Models.Rulesets;
+
+public enum EpisodeType
 {
-    public enum EpisodeType
-    {
-        Standard,
-        Daily,
-        Anime
-    }
+    Standard,
+    Daily,
+    Anime
 }
