@@ -4,6 +4,10 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+		<EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+		<ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:9.0</ContainerBaseImage>
+		<UserSecretsId>6f9f5643-8dc2-4efe-8c30-608b5c2bb8c5</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -13,6 +17,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ContainerPort Include="8081" />
 	</ItemGroup>
 
 </Project>
