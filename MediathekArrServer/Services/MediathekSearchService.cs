@@ -126,7 +126,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             queries,
             sortBy = "timestamp",
             sortOrder = "desc",
-            future = false,
+            future = true,
             offset = 0,
             size = 10000
         };
@@ -549,7 +549,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             queries,
             sortBy = "timestamp",
             sortOrder = "desc",
-            future = false,
+            future = true,
             offset = 0,
             size = 500
         };

@@ -53,12 +53,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var searchName = string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName;
         queries.Add(new { fields = queryField, query = searchName });
 
+        // TODO pagination because of future
+
         var requestBody = new
         {
             queries,
             sortBy = "timestamp",
             sortOrder = "desc",
-            future = false,
+            future = true,
             offset = 0,
             size = 5000 // 5000 for id search
         };
@@ -237,12 +239,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             }
         }
 
+        // TODO pagination because of future
+
         var requestBody = new
         {
             queries,
             sortBy = "timestamp",
             sortOrder = "desc",
-            future = false,
+            future = true,
             offset = 0,
             size = 300 // 300 for RSS sync and string search
         };
