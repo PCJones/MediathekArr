@@ -48,7 +48,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
             return Content(xmlContent, "application/xml", Encoding.UTF8);
         }
         else if (t == "tvsearch" || t == "search" || t == "movie")
-        {
+        {   
             try
             {
                 if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
