@@ -1,16 +1,15 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArrLib.Models;
+using MediathekArrLib.Models.Newznab;
 using MediathekArrLib.Models.Rulesets;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using MediathekArrLib.Utilities;
 using Microsoft.Extensions.Caching.Memory;
-using Guid = MediathekArrLib.Models.Guid;
+using Guid = MediathekArrLib.Models.Newznab.Guid;
 using MatchType = MediathekArrLib.Models.Rulesets.MatchType;
 
 namespace MediathekArrServer.Services;
@@ -64,15 +63,82 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
     }
 
-    public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber)
+    public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber, int limit, int offset)
     {
-        var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}";
+        var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}";
 
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
         {
             return cachedResponse ?? "";
         }
 
+        List<TvdbEpisode>? desiredEpisodes = GetDesiredEpisodes(tvdbData, season, episodeNumber);
+        if (season != null && desiredEpisodes?.Count == 0)
+        {
+            _cache.Set(cacheKey, string.Empty, _cacheTimeSpan);
+            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
+        }
+
+        var mediathekViewRequestCacheKey = $"mediathekapi_{tvdbData.Id}";
+        string apiResponse;
+        if (_cache.TryGetValue(mediathekViewRequestCacheKey, out string? cachedApiResponse))
+        {
+            apiResponse = cachedApiResponse ?? string.Empty;
+        }
+        else
+        {
+            var queries = new List<object>
+            {
+                new { fields = queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
+            };
+
+            var requestBody = new
+            {
+                queries,
+                sortBy = "filmlisteTimestamp",
+                sortOrder = "desc",
+                future = true,
+                offset = 0,
+                size = 10000
+            };
+
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
+            var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
+            if (response.IsSuccessStatusCode)
+            {
+                apiResponse = await response.Content.ReadAsStringAsync();
+                _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
+            }
+            else
+            {
+                return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
+            }
+        }
+
+        var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
+        var matchedEpisodes = await ApplyRulesetFilters(results, tvdbData);
+        var matchedDesiredEpisodes = ApplyDesiredEpisodeFilter(matchedEpisodes, desiredEpisodes);
+
+        List<Item>? newznabItems;
+        if (matchedDesiredEpisodes.Count == 0 && desiredEpisodes?.Count > 0)
+        {
+            // Fallback to best effort matching 
+            newznabItems = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsById(apiResponse, desiredEpisodes[0], tvdbData);
+        }
+        else
+        {
+            newznabItems = matchedDesiredEpisodes.SelectMany(GenerateRssItems).ToList();
+        }
+
+        var newznabRssResponse = ConvertNewznabItemsToRss(newznabItems, limit, offset);
+
+        _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
+
+        return newznabRssResponse;
+    }
+
+    private static List<TvdbEpisode>? GetDesiredEpisodes(TvdbData tvdbData, string? season, string? episodeNumber)
+    {
         List<TvdbEpisode>? desiredEpisodes;
         if (season != null)
         {
@@ -106,50 +172,40 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                     desiredEpisodes.Add(desiredEpisode);
                 }
             }
-
-            if (desiredEpisodes.Count == 0)
-            {
-                _cache.Set(cacheKey, string.Empty, _cacheTimeSpan);
-                return SerializeRss(GetEmptyRssResult());
-            }
         }
         else
         {
             desiredEpisodes = null;
         }
 
-        var queries = new List<object>
+        return desiredEpisodes;
+    }
+
+    private string ConvertNewznabItemsToRss(List<Item> items, int limit, int offset)
+    {
+        if (items == null || items.Count == 0)
         {
-            new { fields = queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
-        };
-
-        var requestBody = new
-        {
-            queries,
-            sortBy = "filmlisteTimestamp",
-            sortOrder = "desc",
-            future = true,
-            offset = 0,
-            size = 10000
-        };
-
-        var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
-        var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var apiResponse = await response.Content.ReadAsStringAsync();
-            var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
-            var matchedEpisodes = await ApplyRulesetFilters(results, tvdbData);
-            var matchedDesiredEpisodes = ApplyDesiredEpisodeFilter(matchedEpisodes, desiredEpisodes);
-
-            var newznabRssResponse = ConvertIdSearchApiResponseToRss(matchedDesiredEpisodes, tvdbData);
-            _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
-
-            return newznabRssResponse;
+            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
         }
 
-        return SerializeRss(GetEmptyRssResult());
+        var paginatedItems = items.Skip(offset).Take(limit).ToList();
+
+        var rss = new Rss
+        {
+            Channel = new Channel
+            {
+                Title = "MediathekArr",
+                Description = "MediathekArr API results",
+                Response = new Response
+                {
+                    Offset = 0,
+                    Total = items.Count
+                },
+                Items = paginatedItems,
+            }
+        };
+
+        return NewznabUtils.SerializeRss(rss);
     }
 
     private static List<MatchedEpisodeInfo> ApplyDesiredEpisodeFilter(List<MatchedEpisodeInfo> matchedEpisodes, List<TvdbEpisode>? desiredEpisodes)
@@ -562,7 +618,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 var apiResponse = await mediathekViewWebApiResponse.Content.ReadAsStringAsync();
                 if (apiResponse == null)
                 {
-                    return SerializeRss(GetEmptyRssResult());
+                    return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
                 }
 
                 results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
@@ -570,7 +626,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             }
             else
             {
-                return SerializeRss(GetEmptyRssResult());
+                return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
             }
         }
 
@@ -637,39 +693,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             return newznabRssResponse;
         }
 
-        return SerializeRss(GetEmptyRssResult());
-    }
-
-    private string ConvertIdSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, TvdbData tvdbData)
-    {
-        if (matchedEpisodes == null || matchedEpisodes.Count == 0)
-        {
-            return SerializeRss(GetEmptyRssResult());
-        }
-
-        var rss = new Rss
-        {
-            Channel = new Channel
-            {
-                Title = "MediathekArr",
-                Description = "MediathekArr API results",
-                Response = new NewznabResponse
-                {
-                    Offset = 0,
-                    Total = matchedEpisodes.Count
-                },
-                Items = matchedEpisodes.SelectMany(GenerateRssItems).ToList()
-            }
-        };
-
-        return SerializeRss(rss);
+        return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
     }
 
     private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 999999, int offset = 0)
     {
         if (matchedEpisodes == null || matchedEpisodes.Count == 0)
         {
-            return SerializeRss(GetEmptyRssResult());
+            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
         }
 
         var allRssItems = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
@@ -681,7 +712,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 Title = "MediathekArr",
                 Description = "MediathekArr API results",
-                Response = new NewznabResponse
+                Response = new Response
                 {
                     Offset = offset,
                     Total = allRssItems.Count
@@ -690,25 +721,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             }
         };
 
-        return SerializeRss(rss);
-    }
-
-    private Rss GetEmptyRssResult()
-    {
-        return new Rss
-        {
-            Channel = new Channel
-            {
-                Title = "MediathekArr",
-                Description = "MediathekArr API results",
-                Response = new NewznabResponse
-                {
-                    Offset = 0,
-                    Total = 0
-                },
-                Items = []
-            }
-        };
+        return NewznabUtils.SerializeRss(rss);
     }
 
     private List<Item> GenerateRssItems(MatchedEpisodeInfo matchedEpisodeInfo)
@@ -804,7 +817,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 Length = adjustedSize,
                 Type = "application/x-nzb"
             },
-            Attributes = GenerateAttributes(matchedEpisodeInfo.Episode.PaddedSeason, categoryValues)
+            Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo.Episode.PaddedSeason, categoryValues)
         };
     }
 
@@ -819,49 +832,13 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return $"{matchedEpisodeInfo.ShowName}.S{episode.PaddedSeason}E{episode.PaddedEpisode}.{episode.Name}.GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
     }
 
-    private List<NewznabAttribute> GenerateAttributes(string? season, string[] categoryValues)
-    {
-        var attributes = new List<NewznabAttribute>();
-
-        foreach (var categoryValue in categoryValues)
-        {
-            attributes.Add(new NewznabAttribute { Name = "category", Value = categoryValue });
-        }
-
-        if (season != null)
-        {
-            attributes.Add(new NewznabAttribute { Name = "season", Value = season });
-        }
-
-        return attributes;
-    }
-
-    private static bool ShouldSkipItem(ApiResultItem item)
+    public static bool ShouldSkipItem(ApiResultItem item)
     {
         // TODO TEMP! 
         // Add item.UrlVideo.EndsWith(".m3u8") again until the downloader can handle it!
         //return item.UrlVideo.EndsWith(".m3u8") || skipKeywords.Any(item.Title.Contains);
         return skipKeywords.Any(item.Title.Contains);
     }
-
-    private static string SerializeRss(Rss rss)
-    {
-        var serializer = new XmlSerializer(typeof(Rss));
-
-        // Define the namespaces and add the newznab namespace
-        var namespaces = new XmlSerializerNamespaces();
-        namespaces.Add("newznab", "http://www.newznab.com/DTD/2010/feeds/attributes/");
-
-        using var stringWriter = new StringWriter();
-        serializer.Serialize(stringWriter, rss, namespaces);
-
-        // TODO quick fix
-        string result = stringWriter.ToString();
-        result = result.Replace(":newznab_x003A_", ":");
-
-        return result;
-    }
-
 
     [GeneratedRegex(@"[&]")]
     private static partial Regex TitleRegexUnd();

@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArrLib.Models;
+namespace MediathekArrLib.Models.Newznab;
 
 public class Enclosure
 {

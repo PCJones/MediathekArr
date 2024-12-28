@@ -1,9 +1,9 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArrLib.Models;
+namespace MediathekArrLib.Models.Newznab;
 
-public class NewznabResponse
+public class Response
 {
     [XmlAttribute("offset")]
     public int Offset { get; set; }

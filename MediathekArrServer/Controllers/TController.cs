@@ -58,7 +58,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
                 {
                     var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
 
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode, limit, offset);
 
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }

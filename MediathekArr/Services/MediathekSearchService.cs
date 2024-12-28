@@ -4,8 +4,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArrLib.Models;
+using MediathekArrLib.Models.Newznab;
 using Microsoft.Extensions.Caching.Memory;
-using Guid = MediathekArrLib.Models.Guid;
+using Guid = MediathekArrLib.Models.Newznab.Guid;
 
 namespace MediathekArr.Services;
 
@@ -52,8 +53,6 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var queries = new List<object>();
         var searchName = string.IsNullOrEmpty(tvdbData.GermanName) ? tvdbData.Name : tvdbData.GermanName;
         queries.Add(new { fields = queryField, query = searchName });
-
-        // TODO pagination because of future
 
         var requestBody = new
         {
@@ -239,8 +238,6 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             }
         }
 
-        // TODO pagination because of future
-
         var requestBody = new
         {
             queries,
@@ -280,7 +277,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 Title = "MediathekArr",
                 Description = "MediathekArr API results",
-                Response = new NewznabResponse
+                Response = new Response
                 {
                     Offset = 0,
                     Total = filteredResponse.Result.QueryInfo.ResultCount
@@ -315,7 +312,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 Title = "MediathekArr",
                 Description = "MediathekArr API results",
-                Response = new NewznabResponse
+                Response = new Response
                 {
                     Offset = 0,
                     Total = responseObject.Result.QueryInfo.ResultCount
@@ -338,7 +335,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 Title = "MediathekArr",
                 Description = "MediathekArr API results",
-                Response = new NewznabResponse
+                Response = new Response
                 {
                     Offset = 0,
                     Total = 0
@@ -565,18 +562,18 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return string.Empty;
     }
 
-    private List<NewznabAttribute> GenerateAttributes(string? season, string[] categoryValues)
+    private List<MediathekArrLib.Models.Newznab.Attribute> GenerateAttributes(string? season, string[] categoryValues)
     {
-        var attributes = new List<NewznabAttribute>();
+        var attributes = new List<MediathekArrLib.Models.Newznab.Attribute>();
 
         foreach (var categoryValue in categoryValues)
         {
-            attributes.Add(new NewznabAttribute { Name = "category", Value = categoryValue });
+            attributes.Add(new MediathekArrLib.Models.Newznab.Attribute { Name = "category", Value = categoryValue });
         }
 
         if (season != null)
         {
-            attributes.Add(new NewznabAttribute { Name = "season", Value = season });
+            attributes.Add(new MediathekArrLib.Models.Newznab.Attribute { Name = "season", Value = season });
         }
 
         return attributes;

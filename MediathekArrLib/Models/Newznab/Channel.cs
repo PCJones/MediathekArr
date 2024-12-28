@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArrLib.Models;
+namespace MediathekArrLib.Models.Newznab;
 
 public class Channel
 {
@@ -12,7 +12,7 @@ public class Channel
     public string Description { get; set; }
 
     [XmlElement("newznab:response", Namespace = "http://www.newznab.com/DTD/2010/feeds/attributes/")]
-    public NewznabResponse Response { get; set; }
+    public Response Response { get; set; }
 
     [XmlElement("item")]
     public List<Item> Items { get; set; } = [];

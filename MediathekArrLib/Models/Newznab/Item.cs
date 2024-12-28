@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArrLib.Models;
+namespace MediathekArrLib.Models.Newznab;
 
 public class Item
 {
@@ -30,5 +30,5 @@ public class Item
     public Enclosure Enclosure { get; set; }
 
     [XmlElement("newznab:attr", Namespace = "http://www.newznab.com/DTD/2010/feeds/attributes/")]
-    public List<NewznabAttribute> Attributes { get; set; } = [];
+    public List<Attribute> Attributes { get; set; } = [];
 }
