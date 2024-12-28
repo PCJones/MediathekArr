@@ -17,6 +17,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
         string q = HttpContext.Request.Query["q"];
         string imdbid = HttpContext.Request.Query["imdbid"];
         string tvdbid = HttpContext.Request.Query["tvdbid"];
+        string tmdbid = HttpContext.Request.Query["tmdbid"];
         string season = HttpContext.Request.Query["season"];
         string episode = HttpContext.Request.Query["ep"];
         string cat = HttpContext.Request.Query["cat"];
@@ -59,10 +60,14 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
 
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
+                else if (q is null && season is null && imdbid is null && tvdbid is null && tmdbid is null)
+                {
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(0, 0);
+                    return Content(searchResults, "application/xml", Encoding.UTF8);
+                }
                 else
                 {
                     string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season);
-
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
             }

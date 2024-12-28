@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MediathekArrLib.Models;
 using MediathekArrLib.Models.Rulesets;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
 using Guid = MediathekArrLib.Models.Guid;
 using MatchType = MediathekArrLib.Models.Rulesets.MatchType;
@@ -19,7 +21,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private readonly ItemLookupService _itemLookupService = itemLookupService;
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-    private static readonly string[] SkipKeywords = ["Audiodeskription", "klare Sprache", "Gebärdensprache", "Trailer"];
+    private static readonly string[] skipKeywords = ["Audiodeskription", "klare Sprache", "Gebärdensprache", "Trailer"];
     private static readonly string[] queryFields = ["topic", "title"];
     private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
 
@@ -521,6 +523,69 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return filteredResults;
     }
 
+    public async Task<string> FetchSearchResultsForRssSync(int page, int pageSize)
+    {
+        // TODO show everything in future as datetime.now
+        var cacheKey = $"rss_{page}_{pageSize}";
+
+        // Return cached response if it exists
+        if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
+        {
+            return cachedResponse ?? "";
+        }
+
+        var mediathekViewRequestCacheKey = "rss_mediathekview_results";
+        List<ApiResultItem> results;
+        if (_cache.TryGetValue(mediathekViewRequestCacheKey, out List<ApiResultItem>? cachedResults))
+        {
+            results = cachedResults ?? [];
+        }
+        else
+        {
+            // Prepare the query
+            var queries = new List<object>();
+
+            var requestBody = new
+            {
+                queries,
+                sortBy = "timestamp",
+                sortOrder = "desc",
+                future = true,
+                offset = 0,
+                size = 6000
+            };
+
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
+            var mediathekViewWebApiResponse = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
+
+            if (mediathekViewWebApiResponse.IsSuccessStatusCode)
+            {
+                var apiResponse = await mediathekViewWebApiResponse.Content.ReadAsStringAsync();
+                if (apiResponse == null)
+                {
+                    return SerializeRss(GetEmptyRssResult());
+                }
+
+                results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
+                _cache.Set(mediathekViewRequestCacheKey, results, TimeSpan.FromMinutes(20));
+            }
+            else
+            {
+                return SerializeRss(GetEmptyRssResult());
+            }
+        }
+
+        // Deserialize the API response and apply ruleset filters
+        var matchedEpisodes = await ApplyRulesetFilters(results);
+
+        // Generate RSS response
+        var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes, season);
+
+        // Cache the response and return it
+        _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
+        return newznabRssResponse;
+    }
+
     public async Task<string> FetchSearchResultsFromApiByString(string? q, string? season)
     {
         var cacheKey = $"q_{q ?? "null"}_{season ?? "null"}";
@@ -601,12 +666,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return SerializeRss(rss);
     }
 
-    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, string? season)
+    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, string? season, int limit = 100, int offset = 0)
     {
         if (matchedEpisodes == null || matchedEpisodes.Count == 0)
         {
             return SerializeRss(GetEmptyRssResult());
         }
+
+        var paginatedEpisodes = matchedEpisodes.Skip(offset).Take(limit).ToList();
 
         var rss = new Rss
         {
@@ -616,10 +683,10 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 Description = "MediathekArr API results",
                 Response = new NewznabResponse
                 {
-                    Offset = 0,
+                    Offset = offset,
                     Total = matchedEpisodes.Count
                 },
-                Items = matchedEpisodes.SelectMany(GenerateRssItems).ToList()
+                Items = paginatedEpisodes.SelectMany(GenerateRssItems).ToList()
             }
         };
 
@@ -773,11 +840,11 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     {
         // TODO TEMP! 
         // Add item.UrlVideo.EndsWith(".m3u8") again until the downloader can handle it!
-        //return item.UrlVideo.EndsWith(".m3u8") || SkipKeywords.Any(item.Title.Contains);
-        return SkipKeywords.Any(item.Title.Contains);
+        //return item.UrlVideo.EndsWith(".m3u8") || skipKeywords.Any(item.Title.Contains);
+        return skipKeywords.Any(item.Title.Contains);
     }
 
-    private string SerializeRss(Rss rss)
+    private static string SerializeRss(Rss rss)
     {
         var serializer = new XmlSerializer(typeof(Rss));
 

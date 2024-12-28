@@ -2,7 +2,7 @@
 
 namespace MediathekArrLib.Models;
 
-public class Result
+public class MediathekApiResult
 {
     [JsonPropertyName("results")]
     public List<ApiResultItem> Results { get; set; }

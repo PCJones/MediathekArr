@@ -126,7 +126,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         // Create a filtered API response
         var filteredApiResponse = new MediathekApiResponse
         {
-            Result = new Result
+            Result = new MediathekApiResult
             {
                 Results = [.. filteredResults],
                 QueryInfo = responseObject.Result.QueryInfo
