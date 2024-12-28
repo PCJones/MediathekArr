@@ -18,7 +18,19 @@ public class ApiResultItem
     public string Description { get; set; }
 
     [JsonPropertyName("timestamp")]
-    public long Timestamp { get; set; }
+    private long _timestamp;
+
+    public long Timestamp
+    {
+        get => _timestamp;
+        set
+        {
+            // Ensure Timestamp does not exceed the current date
+            var currentUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            _timestamp = value > currentUnixTimestamp ? currentUnixTimestamp : value;
+        }
+    }
+
 
     [JsonPropertyName("duration")]
     [JsonConverter(typeof(NumberOrEmptyConverter<int>))]

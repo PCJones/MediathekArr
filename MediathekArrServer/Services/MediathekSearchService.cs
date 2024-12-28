@@ -523,10 +523,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return filteredResults;
     }
 
-    public async Task<string> FetchSearchResultsForRssSync(int page, int pageSize)
+    public async Task<string> FetchSearchResultsForRssSync(int limit, int offset)
     {
-        // TODO show everything in future as datetime.now
-        var cacheKey = $"rss_{page}_{pageSize}";
+        var cacheKey = $"rss_{limit}_{offset}";
 
         // Return cached response if it exists
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
@@ -579,7 +578,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var matchedEpisodes = await ApplyRulesetFilters(results);
 
         // Generate RSS response
-        var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes, season);
+        var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes, limit, offset);
 
         // Cache the response and return it
         _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
@@ -631,7 +630,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             var matchedEpisodes = await ApplyRulesetFilters(results);
 
             // Generate RSS response
-            var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes, season);
+            var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes); // TODO add pagination
 
             // Cache the response and return it
             _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
@@ -666,7 +665,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return SerializeRss(rss);
     }
 
-    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, string? season, int limit = 100, int offset = 0)
+    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 100, int offset = 0)
     {
         if (matchedEpisodes == null || matchedEpisodes.Count == 0)
         {
