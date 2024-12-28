@@ -19,8 +19,4 @@
 		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <ContainerPort Include="8081" />
-	</ItemGroup>
-
 </Project>
