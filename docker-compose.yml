@@ -4,36 +4,10 @@ services:
     container_name: mediathekarr
     environment:
       - TZ=Europe/Berlin
-      - DOWNLOAD_FOLDER_PATH_MAPPING=/downloads # Change right side for correct path mapping
+      - DOWNLOAD_FOLDER_PATH_MAPPING=/downloads/completed # Change right side for correct path mapping
       # - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1 # Only change this if you are hosting your own API. Not needed for 99% of users
     volumes:
-      - ./data/:/app/downloads      # Change left side to your temp download folder location
+      - ./your_temp_downloads_folder/:/app/downloads      # Change left side to your temp download folder location
     ports:
       - "127.0.0.1:5007:5007"                             # Port can be changed
     restart: unless-stopped
-  sonarr:
-    container_name: sonarr
-    image: ghcr.io/hotio/sonarr
-    ports:
-      - "8989:8989"
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - UMASK=002
-      - TZ=Etc/UTC
-    volumes:
-      - ./config:/config
-      - ./data:/data
-  radarr:
-    container_name: radarr
-    image: ghcr.io/hotio/radarr
-    ports:
-      - "7878:7878"
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - UMASK=002
-      - TZ=Etc/UTC
-    volumes:
-      - ./config:/config
-      - ./data:/data
