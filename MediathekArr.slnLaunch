@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "Downloader+Server",
+    "Projects": [
+      {
+        "Path": "MediathekArr\\MediathekArrDownloader.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "MediathekArrServer\\MediathekArrServer.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  }
+]
