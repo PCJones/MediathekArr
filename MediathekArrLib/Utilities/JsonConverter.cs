@@ -14,13 +14,40 @@ public class NumberOrEmptyConverter<T> : JsonConverter<T>
         }
 
         // Convert to the target numeric type (int, long, etc.)
-        if (typeof(T) == typeof(int))
+        try
         {
-            return (T)(object)reader.GetInt32();
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                // Handle numeric values directly
+                if (typeof(T) == typeof(int))
+                {
+                    return (T)(object)reader.GetInt32();
+                }
+                else if (typeof(T) == typeof(long))
+                {
+                    return (T)(object)reader.GetInt64();
+                }
+            }
+            else if (reader.TokenType == JsonTokenType.String)
+            {
+                // Try parsing string as a number
+                string? stringValue = reader.GetString();
+                if (!string.IsNullOrEmpty(stringValue))
+                {
+                    if (typeof(T) == typeof(int) && int.TryParse(stringValue, out int intValue))
+                    {
+                        return (T)(object)intValue;
+                    }
+                    else if (typeof(T) == typeof(long) && long.TryParse(stringValue, out long longValue))
+                    {
+                        return (T)(object)longValue;
+                    }
+                }
+            }
         }
-        else if (typeof(T) == typeof(long))
+        catch (Exception ex)
         {
-            return (T)(object)reader.GetInt64();
+            throw new JsonException($"Error converting value to type {typeof(T)}: {ex.Message}", ex);
         }
 
         throw new NotSupportedException($"The converter does not support type {typeof(T)}.");

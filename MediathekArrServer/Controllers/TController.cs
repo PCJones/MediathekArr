@@ -14,6 +14,8 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
     [HttpGet]
     public async Task<IActionResult> GetCapsXml([FromQuery] string t)
     {
+        var limit = int.TryParse(HttpContext.Request.Query["limit"], out var parsedLimit) ? parsedLimit : 100;
+        var offset = int.TryParse(HttpContext.Request.Query["offset"], out var parsedOffset) ? parsedOffset: 0;
         string q = HttpContext.Request.Query["q"];
         string imdbid = HttpContext.Request.Query["imdbid"];
         string tvdbid = HttpContext.Request.Query["tvdbid"];
@@ -62,7 +64,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
                 }
                 else if (q is null && season is null && imdbid is null && tvdbid is null && tmdbid is null)
                 {
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(0, 0);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(limit, offset);
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
                 else

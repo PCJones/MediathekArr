@@ -126,7 +126,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var requestBody = new
         {
             queries,
-            sortBy = "timestamp",
+            sortBy = "filmlisteTimestamp",
             sortOrder = "desc",
             future = true,
             offset = 0,
@@ -547,7 +547,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             var requestBody = new
             {
                 queries,
-                sortBy = "timestamp",
+                sortBy = "filmlisteTimestamp",
                 sortOrder = "desc",
                 future = true,
                 offset = 0,
@@ -611,7 +611,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var requestBody = new
         {
             queries,
-            sortBy = "timestamp",
+            sortBy = "filmlisteTimestamp",
             sortOrder = "desc",
             future = true,
             offset = 0,
@@ -665,14 +665,15 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return SerializeRss(rss);
     }
 
-    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 100, int offset = 0)
+    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 999999, int offset = 0)
     {
         if (matchedEpisodes == null || matchedEpisodes.Count == 0)
         {
             return SerializeRss(GetEmptyRssResult());
         }
 
-        var paginatedEpisodes = matchedEpisodes.Skip(offset).Take(limit).ToList();
+        var allRssItems = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
+        var paginatedItems = allRssItems.Skip(offset).Take(limit).ToList();
 
         var rss = new Rss
         {
@@ -683,9 +684,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 Response = new NewznabResponse
                 {
                     Offset = offset,
-                    Total = matchedEpisodes.Count
+                    Total = allRssItems.Count
                 },
-                Items = paginatedEpisodes.SelectMany(GenerateRssItems).ToList()
+                Items = paginatedItems
             }
         };
 
@@ -864,7 +865,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     [GeneratedRegex(@"[&]")]
     private static partial Regex TitleRegexUnd();
-    [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>]")]
+    [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>()]")]
     private static partial Regex TitleRegexSymbols();
     [GeneratedRegex(@"\s+")]
     private static partial Regex TitleRegexWhitespace();

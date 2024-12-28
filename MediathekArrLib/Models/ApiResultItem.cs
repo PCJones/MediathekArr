@@ -17,20 +17,9 @@ public class ApiResultItem
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
-    [JsonPropertyName("timestamp")]
-    private long _timestamp;
-
-    public long Timestamp
-    {
-        get => _timestamp;
-        set
-        {
-            // Ensure Timestamp does not exceed the current date
-            var currentUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            _timestamp = value > currentUnixTimestamp ? currentUnixTimestamp : value;
-        }
-    }
-
+    [JsonPropertyName("filmlisteTimestamp")]
+    [JsonConverter(typeof(NumberOrEmptyConverter<long>))]
+    public long Timestamp { get; set; }
 
     [JsonPropertyName("duration")]
     [JsonConverter(typeof(NumberOrEmptyConverter<int>))]
