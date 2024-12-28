@@ -1,11 +1,10 @@
-﻿namespace MediathekArr.Models
+﻿namespace MediathekArr.Models;
+
+public enum SabnzbdDownloadStatus
 {
-    public enum SabnzbdDownloadStatus
-    {
-        Completed,
-        Failed,
-        Downloading,
-        Queued,
-        Extracting
-    }
+    Completed,
+    Failed,
+    Downloading,
+    Queued,
+    Extracting
 }
