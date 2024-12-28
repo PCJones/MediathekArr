@@ -9,5 +9,5 @@ services:
     volumes:
       - ./your_temp_downloads_folder/:/app/downloads      # Change left side to your temp download folder location
     ports:
-      - "127.0.0.1:5007:5007"                             # Port can be changed
+      - "127.0.0.1:5007:5007"                             # Port on the right side can be changed to any value you like
     restart: unless-stopped
