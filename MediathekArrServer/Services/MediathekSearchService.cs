@@ -20,7 +20,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
     private static readonly string[] SkipKeywords = ["Audiodeskription", "klare Sprache", "Gebärdensprache", "Trailer"];
-    private static readonly string[] queryField = ["topic"];
+    private static readonly string[] queryFields = ["topic", "title"];
     private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
 
     public async Task UpdateRulesetsAsync()
@@ -118,7 +118,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
         var queries = new List<object>
         {
-            new { fields = queryField, query = tvdbData.GermanName ?? tvdbData.Name }
+            new { fields = queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
         };
 
         var requestBody = new
@@ -535,7 +535,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var queries = new List<object>();
         if (q != null)
         {
-            queries.Add(new { fields = queryField, query = q });
+            queries.Add(new { fields = queryFields, query = q });
         }
 
         if (!string.IsNullOrEmpty(season))
