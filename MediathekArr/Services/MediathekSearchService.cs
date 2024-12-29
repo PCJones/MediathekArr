@@ -44,6 +44,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         {
             episode = tvdbData.FindEpisodeBySeasonAndNumber(season, episodeNumber);
         }
+
         if (episode is null || episode.Aired is null || episode.Aired.Value.Year <= 1970)
         {
             _cache.Set(cacheKey, string.Empty, _cacheTimeSpan);

@@ -64,6 +64,11 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber, int limit, int offset)
     {
+        // TODO for now never return anything for season search because it might not find all episodes, resulting in sonarr not searching for individual episodes
+        if (episodeNumber is null && season is not null)
+        {
+            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
+        }
         var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}";
 
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
@@ -650,37 +655,8 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return newznabRssResponse;
     }
 
-    private string RemoveThisTOdo(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 999999, int offset = 0)
-    {
-        if (matchedEpisodes == null || matchedEpisodes.Count == 0)
-        {
-            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
-        }
-
-        var allRssItems = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
-        var paginatedItems = allRssItems.Skip(offset).Take(limit).ToList();
-
-        var rss = new Rss
-        {
-            Channel = new Channel
-            {
-                Title = "MediathekArr",
-                Description = "MediathekArr API results",
-                Response = new Response
-                {
-                    Offset = offset,
-                    Total = allRssItems.Count
-                },
-                Items = paginatedItems
-            }
-        };
-
-        return NewznabUtils.SerializeRss(rss);
-    }
-
     public async Task<string> FetchSearchResultsFromApiByString(string? q, string? season, int limit, int offset)
     {
-        // TODO hier weiter, caching von mediathek api + fallback handler. das gleiche bei rss
         var cacheKey = $"q_{q ?? "null"}_{season ?? "null"}_{limit}_{offset}";
 
         // Return cached response if it exists
