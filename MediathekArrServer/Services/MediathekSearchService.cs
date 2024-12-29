@@ -115,8 +115,8 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
 
         var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
-        var matchedEpisodes = await ApplyRulesetFilters(results, tvdbData);
-        var (matchedDesiredEpisodes, _) = await ApplyRulesetFilters(results);
+        var (matchedEpisodes, _) = await ApplyRulesetFilters(results, tvdbData);
+        var matchedDesiredEpisodes = ApplyDesiredEpisodeFilter(matchedEpisodes, desiredEpisodes);
 
         List<Item>? newznabItems;
         if (matchedDesiredEpisodes.Count == 0 && desiredEpisodes?.Count > 0)
@@ -529,12 +529,13 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private async Task<(List<MatchedEpisodeInfo> matchedEpisodes, List<ApiResultItem> unmatchedFilteredResultItems)> ApplyRulesetFilters(List<ApiResultItem> results, TvdbData? tvdbData = null)
     {
         var matchedFilteredResults = new List<MatchedEpisodeInfo>();
-        var unmatchedFilteredResults = new List<ApiResultItem>();
+        var unmatchedFilteredResults = new List<ApiResultItem>(results);
 
         foreach (var item in results)
         {
             if(ShouldSkipItem(item))
             {
+                unmatchedFilteredResults.Remove(item);
                 continue;
             }
 
@@ -547,7 +548,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 if (!ruleset.Filters.All(filter => FilterMatches(item, filter)))
                 {
-                    unmatchedFilteredResults.Add(item);
+                    unmatchedFilteredResults.Remove(item);
                     continue; // Skip this ruleset if any filter fails
                 }
 
@@ -576,7 +577,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 }
                 else
                 {
-                    unmatchedFilteredResults.Add(item);
+                    unmatchedFilteredResults.Remove(item);
                 }
             }
         }
@@ -638,9 +639,11 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         // Deserialize the API response and apply ruleset filters
         var (matchedEpisodes, unmatchedFilteredResultItems) = await ApplyRulesetFilters(results);
 
-        // Generate RSS response
-        var newznabRssResponse = RemoveThisTOdo(matchedEpisodes, limit, offset);
-        //var newznabRssResponse = "";
+        List<Item>? newznabItemsByRuleset = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
+        List<Item>? newznabItemsByFallback = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsByString(unmatchedFilteredResultItems, null);
+
+        // Combine the results from ruleset matching and fallback handler
+        var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset);
 
         // Cache the response and return it
         _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
@@ -735,7 +738,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         var (matchedEpisodes, unmatchedFilteredResultItems) = await ApplyRulesetFilters(results);
 
         List<Item>? newznabItemsByRuleset = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
-        List<Item>? newznabItemsByFallback = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsByString(apiResponse, season);
+        List<Item>? newznabItemsByFallback = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsByString(unmatchedFilteredResultItems, season);
 
         // Combine the results from ruleset matching and fallback handler
         var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset);

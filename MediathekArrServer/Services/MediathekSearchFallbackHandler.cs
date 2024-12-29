@@ -24,21 +24,14 @@ public partial class MediathekSearchFallbackHandler
         return filteredResponse?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
     }
 
-    public static List<Item> GetFallbackSearchResultItemsByString(string? apiResponse, string? season)
+    public static List<Item> GetFallbackSearchResultItemsByString(List<ApiResultItem>? unmatchedFilteredResultItems, string? season)
     {
-        if (string.IsNullOrWhiteSpace(apiResponse))
+        if (unmatchedFilteredResultItems is null || unmatchedFilteredResultItems.Count == 0)
         {
             return [];
         }
 
-        var responseObject = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse);
-
-        if (responseObject?.Result?.Results == null)
-        {
-            return [];
-        }
-
-        return responseObject?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, season, null)).ToList() ?? [];
+        return unmatchedFilteredResultItems.SelectMany(item => GenerateRssItems(item, season, null)).ToList() ?? [];
     }
 
 
