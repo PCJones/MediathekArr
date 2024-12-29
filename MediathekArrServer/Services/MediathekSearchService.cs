@@ -858,10 +858,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     public static bool ShouldSkipItem(ApiResultItem item)
     {
-        // TODO TEMP! 
-        // Add item.UrlVideo.EndsWith(".m3u8") again until the downloader can handle it!
-        //return item.UrlVideo.EndsWith(".m3u8") || skipKeywords.Any(item.Title.Contains);
-        return skipKeywords.Any(item.Title.Contains);
+        return item.UrlVideo.EndsWith(".m3u8") || skipKeywords.Any(item.Title.Contains);
     }
 
     [GeneratedRegex(@"[&]")]
