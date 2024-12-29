@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 using MediathekArrLib.Models;
 using MediathekArrLib.Models.Newznab;
 using MediathekArrLib.Models.Rulesets;
@@ -117,7 +116,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
         var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
         var matchedEpisodes = await ApplyRulesetFilters(results, tvdbData);
-        var matchedDesiredEpisodes = ApplyDesiredEpisodeFilter(matchedEpisodes, desiredEpisodes);
+        var (matchedDesiredEpisodes, _) = await ApplyRulesetFilters(results);
 
         List<Item>? newznabItems;
         if (matchedDesiredEpisodes.Count == 0 && desiredEpisodes?.Count > 0)
@@ -181,7 +180,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return desiredEpisodes;
     }
 
-    private string ConvertNewznabItemsToRss(List<Item> items, int limit, int offset)
+    private static string ConvertNewznabItemsToRss(List<Item> items, int limit, int offset)
     {
         if (items == null || items.Count == 0)
         {
@@ -198,7 +197,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 Description = "MediathekArr API results",
                 Response = new Response
                 {
-                    Offset = 0,
+                    Offset = offset,
                     Total = items.Count
                 },
                 Items = paginatedItems,
@@ -527,9 +526,10 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 			return _rulesetsByTopic.TryGetValue(topic, out var rulesets) ? rulesets : [];
     }
 
-    private async Task<List<MatchedEpisodeInfo>> ApplyRulesetFilters(List<ApiResultItem> results, TvdbData? tvdbData = null)
+    private async Task<(List<MatchedEpisodeInfo> matchedEpisodes, List<ApiResultItem> unmatchedFilteredResultItems)> ApplyRulesetFilters(List<ApiResultItem> results, TvdbData? tvdbData = null)
     {
-        var filteredResults = new List<MatchedEpisodeInfo>();
+        var matchedFilteredResults = new List<MatchedEpisodeInfo>();
+        var unmatchedFilteredResults = new List<ApiResultItem>();
 
         foreach (var item in results)
         {
@@ -547,6 +547,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 if (!ruleset.Filters.All(filter => FilterMatches(item, filter)))
                 {
+                    unmatchedFilteredResults.Add(item);
                     continue; // Skip this ruleset if any filter fails
                 }
 
@@ -570,13 +571,17 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
                 if (matchInfo != null)
                 {
-                    filteredResults.Add(matchInfo);
+                    matchedFilteredResults.Add(matchInfo);
                     break;
+                }
+                else
+                {
+                    unmatchedFilteredResults.Add(item);
                 }
             }
         }
 
-        return filteredResults;
+        return (matchedFilteredResults, unmatchedFilteredResults);
     }
 
     public async Task<string> FetchSearchResultsForRssSync(int limit, int offset)
@@ -631,72 +636,18 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
 
         // Deserialize the API response and apply ruleset filters
-        var matchedEpisodes = await ApplyRulesetFilters(results);
+        var (matchedEpisodes, unmatchedFilteredResultItems) = await ApplyRulesetFilters(results);
 
         // Generate RSS response
-        var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes, limit, offset);
+        var newznabRssResponse = RemoveThisTOdo(matchedEpisodes, limit, offset);
+        //var newznabRssResponse = "";
 
         // Cache the response and return it
         _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
         return newznabRssResponse;
     }
 
-    public async Task<string> FetchSearchResultsFromApiByString(string? q, string? season)
-    {
-        var cacheKey = $"q_{q ?? "null"}_{season ?? "null"}";
-
-        // Return cached response if it exists
-        if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
-        {
-            return cachedResponse ?? "";
-        }
-
-        // Prepare the query
-        var queries = new List<object>();
-        if (q != null)
-        {
-            queries.Add(new { fields = queryFields, query = q });
-        }
-
-        if (!string.IsNullOrEmpty(season))
-        {
-            var zeroBasedSeason = season.Length >= 2 ? season : $"0{season}";
-            queries.Add(new { fields = new[] { "title" }, query = $"S{zeroBasedSeason}" });
-        }
-
-        var requestBody = new
-        {
-            queries,
-            sortBy = "filmlisteTimestamp",
-            sortOrder = "desc",
-            future = true,
-            offset = 0,
-            size = 500
-        };
-
-        var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
-        var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var apiResponse = await response.Content.ReadAsStringAsync();
-
-            // Deserialize the API response and apply ruleset filters
-            var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
-            var matchedEpisodes = await ApplyRulesetFilters(results);
-
-            // Generate RSS response
-            var newznabRssResponse = ConvertStringSearchApiResponseToRss(matchedEpisodes); // TODO add pagination
-
-            // Cache the response and return it
-            _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
-            return newznabRssResponse;
-        }
-
-        return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
-    }
-
-    private string ConvertStringSearchApiResponseToRss(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 999999, int offset = 0)
+    private string RemoveThisTOdo(List<MatchedEpisodeInfo> matchedEpisodes, int limit = 999999, int offset = 0)
     {
         if (matchedEpisodes == null || matchedEpisodes.Count == 0)
         {
@@ -722,6 +673,76 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         };
 
         return NewznabUtils.SerializeRss(rss);
+    }
+
+    public async Task<string> FetchSearchResultsFromApiByString(string? q, string? season, int limit, int offset)
+    {
+        // TODO hier weiter, caching von mediathek api + fallback handler. das gleiche bei rss
+        var cacheKey = $"q_{q ?? "null"}_{season ?? "null"}_{limit}_{offset}";
+
+        // Return cached response if it exists
+        if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
+        {
+            return cachedResponse ?? "";
+        }
+
+        var mediathekViewRequestCacheKey = $"mediathekapi_{q ?? "null"}_{season ?? "null"}";
+        string apiResponse;
+        if (_cache.TryGetValue(mediathekViewRequestCacheKey, out string? cachedApiResponse))
+        {
+            apiResponse = cachedApiResponse ?? string.Empty;
+        }
+        else
+        {
+            // Prepare the query
+            var queries = new List<object>();
+            if (q != null)
+            {
+                queries.Add(new { fields = queryFields, query = q });
+            }
+
+            if (!string.IsNullOrEmpty(season))
+            {
+                var zeroBasedSeason = season.Length >= 2 ? season : $"0{season}";
+                queries.Add(new { fields = new[] { "title" }, query = $"S{zeroBasedSeason}" });
+            }
+
+            var requestBody = new
+            {
+                queries,
+                sortBy = "filmlisteTimestamp",
+                sortOrder = "desc",
+                future = true,
+                offset = 0,
+                size = 1500
+            };
+
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
+            var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                apiResponse = await response.Content.ReadAsStringAsync();
+                _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
+            }
+            else
+            {
+                return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
+            }
+        }
+        // Deserialize the API response and apply ruleset filters
+        var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
+        var (matchedEpisodes, unmatchedFilteredResultItems) = await ApplyRulesetFilters(results);
+
+        List<Item>? newznabItemsByRuleset = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
+        List<Item>? newznabItemsByFallback = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsByString(apiResponse, season);
+
+        // Combine the results from ruleset matching and fallback handler
+        var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset);
+
+        // Cache the response and return it
+        _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
+        return newznabRssResponse;
     }
 
     private List<Item> GenerateRssItems(MatchedEpisodeInfo matchedEpisodeInfo)
@@ -785,7 +806,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     }
 
 
-    private Item CreateRssItem(MatchedEpisodeInfo matchedEpisodeInfo, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, EpisodeType episodeType)
+    private static Item CreateRssItem(MatchedEpisodeInfo matchedEpisodeInfo, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, EpisodeType episodeType)
     {
         var adjustedSize = (long)(matchedEpisodeInfo.Item.Size * sizeMultiplier);
         var parsedTitle = GenerateTitle(matchedEpisodeInfo, quality, episodeType);

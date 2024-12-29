@@ -69,7 +69,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
                 }
                 else
                 {
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season, limit, offset);
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
             }

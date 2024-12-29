@@ -13,18 +13,34 @@ public partial class MediathekSearchFallbackHandler
 {
     public static List<Item> GetFallbackSearchResultItemsById(string? apiResponse, TvdbEpisode episode, TvdbData tvdbData)
     {
-        if (apiResponse?.Length > 0)
-        {
-            var filteredResponse = ApplyFilters(apiResponse, episode);
-            var seasonNumber = episode.SeasonNumber.ToString();
-            var episodeNumber = episode.EpisodeNumber.ToString();
-            return filteredResponse?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
-        }
-        else
+        if (string.IsNullOrWhiteSpace(apiResponse))
         {
             return [];
         }
+
+        var filteredResponse = ApplyFilters(apiResponse, episode);
+        var seasonNumber = episode.SeasonNumber.ToString();
+        var episodeNumber = episode.EpisodeNumber.ToString();
+        return filteredResponse?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
     }
+
+    public static List<Item> GetFallbackSearchResultItemsByString(string? apiResponse, string? season)
+    {
+        if (string.IsNullOrWhiteSpace(apiResponse))
+        {
+            return [];
+        }
+
+        var responseObject = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse);
+
+        if (responseObject?.Result?.Results == null)
+        {
+            return [];
+        }
+
+        return responseObject?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, season, null)).ToList() ?? [];
+    }
+
 
     private static List<Item> GenerateRssItems(ApiResultItem item, string? season, string? episode, TvdbData? tvdbData = null)
     {
@@ -151,7 +167,7 @@ public partial class MediathekSearchFallbackHandler
 
         if (seasonOverride is null || episodeOverride is null)
         {
-            return title;
+            return $"{topic} - {title}.GERMAN.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
         }
         else
         {
