@@ -19,8 +19,8 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private readonly ItemLookupService _itemLookupService = itemLookupService;
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-    private static readonly string[] SkipKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "Trailer", "Outtakes:"];
-    private static readonly string[] queryFields = ["topic", "title"];
+    private static readonly string[] _skipKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "Trailer", "Outtakes:"];
+    private static readonly string[] _queryFields = ["topic", "title"];
     private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
 
     public async Task UpdateRulesetsAsync()
@@ -112,7 +112,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         {
             var queries = new List<object>
             {
-                new { fields = queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
+                new { fields = _queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
             };
 
             apiResponse = await FetchMediathekViewApiResponseAsync(queries, 10000);
@@ -670,7 +670,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             var queries = new List<object>();
             if (q != null)
             {
-                queries.Add(new { fields = queryFields, query = q });
+                queries.Add(new { fields = _queryFields, query = q });
             }
 
             if (!string.IsNullOrEmpty(season))
@@ -812,7 +812,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     public static bool ShouldSkipItem(ApiResultItem item)
     {
-        return item.UrlVideo.EndsWith(".m3u8") || skipKeywords.Any(item.Title.Contains);
+        return item.UrlVideo.EndsWith(".m3u8") || _skipKeywords.Any(item.Title.Contains);
     }
 
     [GeneratedRegex(@"[&]")]
