@@ -19,7 +19,8 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private readonly ItemLookupService _itemLookupService = itemLookupService;
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-    private static readonly string[] _skipKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "(mit Gebärdensprache)", "Trailer", "Outtakes:"];
+    private static readonly string[] _skipTitleKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "(mit Gebärdensprache)", "Trailer", "Outtakes:"];
+    private static readonly string[] _skipUrlKeywords = ["YXVkaW9kZXNrcmlwdGlvbg"]; // base64 for ARD, YXVkaW9kZXNrcmlwdGlvbg = audiodeskription
     private static readonly string[] _queryFields = ["topic", "title"];
     private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
 
@@ -812,7 +813,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     public static bool ShouldSkipItem(ApiResultItem item)
     {
-        return item.UrlVideo.EndsWith(".m3u8") || _skipKeywords.Any(item.Title.Contains);
+        return item.UrlVideo.EndsWith(".m3u8") || _skipTitleKeywords.Any(item.Title.Contains) || _skipUrlKeywords.Any(item.UrlWebsite.Contains);
     }
 
     [GeneratedRegex(@"[&]")]
