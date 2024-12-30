@@ -817,7 +817,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     [GeneratedRegex(@"[&]")]
     private static partial Regex TitleRegexUnd();
-    [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>()]")]
+    [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>,()]")]
     private static partial Regex TitleRegexSymbols();
     [GeneratedRegex(@"\s+")]
     private static partial Regex TitleRegexWhitespace();
