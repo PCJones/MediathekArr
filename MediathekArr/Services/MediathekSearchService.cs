@@ -8,18 +8,18 @@ using MediathekArrLib.Models.Newznab;
 using Microsoft.Extensions.Caching.Memory;
 using Guid = MediathekArrLib.Models.Newznab.Guid;
 
-namespace MediathekArr.Services;
-
-public partial class MediathekSearchService(IHttpClientFactory httpClientFactory, IMemoryCache cache)
+namespace MediathekArr.Services
 {
-    private readonly IMemoryCache _cache = cache;
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
-    private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-    private static readonly string[] SkipKeywords = ["(Audiodeskription)", "(klare Sprache)", "(Gebärdensprache)", "Trailer"];
-    private static readonly string[] queryField = ["topic"];
-    public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber)
+    public partial class MediathekSearchService(IHttpClientFactory httpClientFactory, IMemoryCache cache)
     {
-        var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}";
+        private readonly IMemoryCache _cache = cache;
+        private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
+        private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
+        private static readonly string[] SkipKeywords = ["Audiodeskription", "(klare Sprache)", "(Gebärdensprache)", "Trailer", "Outtakes:"];
+        private static readonly string[] queryField = ["topic"];
+        public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber)
+        {
+            var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}";
 
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
         {
@@ -112,13 +112,13 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             resultsByAiredDate.Clear();
         }
 
-        if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
-        {
-            // Only trust Mediathek season/episode if no other match:
-            resultsBySeasonEpisodeMatch = 
-                FilterBySeasonEpisodeMatch(resultsFilteredByRuntime, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
-                .Where(item => !ShouldSkipItem(item)).ToList(); ;
-        }
+            if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
+            {
+                // Only trust Mediathek season/episode if no other match:
+                resultsBySeasonEpisodeMatch =
+                    FilterBySeasonEpisodeMatch(resultsFilteredByRuntime, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
+                    .Where(item => !ShouldSkipItem(item)).ToList(); ;
+            }
 
         // HashSet to remove duplicates
         HashSet<ApiResultItem> filteredResults = [.. resultsByAiredDate, .. resultsByTitleDate, .. resultsByDescriptionDate, .. resultsByEpisodeTitleMatch, .. resultsBySeasonEpisodeMatch];
@@ -185,11 +185,21 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     {
         var normalizedEpisodeName = NormalizeString(episodeName);
 
-        return results.Where(item =>
-        {
-            var normalizedTitle = NormalizeString(item.Title);
-            return normalizedTitle.Contains(normalizedEpisodeName, StringComparison.OrdinalIgnoreCase);
-        }).ToList();
+            return results.Where(item =>
+            {
+                var normalizedTitle = NormalizeString(item.Title);
+                if (normalizedTitle.Contains(normalizedEpisodeName, StringComparison.OrdinalIgnoreCase)) {
+                    return true;
+                }
+                else if (normalizedEpisodeName.Length >= 13 && normalizedTitle.Length >= 10)
+                {
+                    return normalizedEpisodeName.Contains(normalizedTitle, StringComparison.OrdinalIgnoreCase);
+				}
+                else
+                {
+                    return false;
+                }
+            }).ToList();
     }
 
     private static List<ApiResultItem> FilterBySeasonEpisodeMatch(List<ApiResultItem> results, string season, string episode)
@@ -616,14 +626,15 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
 
 
-    [GeneratedRegex(@"[&]")]
-    private static partial Regex TitleRegexUnd();
-    [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>]")]
-    private static partial Regex TitleRegexSymbols();
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex TitleRegexWhitespace();
-    [GeneratedRegex(@"Folge\s*\d+:\s*")]
-    private static partial Regex EpisodeRegex();
-    [GeneratedRegex("[^a-zA-ZäöüÄÖÜß]")]
-    private static partial Regex NormalizeRegex();
+        [GeneratedRegex(@"[&]")]
+        private static partial Regex TitleRegexUnd();
+        [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>,()]")]
+        private static partial Regex TitleRegexSymbols();
+        [GeneratedRegex(@"\s+")]
+        private static partial Regex TitleRegexWhitespace();
+        [GeneratedRegex(@"Folge\s*\d+:\s*")]
+        private static partial Regex EpisodeRegex();
+        [GeneratedRegex("[^a-zA-ZäöüÄÖÜß]")]
+        private static partial Regex NormalizeRegex();
+    }
 }
