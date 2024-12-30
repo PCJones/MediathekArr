@@ -19,7 +19,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private readonly ItemLookupService _itemLookupService = itemLookupService;
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-    private static readonly string[] _skipKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "Trailer", "Outtakes:"];
+    private static readonly string[] _skipKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "(mit Gebärdensprache)", "Trailer", "Outtakes:"];
     private static readonly string[] _queryFields = ["topic", "title"];
     private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
 
