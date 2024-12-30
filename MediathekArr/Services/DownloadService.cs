@@ -1,18 +1,17 @@
-﻿using MediathekArr.Models;
-using Microsoft.Extensions.Logging;
+﻿using MediathekArrDownloader.Models;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace MediathekArr.Services;
+namespace MediathekArrDownloader.Services;
 
 public partial class DownloadService
 {
     private readonly ILogger<DownloadService> _logger;
     private readonly ConcurrentQueue<SabnzbdQueueItem> _downloadQueue = new();
-    private readonly List<SabnzbdHistoryItem> _downloadHistory = new();
+    private readonly List<SabnzbdHistoryItem> _downloadHistory = [];
     private static readonly HttpClient _httpClient = new();
     private static readonly SemaphoreSlim _semaphore = new(2); // Limit concurrent downloads to 2
     private readonly string _completeDir;

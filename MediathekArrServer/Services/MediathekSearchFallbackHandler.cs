@@ -21,7 +21,7 @@ public partial class MediathekSearchFallbackHandler
         var filteredResponse = ApplyFilters(apiResponse, episode);
         var seasonNumber = episode.SeasonNumber.ToString();
         var episodeNumber = episode.EpisodeNumber.ToString();
-        return filteredResponse?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
+        return filteredResponse?.Result.Results.SelectMany(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
     }
 
     public static List<Item> GetFallbackSearchResultItemsByString(List<ApiResultItem>? unmatchedFilteredResultItems, string? season)

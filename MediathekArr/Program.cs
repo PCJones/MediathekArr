@@ -1,4 +1,4 @@
-using MediathekArr.Services;
+using MediathekArrDownloader.Services;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,8 +17,6 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
 });
-builder.Services.AddSingleton<MediathekSearchService>();
-builder.Services.AddSingleton<ItemLookupService>();
 builder.Services.AddSingleton<DownloadService>();
 
 
