@@ -6,10 +6,10 @@
       "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5007"
+        "ASPNETCORE_URLS": "http://localhost:5008"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5007"
+      "applicationUrl": "http://localhost:5008"
     },
     "https": {
       "commandName": "Project",
@@ -17,10 +17,10 @@
       "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:5007"
+        "ASPNETCORE_URLS": "https://localhost:5008"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:5007"
+      "applicationUrl": "https://localhost:5008"
     },
     "Container (.NET SDK)": {
       "commandName": "SdkContainer",

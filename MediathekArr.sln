@@ -3,7 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArr", "MediathekArr\MediathekArr.csproj", "{325043A5-5585-4C48-B947-A1E69EAE8343}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrDownloader", "MediathekArr\MediathekArrDownloader.csproj", "{325043A5-5585-4C48-B947-A1E69EAE8343}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrServer", "MediathekArrServer\MediathekArrServer.csproj", "{F6A03A18-04C6-4BC1-8969-A8BADDD64718}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrLib", "MediathekArrLib\MediathekArrLib.csproj", "{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.env.example = .env.example
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		build_and_push_docker_image.bat = build_and_push_docker_image.bat
+		docker-compose.yml = docker-compose.yml
+		Dockerfile = Dockerfile
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +31,14 @@ Global
 		{325043A5-5585-4C48-B947-A1E69EAE8343}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{325043A5-5585-4C48-B947-A1E69EAE8343}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{325043A5-5585-4C48-B947-A1E69EAE8343}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6A03A18-04C6-4BC1-8969-A8BADDD64718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6A03A18-04C6-4BC1-8969-A8BADDD64718}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6A03A18-04C6-4BC1-8969-A8BADDD64718}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6A03A18-04C6-4BC1-8969-A8BADDD64718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

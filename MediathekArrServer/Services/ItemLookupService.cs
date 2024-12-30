@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 
-namespace MediathekArr.Services;
+namespace MediathekArrServer.Services;
 
 public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfiguration configuration, IMemoryCache memoryCache)
 {
@@ -18,10 +18,15 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         };
     }
 
-    public async Task<TvdbInfoResponse> GetShowInfoByTvdbId(int tvdbid)
+    public async Task<TvdbData?> GetShowInfoByTvdbId(int? tvdbid)
     {
+        if (tvdbid == null)
+        {
+            return null;
+        }
+
         var cacheKey = $"TvdbInfo_{tvdbid}";
-        if (_memoryCache.TryGetValue(cacheKey, out TvdbInfoResponse? cachedTvdbInfo))
+        if (_memoryCache.TryGetValue(cacheKey, out TvdbData? cachedTvdbInfo))
         {
             if (cachedTvdbInfo != null)
             {
@@ -45,10 +50,11 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         if (tvdbInfo == null || tvdbInfo.Status != "success" || tvdbInfo.Data == null)
         {
             throw new HttpRequestException($"Failed to fetch TVDB data. Response: {jsonResponse}");
+            // TODO log and return null
         }
 
-        _memoryCache.Set(cacheKey, tvdbInfo, TimeSpan.FromHours(12));
+        _memoryCache.Set(cacheKey, tvdbInfo.Data, TimeSpan.FromHours(12));
 
-        return tvdbInfo;
+        return tvdbInfo.Data;
     }
 }

@@ -1,23 +1,7 @@
-﻿using MediathekArr.Utilities;
+﻿using MediathekArrLib.Utilities;
 using System.Text.Json.Serialization;
 
-public class MediathekApiResponse
-{
-    [JsonPropertyName("result")]
-    public Result Result { get; set; }
-
-    [JsonPropertyName("err")]
-    public object Err { get; set; }
-}
-
-public class Result
-{
-    [JsonPropertyName("results")]
-    public List<ApiResultItem> Results { get; set; }
-
-    [JsonPropertyName("queryInfo")]
-    public QueryInfo QueryInfo { get; set; }
-}
+namespace MediathekArrLib.Models;
 
 public class ApiResultItem
 {
@@ -33,7 +17,8 @@ public class ApiResultItem
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
-    [JsonPropertyName("timestamp")]
+    [JsonPropertyName("filmlisteTimestamp")]
+    [JsonConverter(typeof(NumberOrEmptyConverter<long>))]
     public long Timestamp { get; set; }
 
     [JsonPropertyName("duration")]
@@ -55,19 +40,4 @@ public class ApiResultItem
 
     [JsonPropertyName("url_video_hd")]
     public string UrlVideoHd { get; set; }
-}
-
-public class QueryInfo
-{
-    [JsonPropertyName("filmlisteTimestamp")]
-    public long FilmlisteTimestamp { get; set; }
-
-    [JsonPropertyName("searchEngineTime")]
-    public string SearchEngineTime { get; set; }
-
-    [JsonPropertyName("resultCount")]
-    public int ResultCount { get; set; }
-
-    [JsonPropertyName("totalResults")]
-    public int TotalResults { get; set; }
 }

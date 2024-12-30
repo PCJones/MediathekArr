@@ -1,11 +1,10 @@
-using MediathekArr.Services;
+using MediathekArrServer.Services;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient("MediathekClient", client =>
 {
@@ -17,10 +16,10 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
 });
+
+builder.Services.AddHostedService<RulesetBackgroundService>();
 builder.Services.AddSingleton<MediathekSearchService>();
 builder.Services.AddSingleton<ItemLookupService>();
-builder.Services.AddSingleton<DownloadService>();
-
 
 var app = builder.Build();
 

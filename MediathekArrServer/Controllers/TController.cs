@@ -1,8 +1,8 @@
-using MediathekArr.Services;
+using MediathekArrServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
-namespace MediathekArr.Controllers;
+namespace MediathekArrServer.Controllers;
 
 [ApiController]
 [Route("api")]
@@ -14,9 +14,12 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
     [HttpGet]
     public async Task<IActionResult> GetCapsXml([FromQuery] string t)
     {
+        var limit = int.TryParse(HttpContext.Request.Query["limit"], out var parsedLimit) ? parsedLimit : 100;
+        var offset = int.TryParse(HttpContext.Request.Query["offset"], out var parsedOffset) ? parsedOffset: 0;
         string q = HttpContext.Request.Query["q"];
         string imdbid = HttpContext.Request.Query["imdbid"];
         string tvdbid = HttpContext.Request.Query["tvdbid"];
+        string tmdbid = HttpContext.Request.Query["tmdbid"];
         string season = HttpContext.Request.Query["season"];
         string episode = HttpContext.Request.Query["ep"];
         string cat = HttpContext.Request.Query["cat"];
@@ -48,21 +51,25 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
             return Content(xmlContent, "application/xml", Encoding.UTF8);
         }
         else if (t == "tvsearch" || t == "search" || t == "movie")
-        {
+        {   
             try
             {
                 if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
                 {
-                    var tvdbData = (await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid)).Data;
+                    var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
 
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode, limit, offset);
 
+                    return Content(searchResults, "application/xml", Encoding.UTF8);
+                }
+                else if (q is null && season is null && imdbid is null && tvdbid is null && tmdbid is null)
+                {
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(limit, offset);
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
                 else
                 {
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season);
-
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season, limit, offset);
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
             }
