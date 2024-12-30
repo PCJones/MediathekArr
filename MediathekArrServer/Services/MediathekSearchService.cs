@@ -62,13 +62,31 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
     }
 
+    private async Task<string> FetchMediathekViewApiResponseAsync(List<object> queries, int size)
+    {
+        var requestBody = new
+        {
+            queries,
+            sortBy = "filmlisteTimestamp",
+            sortOrder = "desc",
+            future = true,
+            offset = 0,
+            size
+        };
+
+        var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
+        var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        return string.Empty;
+    }
+
     public async Task<string> FetchSearchResultsFromApiById(TvdbData tvdbData, string? season, string? episodeNumber, int limit, int offset)
     {
-        // TODO for now never return anything for season search because it might not find all episodes, resulting in sonarr not searching for individual episodes
-        if (episodeNumber is null && season is not null)
-        {
-            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
-        }
         var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}";
 
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
@@ -79,8 +97,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         List<TvdbEpisode>? desiredEpisodes = GetDesiredEpisodes(tvdbData, season, episodeNumber);
         if (season != null && desiredEpisodes?.Count == 0)
         {
-            _cache.Set(cacheKey, string.Empty, _cacheTimeSpan);
-            return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
+            var response = NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
+            _cache.Set(cacheKey, response, _cacheTimeSpan);
+            return response;
         }
 
         var mediathekViewRequestCacheKey = $"mediathekapi_{tvdbData.Id}";
@@ -96,27 +115,13 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 new { fields = queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
             };
 
-            var requestBody = new
-            {
-                queries,
-                sortBy = "filmlisteTimestamp",
-                sortOrder = "desc",
-                future = true,
-                offset = 0,
-                size = 10000
-            };
-
-            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
-            var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
-            if (response.IsSuccessStatusCode)
-            {
-                apiResponse = await response.Content.ReadAsStringAsync();
-                _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
-            }
-            else
+            apiResponse = await FetchMediathekViewApiResponseAsync(queries, 10000);
+            if (string.IsNullOrEmpty(apiResponse))
             {
                 return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
             }
+
+            _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
         }
 
         var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
@@ -127,7 +132,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         if (matchedDesiredEpisodes.Count == 0 && desiredEpisodes?.Count > 0)
         {
             // Fallback to best effort matching 
-            newznabItems = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsById(apiResponse, desiredEpisodes[0], tvdbData);
+            newznabItems = desiredEpisodes
+                .SelectMany(episode => MediathekSearchFallbackHandler.GetFallbackSearchResultItemsById(apiResponse, episode, tvdbData))
+                .ToList();
         }
         else
         {
@@ -150,6 +157,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             if (episodeNumber is null)
             {
                 desiredEpisodes.AddRange(tvdbData.FindEpisodesBySeason(season));
+                if (season.Length == 4 && int.TryParse(season, out var year))
+                {
+                    if (year >= 1900 && year <= 2100)
+                    {
+                        desiredEpisodes.AddRange(tvdbData.FindEpisodesByAirYear(year));
+                        desiredEpisodes = desiredEpisodes.Distinct().ToList();
+                    }
+                }
             }
             else
             {
@@ -608,37 +623,16 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
         else
         {
-            // Prepare the query
             var queries = new List<object>();
+            var apiResponse = await FetchMediathekViewApiResponseAsync(queries, 6000);
 
-            var requestBody = new
-            {
-                queries,
-                sortBy = "filmlisteTimestamp",
-                sortOrder = "desc",
-                future = true,
-                offset = 0,
-                size = 6000
-            };
-
-            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
-            var mediathekViewWebApiResponse = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
-
-            if (mediathekViewWebApiResponse.IsSuccessStatusCode)
-            {
-                var apiResponse = await mediathekViewWebApiResponse.Content.ReadAsStringAsync();
-                if (apiResponse == null)
-                {
-                    return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
-                }
-
-                results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
-                _cache.Set(mediathekViewRequestCacheKey, results, TimeSpan.FromMinutes(20));
-            }
-            else
+            if (string.IsNullOrEmpty(apiResponse))
             {
                 return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
             }
+
+            results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
+            _cache.Set(mediathekViewRequestCacheKey, results, TimeSpan.FromMinutes(20));
         }
 
         // Deserialize the API response and apply ruleset filters
@@ -673,7 +667,6 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
         else
         {
-            // Prepare the query
             var queries = new List<object>();
             if (q != null)
             {
@@ -686,28 +679,13 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 queries.Add(new { fields = new[] { "title" }, query = $"S{zeroBasedSeason}" });
             }
 
-            var requestBody = new
-            {
-                queries,
-                sortBy = "filmlisteTimestamp",
-                sortOrder = "desc",
-                future = true,
-                offset = 0,
-                size = 1500
-            };
-
-            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
-            var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
-
-            if (response.IsSuccessStatusCode)
-            {
-                apiResponse = await response.Content.ReadAsStringAsync();
-                _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
-            }
-            else
+            apiResponse = await FetchMediathekViewApiResponseAsync(queries, 1500);
+            if (string.IsNullOrEmpty(apiResponse))
             {
                 return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
             }
+
+            _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
         }
         // Deserialize the API response and apply ruleset filters
         var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];

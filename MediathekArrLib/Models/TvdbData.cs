@@ -30,6 +30,18 @@ public record TvdbData(int Id, string Name, [property: JsonPropertyName("german_
     }
 
     /// <summary>
+    /// Finds all episodes aired in a specified year.
+    /// </summary>
+    /// <param name="year">The year to search for.</param>
+    /// <returns>A list of TvdbEpisode objects aired in the specified year, or an empty list if none are found.</returns>
+    public List<TvdbEpisode> FindEpisodesByAirYear(int year)
+    {
+        return Episodes?
+            .Where(episode => episode.Aired?.Year == year)
+            .ToList() ?? [];
+    }
+
+    /// <summary>
     /// Finds all episodes from a given season.
     /// </summary>
     /// <param name="seasonNumber">The season number to search for.</param>
