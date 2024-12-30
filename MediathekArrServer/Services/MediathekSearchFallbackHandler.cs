@@ -85,7 +85,7 @@ public partial class MediathekSearchFallbackHandler
     private static Item CreateRssItem(ApiResultItem item, string? yearSeason, string? season, string? episode, TvdbData? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
     {
         var adjustedSize = (long)(item.Size * sizeMultiplier);
-        var parsedTitle = GenerateTitle(item.Topic, item.Title, quality, formattedDate, season, episode);
+        var parsedTitle = GenerateTitle(tvdbData, item.Topic, item.Title, quality, formattedDate, season, episode);
         var formattedTitle = FormatTitle(parsedTitle);
         //var translatedTitle = TranslateTitle(formattedTitle, tvdbData);
         var translatedTitle = formattedTitle; // TODO see if translation is needed
@@ -120,8 +120,10 @@ public partial class MediathekSearchFallbackHandler
 
     // TODO refactor and make this look good, It's too late right now:D
     // TODO now it's even worse :D oh god
-    private static string GenerateTitle(string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
+    private static string GenerateTitle(TvdbData? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
     {
+        var showName = tvdbData?.Name ?? topic;
+       
         if (!string.IsNullOrEmpty(formattedDate))
         {
             var cleanedTitle = EpisodeRegex().Replace(title, "").Trim();
@@ -131,7 +133,7 @@ public partial class MediathekSearchFallbackHandler
                 cleanedTitle = null;
             }
 
-            return $"{topic}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
         var episodePattern = @"S\d{1,4}/E\d{1,4}";
         var match = Regex.Match(title, episodePattern);
@@ -155,12 +157,12 @@ public partial class MediathekSearchFallbackHandler
             // use overwrite data
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
-            return $"{topic}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
 
         if (seasonOverride is null || episodeOverride is null)
         {
-            return $"{topic} - {title}.GERMAN.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
+            return $"{showName} - {title}.GERMAN.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
         }
         else
         {
@@ -174,7 +176,7 @@ public partial class MediathekSearchFallbackHandler
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
 
-            return $"{topic}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : title)}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : title)}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
     }
     private static string FormatTitle(string title)

@@ -125,7 +125,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
 
         var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
-        var (matchedEpisodes, _) = await ApplyRulesetFilters(results, tvdbData);
+        var (matchedEpisodes, unmatchedFilteredResultItems) = await ApplyRulesetFilters(results, tvdbData);
         var matchedDesiredEpisodes = ApplyDesiredEpisodeFilter(matchedEpisodes, desiredEpisodes);
 
         List<Item>? newznabItems;
