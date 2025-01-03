@@ -1,15 +1,13 @@
 services:
   mediathekarr:
-    #image: pcjones/mediathekarr:latest
-    build:
-        context: .
+    image: pcjones/mediathekarr:beta
     container_name: mediathekarr
     environment:
       - TZ=Europe/Berlin
       # - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1 # Only change this if you are hosting your own API. Not needed for 99% of users
     #volumes:
-      #- /docker/appdata/mediathekarr:/app/config
-      #- /data/usenet:/data/usenet
+      - /docker/appdata/mediathekarr:/app/config
+      - /data/usenet:/data/usenet
     ports:
       - "127.0.0.1:5007:5007"                             # Port on the right side can be changed to any value you like
     restart: unless-stopped
