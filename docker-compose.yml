@@ -11,7 +11,7 @@ services:
       #- DOWNLOAD_COMPLETE_PATH=/data/mediathek/complete # Path to complete downloads"
 
       # Only change this if you are hosting your own API. Not needed for 99% of users
-      - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1 
+      - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1
     volumes:
       - /docker/appdata/mediathekarr:/app/config
       - /data/mediathek/complete:/data/mediathek/complete
