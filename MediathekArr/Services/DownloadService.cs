@@ -1,4 +1,5 @@
 ﻿using MediathekArrDownloader.Models;
+using MediathekArrDownloader.Models.SABnzbd;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -10,28 +11,86 @@ namespace MediathekArrDownloader.Services;
 public partial class DownloadService
 {
     private readonly ILogger<DownloadService> _logger;
+    private readonly Config _config;
     private readonly ConcurrentQueue<SabnzbdQueueItem> _downloadQueue = new();
     private readonly List<SabnzbdHistoryItem> _downloadHistory = [];
     private static readonly HttpClient _httpClient = new();
     private static readonly SemaphoreSlim _semaphore = new(2); // Limit concurrent downloads to 2
-    private readonly string _completeDir;
     private readonly string _ffmpegPath;
     private readonly bool _isWindows;
 
-    public DownloadService(ILogger<DownloadService> logger)
+    public DownloadService(ILogger<DownloadService> logger, Config config)
     {
         _logger = logger;
+        _config = config;
         _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         // Set complete_dir based on the application's startup path
         var startupPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-        _completeDir = Path.Combine(startupPath, "downloads");
         _ffmpegPath = Path.Combine(startupPath, "ffmpeg", _isWindows ? "ffmpeg.exe" : "ffmpeg");
+
+        InitializeIncompleteDirectory();
+        CleanupAbandondedFilesInCompleteDirectory();
 
         // Ensure FFmpeg is available
         Task.Run(EnsureFfmpegExistsAsync).Wait();
     }
 
+    private void CleanupAbandondedFilesInCompleteDirectory()
+    {
+        // Remove files older than 48 hours
+
+        if (!Directory.Exists(_config.CompletePath))
+        {
+            return;
+        }
+
+        var files = Directory.GetFiles(_config.CompletePath);
+        foreach (var file in files)
+        {
+            var fileInfo = new FileInfo(file);
+            if (DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromHours(48))
+            {
+                _logger.LogInformation("Deleting abandoned file in complete directory: {file}", file);
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting file: {file}", file);
+                    continue;
+                }
+            }
+        }
+    }
+
+    private void InitializeIncompleteDirectory()
+    {
+        // Ensure incomplete directory exists
+        if (!Directory.Exists(_config.IncompletePath))
+        {
+            _logger.LogInformation("Ensuring incomplete doesn't exist, creating directory: {incompleteDir}", _config.IncompletePath);
+            Directory.CreateDirectory(_config.IncompletePath);
+        }
+        else
+        {
+            // Delete everything inside the incomplete directory
+            foreach (var file in Directory.GetFiles(_config.IncompletePath))
+            {
+                _logger.LogInformation("Deleting file in incomplete directory: {file}", file);
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting file: {file}", file);
+                    continue;
+                }
+            }
+        }
+    }
 
     public IEnumerable<SabnzbdQueueItem> GetQueue() => [.. _downloadQueue];
     public IEnumerable<SabnzbdHistoryItem> GetHistory() => _downloadHistory;
@@ -43,10 +102,10 @@ public partial class DownloadService
             Status = SabnzbdDownloadStatus.Queued,
             Index = _downloadQueue.Count,
             Timeleft = "10:00:00",
-            Size = "Unknown",
+            Size = "0",
             Title = fileName,
             Category = category,
-            Sizeleft = "Unknown",
+            Sizeleft = "0",
             Percentage = "0"
         };
 
@@ -94,12 +153,13 @@ public partial class DownloadService
     {
         try
         {
-            var categoryDir = Path.Combine(_completeDir, queueItem.Category);
-            _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, categoryDir);
-            Directory.CreateDirectory(categoryDir);
-
             var fileExtension = Path.GetExtension(url) ?? ".mp4";
-            var filePath = Path.Combine(categoryDir, queueItem.Title + fileExtension);
+            var filePath = Path.Combine(_config.IncompletePath, queueItem.Title + fileExtension);
+
+            if (File.Exists(filePath))
+            {
+                _logger.LogWarning("Removing existing file in temp directory: {filePath}", filePath);
+            }
 
             _logger.LogInformation("Starting download of file to path: {Path} with extension {Extension}", filePath, fileExtension);
             queueItem.Status = SabnzbdDownloadStatus.Downloading;
@@ -180,9 +240,12 @@ public partial class DownloadService
 
     private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch)
     {
-        var categoryDir = Path.Combine(_completeDir, queueItem.Category);
-        var mp4Path = Path.Combine(categoryDir, queueItem.Title + ".mp4");
-        var mkvPath = Path.Combine(categoryDir, queueItem.Title + ".mkv");
+        var completeCategoryDir = Path.Combine(_config.CompletePath, queueItem.Category);
+        _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, completeCategoryDir);
+        Directory.CreateDirectory(completeCategoryDir);
+
+        var mp4Path = Path.Combine(_config.IncompletePath, queueItem.Title + ".mp4");
+        var mkvPath = Path.Combine(completeCategoryDir, queueItem.Title + ".mkv");
 
         if (!File.Exists(mp4Path))
         {

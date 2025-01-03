@@ -1,16 +1,18 @@
 ﻿using MediathekArrDownloader.Models;
+using MediathekArrDownloader.Models.SABnzbd;
 using MediathekArrDownloader.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace MediathekArrDownloader.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class DownloadController(DownloadService downloadService) : ControllerBase
+public partial class DownloadController(DownloadService downloadService, Config config, IWebHostEnvironment environment) : ControllerBase
 {
     private readonly DownloadService _downloadService = downloadService;
+    private readonly Config _config = config;
+    private readonly IWebHostEnvironment _environment = environment;
 
     [HttpGet("api")]
     public IActionResult GetVersion([FromQuery] string mode, [FromQuery] string? name = null, [FromQuery] string? value = null, [FromQuery] int? del_files = 0)
@@ -18,7 +20,8 @@ public partial class DownloadController(DownloadService downloadService) : Contr
         return mode switch
         {
             "version" => Ok(new { version = "4.3.3" }),
-            "get_config" => Content(GetConfigResponse(), "application/json"),
+            "get_config" => Content(ConfigResponse, "application/json"),
+            "fullstatus" => Content(FullStatusResponse, "application/json"),
             "queue" => Ok(GetQueue()),
             "history" => (name == "delete" && !string.IsNullOrEmpty(value))
                 ? DeleteHistoryItem(value, del_files.GetValueOrDefault() == 1)
@@ -102,25 +105,31 @@ public partial class DownloadController(DownloadService downloadService) : Contr
         };
     }
 
-    private static string GetConfigResponse()
-    {
-        var startupPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-        var downloadFolderPathMapping = Environment.GetEnvironmentVariable("DOWNLOAD_FOLDER_PATH_MAPPING");
+    private string FullStatusResponse => @$"{{
+       ""status"": {{
+              ""completeDir"": ""{_config.CompletePath.Replace('\\', '/')}""
+            }}
+    }}";
 
-        var completeDir = !string.IsNullOrEmpty(downloadFolderPathMapping)
-            ? Path.Combine(downloadFolderPathMapping)
-            : Path.Combine(startupPath, "downloads"); ;
 
-        return @$"{{
+    private string ConfigResponse => @$"{{
         ""config"": {{
             ""misc"": {{
-                ""complete_dir"": ""{completeDir.Replace("\\", "/")}"",
+                ""complete_dir"": ""{_config.CompletePath.Replace('\\', '/')}"",
                 ""enable_tv_sorting"": false,
                 ""enable_movie_sorting"": false,
                 ""pre_check"": false,
-                ""history_retention"": ""all""
+                ""history_retention"": """",
+                ""history_retention_option"": ""all""
             }},
             ""categories"": [
+                {{
+                    ""name"": ""mediathek"",
+                    ""pp"": """",
+                    ""script"": ""Default"",
+                    ""dir"": """",
+                    ""priority"": -100
+                }},
                 {{
                     ""name"": ""sonarr"",
                     ""pp"": """",
@@ -162,12 +171,11 @@ public partial class DownloadController(DownloadService downloadService) : Contr
                     ""script"": ""Default"",
                     ""dir"": """",
                     ""priority"": -100
-                }},
+                }}
             ],
             ""sorters"": []
         }}
     }}";
-    }
 
     [GeneratedRegex(@"filename=""([^""]+)\.nzb""")]
     private static partial Regex FileNameRegex();

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MediathekArrDownloader.Models;
+namespace MediathekArrDownloader.Models.SABnzbd;
 
 public class SabnzbdQueueItem
 {
@@ -33,5 +33,5 @@ public class SabnzbdQueueItem
     public string Percentage { get; set; } // "34"
 
     [JsonPropertyName("nzo_id")]
-    public string Id { get; set; } = System.Guid.NewGuid().ToString();
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 }

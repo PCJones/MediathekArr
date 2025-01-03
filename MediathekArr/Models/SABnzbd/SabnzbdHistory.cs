@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MediathekArrDownloader.Models;
+namespace MediathekArrDownloader.Models.SABnzbd;
 
 public class SabnzbdHistory
 {

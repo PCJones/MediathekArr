@@ -1,4 +1,4 @@
-﻿namespace MediathekArrDownloader.Models;
+﻿namespace MediathekArrDownloader.Models.SABnzbd;
 
 public enum SabnzbdDownloadStatus
 {
