@@ -9,7 +9,7 @@ let selectedIndexerDetails = null;
 let useProwlarr = false;
 let prowlarrHost = '';
 let prowlarrPort = '';
-let prowlarrApiKey = 'd62025228e6c4274a0e5616e8370a52d'; // TODO debug remove
+let prowlarrApiKey = ''; // TODO debug remove
 let selectedAppProfileId = null;
 
 function toggleProwlarrSettings(isChecked) {

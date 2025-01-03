@@ -67,7 +67,19 @@ app.Run();
 static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
 {
     // Attempt to load configuration from external file
-    var configFilePath = Path.Combine("config", "mediathekarr.json");
+    var configPathEnv = Environment.GetEnvironmentVariable("CONFIG_PATH");
+
+    string configFilePath;
+    if (!string.IsNullOrEmpty(configPathEnv))
+    {
+        configFilePath = Path.Combine(configPathEnv, "mediathekarr.json");
+    }
+    else
+    {
+        configFilePath = Path.Combine("config", "mediathekarr.json");
+    }
+    logger.LogInformation("Config path set to: {configFilePath}", configFilePath);
+
     bool existingConfig;
     Config config;
 

@@ -30,6 +30,7 @@ COPY docker_start.sh /app/docker_start.sh
 RUN chmod +x /app/docker_start.sh
 
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV CONFIG_PATH=/app/config
 
 # Use the shell script to start both processes
 ENTRYPOINT ["/app/docker_start.sh"]
