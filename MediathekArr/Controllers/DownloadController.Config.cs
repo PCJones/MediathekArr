@@ -42,7 +42,21 @@ public partial class DownloadController
         }
 
         // Persist updated config to file
-        var configFilePath = Path.Combine(AppContext.BaseDirectory, "config", "mediathekarr.json");
+        var configPathEnv = Environment.GetEnvironmentVariable("CONFIG_PATH");
+
+        string configFilePath;
+        if (!string.IsNullOrEmpty(configPathEnv))
+        {
+            configFilePath = Path.Combine(configPathEnv, "mediathekarr.json");
+        }
+        else
+        {
+            configFilePath = Path.Combine("config", "mediathekarr.json");
+            if (!Directory.Exists("config"))
+            {
+                Directory.CreateDirectory("config");
+            }
+        }
         System.IO.File.WriteAllText(configFilePath, System.Text.Json.JsonSerializer.Serialize(_config, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
 
         return Ok(new { status = "success" });

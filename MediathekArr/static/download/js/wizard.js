@@ -21,12 +21,8 @@ async function fetchAppProfiles() {
     updateStatus('Fetching Prowlarr app profiles...');
 
     const appProfiles = await fetchWithStatus(
-        `${prowlarrHost}:${prowlarrPort}/api/v1/appprofile`,
-        {
-            headers: {
-                "X-Api-Key": prowlarrApiKey
-            }
-        },
+        `/wizard/appprofiles?prowlarrHost=${encodeURIComponent(prowlarrHost)}&prowlarrPort=${encodeURIComponent(prowlarrPort)}&apiKey=${encodeURIComponent(prowlarrApiKey)}`,
+        {},
         'App profiles fetched successfully.',
         'Failed to fetch app profiles'
     );
@@ -100,9 +96,8 @@ async function updateOrCreateIndexer() {
         payload.enable = true;
     }
 
-    const url = useProwlarr
-        ? `${prowlarrHost}:${prowlarrPort}/api/v1/indexer${selectedIndexerId ? `/${selectedIndexerId}` : ''}`
-        : `${sonarrHost}/api/v3/indexer${selectedIndexerId ? `/${selectedIndexerId}` : ''}`;
+    const url = `/wizard/indexer${selectedIndexerId ? `/${selectedIndexerId}` : ''}?arrHost=${encodeURIComponent(useProwlarr ? prowlarrHost : sonarrHost)}&apiKey=${encodeURIComponent(useProwlarr ? prowlarrApiKey : apiKey)}&prowlarr=${useProwlarr}`;
+
 
     const method = selectedIndexerId ? "PUT" : "POST";
 
@@ -151,13 +146,9 @@ function showSuccessScreen() {
 async function fetchIndexers() {
     updateStatus('Fetching existing Indexers...');
 
-    let url;
-    if (useProwlarr) {
-        url = `/wizard/indexers?arrHost=${encodeURIComponent(prowlarrHost)}:${encodeURIComponent(prowlarrPort)}&apiKey=${encodeURIComponent(prowlarrApiKey)}&prowlarr=true`;
-    }
-    else {
-        url = `/wizard/indexers?arrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`;
-    }
+    const url = useProwlarr
+        ? `/wizard/indexers?arrHost=${encodeURIComponent(prowlarrHost)}:${encodeURIComponent(prowlarrPort)}&apiKey=${encodeURIComponent(prowlarrApiKey)}&prowlarr=true`
+        : `/wizard/indexers?arrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`;
     const headers = {};
 
     const indexers = await fetchWithStatus(
@@ -297,9 +288,8 @@ async function testIndexerSettings() {
         testPayload.enable = true;
     }
 
-    const url = useProwlarr
-        ? `http://localhost:9696/api/v1/indexer/test`
-        : `${sonarrHost}/api/v3/indexer/test`;
+    const url = `/wizard/indexer/test?arrHost=${encodeURIComponent(useProwlarr ? prowlarrHost : sonarrHost)}&apiKey=${encodeURIComponent(useProwlarr ? prowlarrApiKey : apiKey)}&prowlarr=${useProwlarr}`;
+
 
     const headers = {
         "Content-Type": "application/json",
@@ -501,12 +491,11 @@ async function testClientSettings(tryAlternate = true) {
     };
 
     const response = await fetchWithStatus(
-        `${sonarrHost}/api/v3/downloadclient/test`,
+        `/wizard/downloadclient/test?sonarrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`,
         {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-Api-Key": apiKey
             },
             body: JSON.stringify(testPayload)
         },
@@ -617,9 +606,7 @@ async function updateOrCreateDownloadClient() {
         tags: []
     };
 
-    const url = selectedClientId
-        ? `${sonarrHost}/api/v3/downloadclient/${selectedClientId}`
-        : `${sonarrHost}/api/v3/downloadclient`;
+    const url = `/wizard/downloadclient${selectedClientId ? `/${selectedClientId}` : ''}?sonarrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`;
 
     const method = selectedClientId ? "PUT" : "POST";
 

@@ -66,7 +66,6 @@ app.Run();
 
 static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
 {
-    // Attempt to load configuration from external file
     var configPathEnv = Environment.GetEnvironmentVariable("CONFIG_PATH");
 
     string configFilePath;
@@ -145,10 +144,6 @@ static string GetDefaultPath(string startupPath, string type, ILogger logger)
     if (OperatingSystem.IsWindows())
     {
         defaultPath = Path.Combine(startupPath, "downloads", type);
-        if (!Directory.Exists(defaultPath))
-        {
-            Directory.CreateDirectory(defaultPath);
-        }
     }
     else
     {
