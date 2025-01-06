@@ -749,7 +749,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
         if (!string.IsNullOrEmpty(matchedEpisodeInfo.Item.UrlVideoHd))
         {
-            items.AddRange(CreateRssItems(matchedEpisodeInfo, "1080p", 1.6, "TV > HD", [.. categories, "5040", "2040"], matchedEpisodeInfo.Item.UrlVideoHd));
+            items.AddRange(CreateRssItems(matchedEpisodeInfo, "1080p", 1.75, "TV > HD", [.. categories, "5040", "2040"], matchedEpisodeInfo.Item.UrlVideoHd));
         }
 
         if (!string.IsNullOrEmpty(matchedEpisodeInfo.Item.UrlVideo))

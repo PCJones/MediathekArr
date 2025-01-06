@@ -43,7 +43,7 @@ public partial class MediathekSearchFallbackHandler
 
         if (!string.IsNullOrEmpty(item.UrlVideoHd))
         {
-            items.AddRange(CreateRssItems(item, season, episode, tvdbData, "1080p", 1.6, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideoHd));
+            items.AddRange(CreateRssItems(item, season, episode, tvdbData, "1080p", 1.75, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideoHd));
         }
 
         if (!string.IsNullOrEmpty(item.UrlVideo))
