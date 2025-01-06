@@ -304,12 +304,12 @@ public partial class DownloadService
             // Move completed download to history
             var historyItem = new SabnzbdHistoryItem
             {
-                Title = queueItem.Title,
+                Title = $"{queueItem.Title}.mkv",
                 NzbName = queueItem.Title,
                 Category = queueItem.Category,
                 Size = (long)(sizeInMB * 1024 * 1024), // Convert MB to bytes
                 DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
-                Storage = completeCategoryDir,
+                Storage = mkvPath,
                 Status = queueItem.Status,
                 Id = queueItem.Id
             };

@@ -366,3 +366,4 @@ FodyWeavers.xsd
 config.json
 *.mp4
 *.mkv
+ffmpeg/
