@@ -253,9 +253,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             return null;
         }
 
+        // Use generated title if available, otherwise read from mediathek response
+        string? title = ruleset.TitleRegexRules.Count != 0 ? 
+            BuildTitleFromRegexRules(item, ruleset.TitleRegexRules) : 
+            GetFieldValue(item, "title");
+
         // Extract season and episode from the item using the ruleset
-        string? season = ExtractValueUsingRegex(item, ruleset.SeasonRegex);
-        string? episode = ExtractValueUsingRegex(item, ruleset.EpisodeRegex);
+        string? season = ExtractValueUsingRegex(title, ruleset.SeasonRegex);
+        string? episode = ExtractValueUsingRegex(title, ruleset.EpisodeRegex);
 
         if (string.IsNullOrEmpty(season) || string.IsNullOrEmpty(episode))
         {
@@ -289,21 +294,19 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     /// <param name="item">The API result item.</param>
     /// <param name="regexRule">The regex rule.</param>
     /// <returns>The extracted value, or null if not found.</returns>
-    private static string? ExtractValueUsingRegex(ApiResultItem item, string? pattern)
+    private static string? ExtractValueUsingRegex(string? source, string? pattern)
     {
         if (string.IsNullOrEmpty(pattern))
         {
             return null;
         }
 
-        string fieldValue = GetFieldValue(item, "title");
-
-        if (string.IsNullOrEmpty(fieldValue))
+        if (string.IsNullOrEmpty(source))
         {
             return null;
         }
 
-        var match = Regex.Match(fieldValue, pattern);
+        var match = Regex.Match(source, pattern);
 
         return match.Success && match.Groups.Count > 1 ? match.Groups[1].Value : null;
     }
