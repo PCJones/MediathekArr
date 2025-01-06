@@ -56,10 +56,24 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
 
         _rulesetsByTopic.Clear();
-        foreach (var group in allRulesets.GroupBy(r => r.Topic))
+        foreach (var ruleset in allRulesets)
         {
-            // Sort each group by priority before adding it
-            _rulesetsByTopic[group.Key] = [.. group.OrderBy(ruleset => ruleset.Priority)];
+            foreach (var topic in ruleset.Topics) // Iterate over all topics for the ruleset
+            {
+                if (!_rulesetsByTopic.TryGetValue(topic, out List<Ruleset>? value))
+                {
+                    value = [];
+                    _rulesetsByTopic[topic] = value;
+                }
+
+                value.Add(ruleset);
+            }
+        }
+
+        // Sort each topic group by priority
+        foreach (var topic in _rulesetsByTopic.Keys.ToList())
+        {
+            _rulesetsByTopic[topic] = _rulesetsByTopic[topic].OrderBy(ruleset => ruleset.Priority).ToList();
         }
     }
 
@@ -259,8 +273,29 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             GetFieldValue(item, "title");
 
         // Extract season and episode from the item using the ruleset
-        string? season = ExtractValueUsingRegex(title, ruleset.SeasonRegex);
-        string? episode = ExtractValueUsingRegex(title, ruleset.EpisodeRegex);
+        string? season;
+        if (ruleset.SeasonRegex != null && StaticSeasonRegex().IsMatch(ruleset.SeasonRegex))
+        {
+            // If SeasonRegex is in the format "S0nnn", use it directly
+            season = ruleset.SeasonRegex[1..];
+        }
+        else
+        {
+            // Otherwise, attempt to extract the value using the regex
+            season = ExtractValueUsingRegex(title, ruleset.SeasonRegex);
+        }
+
+        string? episode;
+        if (ruleset.SeasonRegex != null && StaticEpisodeRegex().IsMatch(ruleset.EpisodeRegex))
+        {
+            // If EpisodeRegex is in the format "E0nnn", use it directly
+            episode = ruleset.EpisodeRegex[1..];
+        }
+        else
+        {
+            // Otherwise, attempt to extract the value using the regex
+            episode = ExtractValueUsingRegex(title, ruleset.EpisodeRegex);
+        }
 
         if (string.IsNullOrEmpty(season) || string.IsNullOrEmpty(episode))
         {
@@ -324,7 +359,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         // Construct the title based on ruleset
         var constructedTitle = BuildTitleFromRegexRules(item, ruleset.TitleRegexRules);
 
-        if (constructedTitle is null)
+        if (string.IsNullOrEmpty(constructedTitle))
         {
             return null;
         }
@@ -361,7 +396,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 			// Construct the title based on ruleset
 			var constructedTitle = BuildTitleFromRegexRules(item, ruleset.TitleRegexRules);
 
-			if (constructedTitle is null)
+			if (string.IsNullOrEmpty(constructedTitle))
 			{
 				return null;
 			}
@@ -422,7 +457,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         // Construct the title based on ruleset
         var constructedTitle = BuildTitleFromRegexRules(item, ruleset.TitleRegexRules);
 
-        if (constructedTitle is null)
+        if (string.IsNullOrEmpty(constructedTitle))
         {
             return null;
         }
@@ -547,7 +582,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     private List<Ruleset> GetRulesetsForTopic(string topic)
     {
-			return _rulesetsByTopic.TryGetValue(topic, out var rulesets) ? rulesets : [];
+        return _rulesetsByTopic.TryGetValue(topic, out var rulesets) ? rulesets : [];
     }
 
     private async Task<(List<MatchedEpisodeInfo> matchedEpisodes, List<ApiResultItem> unmatchedFilteredResultItems)> ApplyRulesetFilters(List<ApiResultItem> results, TvdbData? tvdbData = null)
@@ -825,4 +860,8 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private static partial Regex TitleRegexSymbols();
     [GeneratedRegex(@"\s+")]
     private static partial Regex TitleRegexWhitespace();
+    [GeneratedRegex(@"^S\d{1,4}$")]
+    private static partial Regex StaticSeasonRegex();
+    [GeneratedRegex(@"^E\d{1,4}$")]
+    private static partial Regex StaticEpisodeRegex();
 }

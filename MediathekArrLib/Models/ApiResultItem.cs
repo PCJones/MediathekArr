@@ -9,9 +9,11 @@ public class ApiResultItem
     public string Channel { get; set; }
 
     [JsonPropertyName("topic")]
+    [JsonConverter(typeof(StringSanitizerConverter))]
     public string Topic { get; set; }
 
     [JsonPropertyName("title")]
+    [JsonConverter(typeof(StringSanitizerConverter))]
     public string Title { get; set; }
 
     [JsonPropertyName("description")]

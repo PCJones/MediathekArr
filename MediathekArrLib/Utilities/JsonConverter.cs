@@ -58,3 +58,17 @@ public class NumberOrEmptyConverter<T> : JsonConverter<T>
         writer.WriteNumberValue(Convert.ToDouble(value));
     }
 }
+
+public class StringSanitizerConverter : JsonConverter<string>
+{
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var value = reader.GetString();
+        return value?.Replace('–', '-') ?? string.Empty;
+    }
+
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value);
+    }
+}
