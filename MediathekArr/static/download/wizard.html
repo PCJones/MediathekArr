@@ -94,15 +94,11 @@
             <div id="prowlarrSettings" style="display: none;">
                 <div>
                     <label for="prowlarrHost">Prowlarr Host:</label>
-                    <input type="text" id="prowlarrHost" value="http://localhost" placeholder="http://localhost" />
-                </div>
-                <div>
-                    <label for="prowlarrPort">Prowlarr Port:</label>
-                    <input type="text" id="prowlarrPort" value="9696" placeholder="9696" />
+                    <input type="text" id="prowlarrHost" value="http://localhost:9696" placeholder="http://localhost:9696" />
                 </div>
                 <div>
                     <label for="prowlarrApiKey">Prowlarr API Key:</label>
-                    <input type="password" id="prowlarrApiKey" value="d62025228e6c4274a0e5616e8370a52d" placeholder="Enter your Prowlarr API Key" />
+                    <input type="password" id="prowlarrApiKey" value="" placeholder="Enter your Prowlarr API Key" />
                 </div>
                 <div>
                     <label for="appProfile">Select App Profile:</label>
@@ -126,7 +122,7 @@
         <div id="wizardStep4" style="display: none;">
             <h3>Review and Test Indexer Settings</h3>
             <div id="indexerDetails">
-                <p><strong>Name:</strong> <span id="indexerName">MediathekArr Indexer</span></p>
+                <p><strong>Name:</strong> <span id="indexerName">MediathekArr</span></p>
                 <p><strong>Base URL:</strong> <span id="indexerBaseUrl">http://localhost:5007</span></p>
                 <p><strong>Priority:</strong> <span id="indexerPriority">25</span></p>
                 <p id="indexerDownloadClientIdContainer" style="display: none;"><strong>Download Client ID:</strong> <span id="indexerDownloadClientId">1</span></p>

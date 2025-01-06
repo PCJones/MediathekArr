@@ -240,7 +240,7 @@ public partial class DownloadService
 
     private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch)
     {
-        var completeCategoryDir = Path.Combine(_config.CompletePath, queueItem.Category);
+        var completeCategoryDir = _config.CompletePath;
         _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, completeCategoryDir);
         Directory.CreateDirectory(completeCategoryDir);
 
@@ -301,12 +301,6 @@ public partial class DownloadService
                 sizeInMB = queueItem.Size.Contains("GB") ? size * 1024 : size;
             }
 
-            var downloadFolderPathMapping = Environment.GetEnvironmentVariable("DOWNLOAD_FOLDER_PATH_MAPPING");
-
-            var storagePath = !string.IsNullOrEmpty(downloadFolderPathMapping)
-                ? Path.Combine(downloadFolderPathMapping, queueItem.Category, queueItem.Title + ".mkv")
-                : mkvPath;
-
             // Move completed download to history
             var historyItem = new SabnzbdHistoryItem
             {
@@ -315,7 +309,7 @@ public partial class DownloadService
                 Category = queueItem.Category,
                 Size = (long)(sizeInMB * 1024 * 1024), // Convert MB to bytes
                 DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
-                Storage = storagePath,
+                Storage = completeCategoryDir,
                 Status = queueItem.Status,
                 Id = queueItem.Id
             };

@@ -127,7 +127,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
                     ""name"": ""mediathek"",
                     ""pp"": """",
                     ""script"": ""Default"",
-                    ""dir"": """",
+                    ""dir"": ""{_config.CompletePath.Replace('\\', '/')}"",
                     ""priority"": -100
                 }},
                 {{

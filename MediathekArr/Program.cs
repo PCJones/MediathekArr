@@ -144,10 +144,18 @@ static string GetDefaultPath(string startupPath, string type, ILogger logger)
     if (OperatingSystem.IsWindows())
     {
         defaultPath = Path.Combine(startupPath, "downloads", type);
+        if (!Directory.Exists(defaultPath))
+        {
+            Directory.CreateDirectory(defaultPath);
+        }
     }
     else
     {
         defaultPath = $"/data/mediathek/{type}";
+        if (!Directory.Exists(defaultPath))
+        {
+            Directory.CreateDirectory(defaultPath);
+        }
     }
 
     logger.LogWarning("Using default {Type} path: {DefaultPath}", type, defaultPath);

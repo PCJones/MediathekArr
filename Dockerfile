@@ -34,6 +34,9 @@ COPY --from=build-env /app/out/MediathekArrDownloader /app/MediathekArrDownloade
 COPY docker_start.sh /app/docker_start.sh
 RUN chmod +x /app/docker_start.sh
 
+# Create required directories
+RUN mkdir -p /data/mediathek/incomplete /data/mediathek/complete
+
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV CONFIG_PATH=/app/config
 

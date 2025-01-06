@@ -1,9 +1,35 @@
 #!/bin/bash
 
+# Function to adjust ownership dynamically for mounted directories
+adjust_mounted_volumes() {
+    echo "Adjusting ownership for mounted volumes..."
+    while read -r device mountpoint fstype options dump pass; do
+        # Exclude system directories and the root `/` mount
+        if [[ "$mountpoint" == "/"* ]] && \
+           [[ "$mountpoint" != "/" ]] && \
+           [[ "$mountpoint" != "/proc"* ]] && \
+           [[ "$mountpoint" != "/sys"* ]] && \
+           [[ "$mountpoint" != "/dev"* ]] && \
+           [[ "$mountpoint" != "/run"* ]] && \
+           [[ "$mountpoint" != "/etc"* ]] && \
+           [[ "$mountpoint" != "/lib"* ]] && \
+           [[ "$mountpoint" != "/usr"* ]]; then
+           
+            echo "Checking mounted directory: $mountpoint"
+            if [ -d "$mountpoint" ]; then
+                echo "Setting ownership for $mountpoint"
+                chown -R appuser:appgroup "$mountpoint"
+            else
+                echo "Skipped non-directory mountpoint: $mountpoint"
+            fi
+        fi
+    done < /proc/self/mounts
+}
+
 # Check if running in user mode
 if [ "$1" == "--user-mode" ]; then
     shift
-    
+
     # Start MediathekArrServer
     cd /app/MediathekArrServer
     dotnet MediathekArrServer.dll &
@@ -47,6 +73,9 @@ else
 
     # Adjust ownership of relevant directories
     chown -R appuser:appgroup /app /app/config /data/mediathek
+
+    # Adjust ownership dynamically for all mounted volumes
+    adjust_mounted_volumes
 
     # Switch to the created user and re-execute the script
     exec gosu appuser /bin/bash "$0" --user-mode

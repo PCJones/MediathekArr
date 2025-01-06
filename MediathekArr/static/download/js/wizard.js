@@ -8,7 +8,6 @@ let selectedIndexerDetails = null;
 
 let useProwlarr = false;
 let prowlarrHost = '';
-let prowlarrPort = '';
 let prowlarrApiKey = ''; // TODO debug remove
 let selectedAppProfileId = null;
 
@@ -21,7 +20,7 @@ async function fetchAppProfiles() {
     updateStatus('Fetching Prowlarr app profiles...');
 
     const appProfiles = await fetchWithStatus(
-        `/wizard/appprofiles?prowlarrHost=${encodeURIComponent(prowlarrHost)}&prowlarrPort=${encodeURIComponent(prowlarrPort)}&apiKey=${encodeURIComponent(prowlarrApiKey)}`,
+        `/wizard/appprofiles?prowlarrHost=${encodeURIComponent(prowlarrHost)}&apiKey=${encodeURIComponent(prowlarrApiKey)}`,
         {},
         'App profiles fetched successfully.',
         'Failed to fetch app profiles'
@@ -51,10 +50,9 @@ async function fetchAppProfiles() {
 function proceedToIndexerSelection() {
     if (useProwlarr) {
         prowlarrHost = sanitizeHost(document.getElementById('prowlarrHost').value);
-        prowlarrPort = document.getElementById('prowlarrPort').value;
         prowlarrApiKey = document.getElementById('prowlarrApiKey').value;
-        if (!prowlarrHost || !prowlarrPort || !prowlarrApiKey) {
-            alert('Please enter the Prowlarr Host, Port, and API Key.');
+        if (!prowlarrHost || !prowlarrApiKey) {
+            alert('Please enter the Prowlarr Host, and API Key.');
             return;
         }
         if (!selectedAppProfileId) {
@@ -94,6 +92,9 @@ async function updateOrCreateIndexer() {
     } else {
         payload.appProfileId = selectedAppProfileId;
         payload.enable = true;
+        if (!selectedIndexerDetails) {
+            payload.added = new Date().toISOString();
+        }
     }
 
     const url = `/wizard/indexer${selectedIndexerId ? `/${selectedIndexerId}` : ''}?arrHost=${encodeURIComponent(useProwlarr ? prowlarrHost : sonarrHost)}&apiKey=${encodeURIComponent(useProwlarr ? prowlarrApiKey : apiKey)}&prowlarr=${useProwlarr}`;
@@ -147,7 +148,7 @@ async function fetchIndexers() {
     updateStatus('Fetching existing Indexers...');
 
     const url = useProwlarr
-        ? `/wizard/indexers?arrHost=${encodeURIComponent(prowlarrHost)}:${encodeURIComponent(prowlarrPort)}&apiKey=${encodeURIComponent(prowlarrApiKey)}&prowlarr=true`
+        ? `/wizard/indexers?arrHost=${encodeURIComponent(prowlarrHost)}&apiKey=${encodeURIComponent(prowlarrApiKey)}&prowlarr=true`
         : `/wizard/indexers?arrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`;
     const headers = {};
 
@@ -540,6 +541,8 @@ async function setProwlarrIndexerDownloadClient(indexerId) {
         'Sonarr indexers fetched successfully.',
         'Failed to fetch Sonarr indexers'
     );
+
+    // TODO if Failed to fetch Sonarr indexers we still continue to setup completed
 
     if (sonarrIndexers) {
         const matchingIndexers = sonarrIndexers.filter(indexer =>
