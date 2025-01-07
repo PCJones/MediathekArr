@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
@@ -20,7 +21,8 @@ public class MediathekArrConsoleFormatter : ConsoleFormatter
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
     {
         string assemblyName = System.Reflection.Assembly.GetEntryAssembly().GetName().Name; // Get Display name of Assembly, allowing us to do some nice formatting
-        textWriter.WriteLine($"{logEntry.LogLevel} in {assemblyName}: {logEntry.Formatter(logEntry.State, logEntry.Exception)}");
+        textWriter.WriteLine($"{DateTime.Now:dd/MM/yy HH:mm:ss.fff}: [{assemblyName}] {logEntry.LogLevel}");
+        textWriter.WriteLine($"{logEntry.Formatter(logEntry.State, logEntry.Exception)}")
     }
 }
 
@@ -49,9 +51,9 @@ public class MediathekArrLogger : ILogger
         var assemblyName = Assembly.GetEntryAssembly().GetName().Name;
         var originalColour = Console.ForegroundColor;
         Console.ForegroundColor = _config.LogLevelMapping[logLevel];
-        var logMessage = $"[{assemblyName}] {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {logLevel} - {_name}: {formatter(state, exception)}";
-        Console.WriteLine(logMessage);
+        Console.WriteLine($"{DateTime.Now:dd/MM/yy HH:mm:ss.fff}: [{assemblyName}] {logLevel} - {_name}");
         Console.ForegroundColor = originalColour;
+        Console.WriteLine($"{formatter(state, exception)}");
     }
 }
 
@@ -87,8 +89,8 @@ public class ColourConsoleLoggerConfiguration
 {
     public Dictionary<LogLevel, ConsoleColor> LogLevelMapping { get; set; } = new Dictionary<LogLevel, ConsoleColor>
     {
-        [LogLevel.Information] = ConsoleColor.Green,
-        [LogLevel.Warning] = ConsoleColor.Yellow,
+        [LogLevel.Information] = ConsoleColor.White,
+        [LogLevel.Warning] = ConsoleColor.DarkYellow,
         [LogLevel.Error] = ConsoleColor.Red,
         [LogLevel.Critical] = ConsoleColor.Magenta
     };
@@ -100,8 +102,8 @@ public static class LoggerExtensions
     {
         builder.ClearProviders();
         builder.AddProvider(new MediathekArrLoggerProvider(new ColourConsoleLoggerConfiguration()));
-        builder.AddConsole(options => options.FormatterName = MediathekArrConsoleFormatter.FormatterName);
-        builder.AddConsoleFormatter<MediathekArrConsoleFormatter, ConsoleFormatterOptions>();
+        //builder.AddConsole(options => options.FormatterName = MediathekArrConsoleFormatter.FormatterName);
+        //builder.AddConsoleFormatter<MediathekArrConsoleFormatter, ConsoleFormatterOptions>();
         return builder;
     }
 }
