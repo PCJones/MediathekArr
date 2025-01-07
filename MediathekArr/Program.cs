@@ -1,9 +1,12 @@
 using MediathekArr.Services;
+using MediathekArrLib.Utilities;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Logging.AddMediathekArrLogging();
 builder.Services.AddOpenApi();
 
 builder.Services.AddMemoryCache();
@@ -16,7 +19,9 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
-});
+})
+.AddHttpMessageHandler<MediathekArrLoggingHandler>(); // Add sensitive query parameters to log output
+builder.Services.TryAddTransient<MediathekArrLoggingHandler>();
 builder.Services.AddSingleton<MediathekSearchService>();
 builder.Services.AddSingleton<ItemLookupService>();
 builder.Services.AddSingleton<DownloadService>();
