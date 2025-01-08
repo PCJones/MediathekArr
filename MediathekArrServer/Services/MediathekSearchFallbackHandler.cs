@@ -209,9 +209,9 @@ public partial class MediathekSearchFallbackHandler
 
         var initialResults = responseObject.Result.Results;
         var resultsFilteredByRuntime = FilterByRuntime(initialResults, episode.Runtime);
-        var resultsByAiredDate = FilterByAiredDate(resultsFilteredByRuntime, episode.Aired!.Value).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
-        var resultsByTitleDate = FilterByTitleDate(resultsFilteredByRuntime, episode.Aired.Value).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
-        var resultsByDescriptionDate = FilterByDescriptionDate(resultsFilteredByRuntime, episode.Aired.Value).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
+        var resultsByAiredDate = FilterByAiredDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
+        var resultsByTitleDate = FilterByTitleDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
+        var resultsByDescriptionDate = FilterByDescriptionDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(resultsFilteredByRuntime, episode.Name).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         List<ApiResultItem> resultsBySeasonEpisodeMatch = [];
         // if more than 3 results we assume episode title match wasn't correct
@@ -265,16 +265,25 @@ public partial class MediathekSearchFallbackHandler
             .ToList();
     }
 
-    private static List<ApiResultItem> FilterByAiredDate(List<ApiResultItem> results, DateTime airedDate)
+    private static List<ApiResultItem> FilterByAiredDate(List<ApiResultItem> results, DateTime? airedDate)
     {
+        if (airedDate is null)
+        {
+            return [];
+        }
         return results.Where(item =>
             ConvertToBerlinTimezone(UnixTimeStampToDateTime(item.Timestamp)).Date == airedDate)
             .ToList();
     }
 
-    private static List<ApiResultItem> FilterByTitleDate(List<ApiResultItem> results, DateTime airedDate)
+    private static List<ApiResultItem> FilterByTitleDate(List<ApiResultItem> results, DateTime? airedDate)
     {
-        var formattedAiredDate = airedDate.ToString("yyyy-MM-dd");
+        if (airedDate is null)
+        {
+            return [];
+        }
+
+        var formattedAiredDate = airedDate.Value.ToString("yyyy-MM-dd");
 
         return results.Where(item =>
         {
@@ -283,9 +292,14 @@ public partial class MediathekSearchFallbackHandler
         }).ToList();
     }
 
-    private static List<ApiResultItem> FilterByDescriptionDate(List<ApiResultItem> results, DateTime airedDate)
+    private static List<ApiResultItem> FilterByDescriptionDate(List<ApiResultItem> results, DateTime? airedDate)
     {
-        var formattedAiredDate = airedDate.ToString("yyyy-MM-dd");
+        if (airedDate is null)
+        {
+            return [];
+        }
+
+        var formattedAiredDate = airedDate.Value.ToString("yyyy-MM-dd");
 
         return results.Where(item =>
         {

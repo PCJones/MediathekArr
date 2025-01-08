@@ -8,7 +8,7 @@ let selectedIndexerDetails = null;
 
 let useProwlarr = false;
 let prowlarrHost = '';
-let prowlarrApiKey = ''; // TODO debug remove
+let prowlarrApiKey = '';
 let selectedAppProfileId = null;
 
 function toggleProwlarrSettings(isChecked) {
@@ -579,7 +579,8 @@ async function setProwlarrIndexerDownloadClient(indexerId) {
         }
     }
 
-    return true;
+    alert('Failed to update the indexer with the download client ID.');
+    return false;
 }
 
 async function updateOrCreateDownloadClient() {
