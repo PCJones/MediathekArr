@@ -6,7 +6,7 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Logging.AddMediathekArrLogging();
+builder.Logging.AddMediathekArrLogger();
 builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient("MediathekClient", client =>
@@ -19,34 +19,14 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
 })
-.AddHttpMessageHandler<MediathekArrLoggingHandler>(); // Add sensitive query parameters to log output
-builder.Services.TryAddTransient<MediathekArrLoggingHandler>();
+.AddHttpMessageHandler<HttpClientLoggingHandler>(); // Add sensitive query parameters to log output
+builder.Services.TryAddTransient<HttpClientLoggingHandler>();
 
 builder.Services.AddHostedService<RulesetBackgroundService>();
 builder.Services.AddSingleton<MediathekSearchService>();
 builder.Services.AddSingleton<ItemLookupService>();
 
 var app = builder.Build();
-
-// Middleware to log all incoming requests
-app.Use(async (context, next) =>
-{
-    // Log the incoming request details
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    var request = context.Request;
-    logger.LogInformation("Incoming Request: {method} {url}", request.Method, request.Path + request.QueryString);
-
-    // Check if the request is a POST and has a body
-    if (request.Method == HttpMethods.Post && request.ContentLength > 0)
-    {
-        // Enable buffering so the request can be read multiple times
-        request.EnableBuffering();
-    }
-
-    // Call the next middleware in the pipeline
-    await next.Invoke();
-});
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

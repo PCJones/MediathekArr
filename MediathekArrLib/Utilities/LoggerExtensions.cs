@@ -7,25 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Logging.Console;
 
 namespace MediathekArrLib.Utilities;
 
-public class MediathekArrConsoleFormatter : ConsoleFormatter
-{
-    public const string FormatterName = "MediathekArr";
-
-    public MediathekArrConsoleFormatter() : base(FormatterName) { } // Give this Formatter a name
-
-    public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
-    {
-        string assemblyName = System.Reflection.Assembly.GetEntryAssembly().GetName().Name; // Get Display name of Assembly, allowing us to do some nice formatting
-        textWriter.WriteLine($"{DateTime.Now:dd/MM/yy HH:mm:ss.fff}: [{assemblyName}] {logEntry.LogLevel}");
-        textWriter.WriteLine($"{logEntry.Formatter(logEntry.State, logEntry.Exception)}")
-    }
-}
-
+/// <summary>
+/// Generic Logger for MediathekArr
+/// </summary>
 public class MediathekArrLogger : ILogger
 {
     private readonly string _name;
@@ -43,20 +30,21 @@ public class MediathekArrLogger : ILogger
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {
-        if (!IsEnabled(logLevel))
-        {
-            return;
-        }
+        if (!IsEnabled(logLevel)) return;
 
         var assemblyName = Assembly.GetEntryAssembly().GetName().Name;
-        var originalColour = Console.ForegroundColor;
-        Console.ForegroundColor = _config.LogLevelMapping[logLevel];
-        Console.WriteLine($"{DateTime.Now:dd/MM/yy HH:mm:ss.fff}: [{assemblyName}] {logLevel} - {_name}");
-        Console.ForegroundColor = originalColour;
-        Console.WriteLine($"{formatter(state, exception)}");
+        var originalTextColour = Console.ForegroundColor;
+        Console.ForegroundColor = _config.LogLevelTextColourMapping.TryGetValue(logLevel, out ConsoleColor loggingTextColour) ? loggingTextColour : originalTextColour;
+        string logLevelString = _config.LogLevelAbbreviationMapping.TryGetValue(logLevel, out string logLevelAbbreviation) ? logLevelAbbreviation : logLevel.ToString();
+        Console.WriteLine($"[{assemblyName}] {logLevelString}: {_name} - {formatter(state, exception)}");
+        Console.ForegroundColor = originalTextColour;
     }
 }
 
+/// <summary>
+/// ILogger Provider for <see cref="MediathekArrLogger"/>
+/// </summary>
+/// <param name="config"></param>
 public class MediathekArrLoggerProvider(ColourConsoleLoggerConfiguration config) : ILoggerProvider
 {
     private readonly ConcurrentDictionary<string, MediathekArrLogger> _loggers = new();
@@ -74,7 +62,51 @@ public class MediathekArrLoggerProvider(ColourConsoleLoggerConfiguration config)
     }
 }
 
-public class MediathekArrLoggingHandler(ILogger<MediathekArrLoggingHandler> logger) : DelegatingHandler
+
+/// <summary>
+/// Console Colour configuration
+/// </summary>
+public class ColourConsoleLoggerConfiguration
+{
+    public Dictionary<LogLevel, ConsoleColor> LogLevelTextColourMapping { get; set; } = new Dictionary<LogLevel, ConsoleColor>
+    {
+        [LogLevel.Trace] = ConsoleColor.Gray,
+        [LogLevel.Debug] = ConsoleColor.Blue,
+        [LogLevel.Information] = ConsoleColor.White,
+        [LogLevel.Warning] = ConsoleColor.DarkYellow,
+        [LogLevel.Error] = ConsoleColor.Red,
+        [LogLevel.Critical] = ConsoleColor.Magenta
+    };
+
+    public Dictionary<LogLevel, string> LogLevelAbbreviationMapping { get; set; } = new Dictionary<LogLevel, string>
+    {
+        [LogLevel.Trace] = "trce",
+        [LogLevel.Debug] = "dbug",
+        [LogLevel.Information] = "info",
+        [LogLevel.Warning] = "warn",
+        [LogLevel.Error] = "fail",
+        [LogLevel.Critical] = "crit"
+    };
+}
+
+/// <summary>
+/// Extensions to inject MediathekArr Logger
+/// </summary>
+public static class LoggerExtensions
+{
+    public static ILoggingBuilder AddMediathekArrLogger(this ILoggingBuilder builder)
+    {
+        builder.ClearProviders();
+        builder.AddProvider(new MediathekArrLoggerProvider(new ColourConsoleLoggerConfiguration()));
+        return builder;
+    }
+}
+
+/// <summary>
+/// Logging Handler for HttpClient
+/// </summary>
+/// <param name="logger"></param>
+public class HttpClientLoggingHandler(ILogger<HttpClientLoggingHandler> logger) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
@@ -82,28 +114,5 @@ public class MediathekArrLoggingHandler(ILogger<MediathekArrLoggingHandler> logg
         var response = await base.SendAsync(request, cancellationToken);
         logger.LogInformation("Finished processing HTTP request {Method} {Url}", request.Method, request.RequestUri);
         return response;
-    }
-}
-
-public class ColourConsoleLoggerConfiguration
-{
-    public Dictionary<LogLevel, ConsoleColor> LogLevelMapping { get; set; } = new Dictionary<LogLevel, ConsoleColor>
-    {
-        [LogLevel.Information] = ConsoleColor.White,
-        [LogLevel.Warning] = ConsoleColor.DarkYellow,
-        [LogLevel.Error] = ConsoleColor.Red,
-        [LogLevel.Critical] = ConsoleColor.Magenta
-    };
-}
-
-public static class LoggerExtensions
-{
-    public static ILoggingBuilder AddMediathekArrLogging(this ILoggingBuilder builder)
-    {
-        builder.ClearProviders();
-        builder.AddProvider(new MediathekArrLoggerProvider(new ColourConsoleLoggerConfiguration()));
-        //builder.AddConsole(options => options.FormatterName = MediathekArrConsoleFormatter.FormatterName);
-        //builder.AddConsoleFormatter<MediathekArrConsoleFormatter, ConsoleFormatterOptions>();
-        return builder;
     }
 }
