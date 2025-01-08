@@ -118,7 +118,7 @@ public partial class MediathekSearchFallbackHandler
                 Length = adjustedSize,
                 Type = "application/x-nzb"
             },
-            Attributes = NewznabUtils.GenerateAttributes(yearSeason ?? season, categoryValues)
+            Attributes = NewznabUtils.GenerateAttributes(yearSeason ?? season, episode, categoryValues)
         };
     }
 

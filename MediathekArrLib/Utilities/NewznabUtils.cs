@@ -1,11 +1,10 @@
-﻿using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
+﻿using MediathekArrLib.Models.Newznab;
 using System.Xml.Serialization;
 
 namespace MediathekArrLib.Utilities;
 public static class NewznabUtils
 {
-    public static List<Models.Newznab.Attribute> GenerateAttributes(string? season, string[] categoryValues)
+    public static List<Models.Newznab.Attribute> GenerateAttributes(string? season, string? episode, string[] categoryValues)
     {
         var attributes = new List<Models.Newznab.Attribute>();
 
@@ -17,6 +16,11 @@ public static class NewznabUtils
         if (season != null)
         {
             attributes.Add(new Models.Newznab.Attribute { Name = "season", Value = season });
+        }
+
+        if (episode != null)
+        {
+            attributes.Add(new Models.Newznab.Attribute { Name = "episode", Value = episode });
         }
 
         return attributes;

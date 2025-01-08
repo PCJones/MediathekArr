@@ -839,7 +839,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 Length = adjustedSize,
                 Type = "application/x-nzb"
             },
-            Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo.Episode.PaddedSeason, categoryValues)
+            Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues)
         };
     }
 
@@ -856,8 +856,6 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     public static bool ShouldSkipItem(ApiResultItem item)
     {
-        return _skipTitleKeywords.Any(item.Title.Contains) || _skipUrlKeywords.Any(item.UrlWebsite.Contains);
-        // TODO temp debug
         return item.UrlVideo.EndsWith(".m3u8") || _skipTitleKeywords.Any(item.Title.Contains) || _skipUrlKeywords.Any(item.UrlWebsite.Contains);
     }
 
