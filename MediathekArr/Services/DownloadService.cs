@@ -35,7 +35,7 @@ public partial class DownloadService
         CleanupAbandondedFilesInCompleteDirectory();
 
         // Ensure FFmpeg is available
-        Task.Run(EnsureFfmpegExistsAsync).Wait();
+        Task.Run(() => FfmpegUtils.EnsureFfmpegExistsAsync(_ffmpegPath, _isWindows, _logger, _httpClient)).Wait();
     }
 
     private void CleanupAbandondedFilesInCompleteDirectory()
@@ -330,86 +330,63 @@ public partial class DownloadService
         {
             _logger.LogError("Subtitle file not found for conversion. Path: {SubtitlePath}. Continuing without subtitles.", subtitlePath);
             subtitlesAvailable = false;
-
         }
 
         queueItem.Status = SabnzbdDownloadStatus.Extracting;
         _logger.LogInformation("Starting conversion of {Title} from MP4 to MKV. MP4 Path: {Mp4Path}, MKV Path: {MkvPath}", queueItem.Title, mp4Path, mkvPath);
 
-        var ffmpegArgs = subtitlesAvailable
-            ? $"-y -i \"{mp4Path}\" -i \"{subtitlePath}\" -map 0:v -map 0:a -map 1 -c copy -map_metadata -1 " +
-              $"-metadata:s:v:0 language=ger -metadata:s:a:0 language=ger -metadata:s:s:0 language=de \"{mkvPath}\""
-            : $"-y -i \"{mp4Path}\" -map 0:v -map 0:a -c copy -map_metadata -1 " +
-              $"-metadata:s:v:0 language=ger -metadata:s:a:0 language=ger \"{mkvPath}\"";
+        var (success, exitCode, errorOutput) = await FfmpegUtils.StartFfmpegProcessAsync(_ffmpegPath, mp4Path, subtitlePath, mkvPath, subtitlesAvailable, queueItem.Title, _logger);
 
-
-        var process = new Process
+        if (success)
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = _ffmpegPath,
-                Arguments = ffmpegArgs,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
-        };
+            queueItem.Status = SabnzbdDownloadStatus.Completed;
+            _logger.LogInformation("Conversion completed successfully for {Title}. Output path: {MkvPath}", queueItem.Title, mkvPath);
+        }
+        else
+        {
+            queueItem.Status = SabnzbdDownloadStatus.Failed;
+            _logger.LogError("FFmpeg conversion failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, exitCode, errorOutput);
+        }
 
+        DeleteTemporaryFiles(mp4Path, subtitlePath, subtitlesAvailable);
+
+        double sizeInMB = 0;
+        if (double.TryParse(queueItem.Size.Replace("GB", "").Replace("MB", "").Trim(), out double size))
+        {
+            sizeInMB = queueItem.Size.Contains("GB") ? size * 1024 : size;
+        }
+
+        // Move completed download to history
+        var historyItem = new SabnzbdHistoryItem
+        {
+            Title = $"{queueItem.Title}.mkv",
+            NzbName = queueItem.Title,
+            Category = queueItem.Category,
+            Size = (long)(sizeInMB * 1024 * 1024), // Convert MB to bytes
+            DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
+            Storage = mkvPath,
+            Status = queueItem.Status,
+            Id = queueItem.Id
+        };
+        _downloadHistory.Add(historyItem);
+
+        _logger.LogInformation("Download history updated for {Title}. Status: {Status}, Download Time: {DownloadTime}s, Size: {Size} bytes",
+            queueItem.Title, queueItem.Status, historyItem.DownloadTime, historyItem.Size);
+    }
+
+    public void DeleteTemporaryFiles(string mp4Path, string subtitlePath, bool subtitlesAvailable)
+    {
         try
         {
-            process.Start();
-            _logger.LogInformation("FFmpeg process started for {Title} with arguments: {Arguments}", queueItem.Title, ffmpegArgs);
-
-            var standardErrorTask = process.StandardError.ReadToEndAsync();
-
-            await process.WaitForExitAsync();
-            string ffmpegOutput = await standardErrorTask;
-
-            if (process.ExitCode == 0)
-            {
-                queueItem.Status = SabnzbdDownloadStatus.Completed;
-                _logger.LogInformation("Conversion completed successfully for {Title}. Output path: {MkvPath}", queueItem.Title, mkvPath);
-            }
-            else
-            {
-                queueItem.Status = SabnzbdDownloadStatus.Failed;
-                _logger.LogError("FFmpeg conversion failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, process.ExitCode, ffmpegOutput);
-            }
-
             File.Delete(mp4Path);
             if (subtitlesAvailable)
             {
                 File.Delete(subtitlePath);
             }
-
-            double sizeInMB = 0;
-            if (double.TryParse(queueItem.Size.Replace("GB", "").Replace("MB", "").Trim(), out double size))
-            {
-                sizeInMB = queueItem.Size.Contains("GB") ? size * 1024 : size;
-            }
-
-            // Move completed download to history
-            var historyItem = new SabnzbdHistoryItem
-            {
-                Title = $"{queueItem.Title}.mkv",
-                NzbName = queueItem.Title,
-                Category = queueItem.Category,
-                Size = (long)(sizeInMB * 1024 * 1024), // Convert MB to bytes
-                DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
-                Storage = mkvPath,
-                Status = queueItem.Status,
-                Id = queueItem.Id
-            };
-            _downloadHistory.Add(historyItem);
-
-            _logger.LogInformation("Download history updated for {Title}. Status: {Status}, Download Time: {DownloadTime}s, Size: {Size} bytes",
-                queueItem.Title, queueItem.Status, historyItem.DownloadTime, historyItem.Size);
         }
         catch (Exception ex)
         {
-            queueItem.Status = SabnzbdDownloadStatus.Failed;
-            _logger.LogError(ex, "An error occurred during the conversion of {Title} from MP4 to MKV.", queueItem.Title);
+            _logger.LogError(ex, "Error deleting temporary files.");
         }
     }
 
