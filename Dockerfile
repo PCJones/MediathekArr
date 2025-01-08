@@ -20,8 +20,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 RUN apt-get update && apt-get install -y \
     tar \
     xz-utils \
-    gosu && \
-    rm -rf /var/lib/apt/lists/*
+    gosu \
+    wget \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add MKVToolNix repository and install
+RUN wget -O /etc/apt/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/debian/ bookworm main" > /etc/apt/sources.list.d/mkvtoolnix.download.list && \
+    apt-get update && apt-get install -y \
+    mkvtoolnix
 
 # Set working directory
 WORKDIR /app

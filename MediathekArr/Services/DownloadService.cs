@@ -18,7 +18,7 @@ public partial class DownloadService
     private readonly List<SabnzbdHistoryItem> _downloadHistory = [];
     private static readonly HttpClient _httpClient = new();
     private static readonly SemaphoreSlim _semaphore = new(2); // Limit concurrent downloads to 2
-    private readonly string _ffmpegPath;
+    private readonly string _mkvMergePath;
     private readonly bool _isWindows;
 
     public DownloadService(ILogger<DownloadService> logger, Config config)
@@ -29,13 +29,13 @@ public partial class DownloadService
 
         // Set complete_dir based on the application's startup path
         var startupPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-        _ffmpegPath = Path.Combine(startupPath, "ffmpeg", _isWindows ? "ffmpeg.exe" : "ffmpeg");
+        _mkvMergePath = _isWindows ? Path.Combine(startupPath, "mkvtoolnix", "mkvmerge.exe") : "mkvmerge";
 
         InitializeIncompleteDirectory();
         CleanupAbandondedFilesInCompleteDirectory();
 
-        // Ensure FFmpeg is available
-        Task.Run(() => FfmpegUtils.EnsureFfmpegExistsAsync(_ffmpegPath, _isWindows, _logger, _httpClient)).Wait();
+        // Ensure Mkvmerge is available
+        Task.Run(() => MkvMergeUtils.EnsureMkvMergeExistsAsync(_mkvMergePath, _logger, _httpClient)).Wait();
     }
 
     private void CleanupAbandondedFilesInCompleteDirectory()
@@ -335,7 +335,7 @@ public partial class DownloadService
         queueItem.Status = SabnzbdDownloadStatus.Extracting;
         _logger.LogInformation("Starting conversion of {Title} from MP4 to MKV. MP4 Path: {Mp4Path}, MKV Path: {MkvPath}", queueItem.Title, mp4Path, mkvPath);
 
-        var (success, exitCode, errorOutput) = await FfmpegUtils.StartFfmpegProcessAsync(_ffmpegPath, mp4Path, subtitlePath, mkvPath, subtitlesAvailable, queueItem.Title, _logger);
+        var (success, exitCode, errorOutput) = await MkvMergeUtils.StartMkvmergeProcessAsync(_mkvMergePath, mp4Path, subtitlePath, mkvPath, subtitlesAvailable, queueItem.Title, _logger);
 
         if (success)
         {
@@ -345,7 +345,7 @@ public partial class DownloadService
         else
         {
             queueItem.Status = SabnzbdDownloadStatus.Failed;
-            _logger.LogError("FFmpeg conversion failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, exitCode, errorOutput);
+            _logger.LogError("Mkvmerge conversion failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, exitCode, errorOutput);
         }
 
         DeleteTemporaryFiles(mp4Path, subtitlePath, subtitlesAvailable);
