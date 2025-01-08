@@ -94,4 +94,20 @@ public record TvdbData(int Id, string Name, [property: JsonPropertyName("german_
 
         return null;
     }
+
+    /// <summary>
+    /// Finds a specific episode by absolute episode number. Dangerous, unless the show only has one season or absolute season numbers
+    /// </summary>
+    /// <param name="absoluteEpisodeNumber">The absolute episode number of the episode.</param>
+    /// <returns>The TvdbEpisode if found, or null if not found.</returns>
+    public TvdbEpisode? FindEpisodeByAbsoluteEpisodeNumber(int absoluteEpisodeNumber)
+    {
+        if (absoluteEpisodeNumber == 0)
+        {
+            return null;
+        }
+
+        return Episodes?.FirstOrDefault(episode =>
+            episode.EpisodeNumber == absoluteEpisodeNumber);
+    }
 }

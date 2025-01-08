@@ -323,6 +323,51 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         );
     }
 
+    private async Task<MatchedEpisodeInfo?> MatchesAbsoluteEpisodeNumber(ApiResultItem item, Ruleset ruleset)
+    {
+        // Fetch TVDB episode information
+        var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+
+        if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
+        {
+            return null;
+        }
+
+        // Use generated title if available, otherwise read from mediathek response
+        string? title = ruleset.TitleRegexRules.Count != 0 ?
+            BuildTitleFromRegexRules(item, ruleset.TitleRegexRules) :
+            GetFieldValue(item, "title");
+
+        // Extract absolute episode number from the item using the ruleset
+
+        string? absoluteEpisode = ExtractValueUsingRegex(title, ruleset.EpisodeRegex);
+
+        if (string.IsNullOrEmpty(absoluteEpisode))
+        {
+            return null;
+        }
+
+        if (!int.TryParse(absoluteEpisode, out var absoluteEpisodeNumber))
+        {
+            return null; // Invalid season or episode format
+        }
+
+        // Find the matching episode in the TVDB data
+        var matchedEpisode = tvdbData.FindEpisodeByAbsoluteEpisodeNumber(absoluteEpisodeNumber);
+
+        if (matchedEpisode == null)
+        {
+            return null; // No matching episode found
+        }
+
+        return new MatchedEpisodeInfo(
+            Episode: matchedEpisode,
+            Item: item,
+            ShowName: string.IsNullOrEmpty(tvdbData.Name) ? tvdbData.GermanName : tvdbData.Name,
+            MatchedTitle: $"E{absoluteEpisode}"
+        );
+    }
+
     /// <summary>
     /// Extracts a value from the item using the specified regex rule.
     /// </summary>
@@ -626,6 +671,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                         break;
                     case MatchingStrategy.ItemTitleEqualsAirdate:
                         matchInfo = await MatchesItemTitleEqualsAirdate(item, ruleset);
+                        break;
+                    case MatchingStrategy.ByAbsoluteEpisodeNumber:
+                        matchInfo = await MatchesAbsoluteEpisodeNumber(item, ruleset);
                         break;
                 }
 
