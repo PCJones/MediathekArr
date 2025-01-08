@@ -85,23 +85,27 @@ public partial class MediathekSearchFallbackHandler
     private static Item CreateRssItem(ApiResultItem item, string? yearSeason, string? season, string? episode, TvdbData? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
     {
         var adjustedSize = (long)(item.Size * sizeMultiplier);
+        if (!string.IsNullOrEmpty(item.UrlSubtitle))
+        {
+            adjustedSize += 15000000; // Add 15MB to size if subs are available
+        }
         var parsedTitle = GenerateTitle(tvdbData, item.Topic, item.Title, quality, formattedDate, season, episode);
         var formattedTitle = FormatTitle(parsedTitle);
         //var translatedTitle = TranslateTitle(formattedTitle, tvdbData);
         var translatedTitle = formattedTitle; // TODO see if translation is needed
         var encodedTitle = Convert.ToBase64String(Encoding.UTF8.GetBytes(translatedTitle));
-        var encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+        var encodedVideoUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+        var encodedSubtitleUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(item.UrlSubtitle));
 
         // Generate the full URL for the fake_nzb_download endpoint
-        var fakeDownloadUrl = $"/api/fake_nzb_download?encodedUrl={encodedUrl}&encodedTitle={encodedTitle}";
-
+        var fakeDownloadUrl = $"/api/fake_nzb_download?encodedVideoUrl={encodedVideoUrl}&encodedSubtitleUrl={encodedSubtitleUrl}&encodedTitle={encodedTitle}";
         return new Item
         {
             Title = translatedTitle,
             Guid = new Guid
             {
                 IsPermaLink = true,
-                Value = $"{item.UrlWebsite}#{quality}{(string.IsNullOrEmpty(formattedDate) ? "" : "-a")}",
+                Value = $"{item.UrlWebsite}#{quality}{(string.IsNullOrEmpty(formattedDate) ? "" : "-a")}-{item.Language}",
             },
             Link = url,
             Comments = item.UrlWebsite,
@@ -123,7 +127,8 @@ public partial class MediathekSearchFallbackHandler
     private static string GenerateTitle(TvdbData? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
     {
         var showName = tvdbData?.Name ?? topic;
-       
+        var language = title.Contains("(Englisch)") ? "ENGLISH" : "GERMAN";
+
         if (!string.IsNullOrEmpty(formattedDate))
         {
             var cleanedTitle = EpisodeRegex().Replace(title, "").Trim();
@@ -133,7 +138,7 @@ public partial class MediathekSearchFallbackHandler
                 cleanedTitle = null;
             }
 
-            return $"{showName}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
         var episodePattern = @"S\d{1,4}/E\d{1,4}";
         var match = Regex.Match(title, episodePattern);
@@ -151,18 +156,18 @@ public partial class MediathekSearchFallbackHandler
             if (seasonOverride is null || episodeOverride is null)
             {
                 // use data from mediathek
-                return $"{topic}.{seasonAndEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+                return $"{topic}.{seasonAndEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
             }
 
             // use overwrite data
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
-            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
 
         if (seasonOverride is null || episodeOverride is null)
         {
-            return $"{showName} - {title}.GERMAN.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
+            return $"{showName} - {title}.{language}.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
         }
         else
         {
@@ -190,6 +195,9 @@ public partial class MediathekSearchFallbackHandler
                      .Replace("Ö", "Oe")
                      .Replace("Ü", "Ue");
 
+        // Remove "Englisch" at the end
+        title = title.Replace(".(Englisch)", "");
+
         // Remove unwanted characters
         title = TitleRegexUnd().Replace(title, "und");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
@@ -209,7 +217,6 @@ public partial class MediathekSearchFallbackHandler
 
         var initialResults = responseObject.Result.Results;
         var resultsFilteredByRuntime = FilterByRuntime(initialResults, episode.Runtime);
-        var resultsByAiredDate = FilterByAiredDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         var resultsByTitleDate = FilterByTitleDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         var resultsByDescriptionDate = FilterByDescriptionDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(resultsFilteredByRuntime, episode.Name).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
@@ -220,23 +227,16 @@ public partial class MediathekSearchFallbackHandler
             resultsByEpisodeTitleMatch.Clear();
         }
 
-        // if we have episode title match that is the best we got
-        if (resultsByEpisodeTitleMatch.Count > 0)
+        if (resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
         {
-            // we ignore air date in this case as it is not as reliable
-            resultsByAiredDate.Clear();
-        }
-
-        if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
-        {
-            // Only trust Mediathek season/episode if no other match:
+            // Only trust Mediathek season/episode if no other match (aside from airedDate):
             resultsBySeasonEpisodeMatch =
                 FilterBySeasonEpisodeMatch(resultsFilteredByRuntime, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
                 .Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList(); ;
         }
 
         // HashSet to remove duplicates
-        HashSet<ApiResultItem> filteredResults = [.. resultsByAiredDate, .. resultsByTitleDate, .. resultsByDescriptionDate, .. resultsByEpisodeTitleMatch, .. resultsBySeasonEpisodeMatch];
+        HashSet<ApiResultItem> filteredResults = [ .. resultsByTitleDate, .. resultsByDescriptionDate, .. resultsByEpisodeTitleMatch, .. resultsBySeasonEpisodeMatch];
 
         // Create a filtered API response
         var filteredApiResponse = new MediathekApiResponse

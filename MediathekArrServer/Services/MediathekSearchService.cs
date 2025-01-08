@@ -19,7 +19,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private readonly ItemLookupService _itemLookupService = itemLookupService;
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
-    private static readonly string[] _skipTitleKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "(Gebärdensprache)", "(mit Gebärdensprache)", "Trailer", "Outtakes:"];
+    private static readonly string[] _skipTitleKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "Gebärdensprache", "Trailer", "Outtakes:"];
     private static readonly string[] _skipUrlKeywords = ["YXVkaW9kZXNrcmlwdGlvbg"]; // base64 for ARD, YXVkaW9kZXNrcmlwdGlvbg = audiodeskription
     private static readonly string[] _queryFields = ["topic", "title"];
     private readonly ConcurrentDictionary<string, List<Ruleset>> _rulesetsByTopic = new();
@@ -804,16 +804,21 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     private static Item CreateRssItem(MatchedEpisodeInfo matchedEpisodeInfo, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, EpisodeType episodeType)
     {
+        var item = matchedEpisodeInfo.Item;
         var adjustedSize = (long)(matchedEpisodeInfo.Item.Size * sizeMultiplier);
+        if (!string.IsNullOrEmpty(matchedEpisodeInfo.Item.UrlSubtitle))
+        {
+            adjustedSize += 15000000; // Add 15MB to size if subs are available
+        }
         var parsedTitle = GenerateTitle(matchedEpisodeInfo, quality, episodeType);
         var formattedTitle = FormatTitle(parsedTitle);
         var translatedTitle = formattedTitle;
         var encodedTitle = Convert.ToBase64String(Encoding.UTF8.GetBytes(translatedTitle));
-        var encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+        var encodedVideoUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+        var encodedSubtitleUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(item.UrlSubtitle));
 
         // Generate the full URL for the fake_nzb_download endpoint
-        var fakeDownloadUrl = $"/api/fake_nzb_download?encodedUrl={encodedUrl}&encodedTitle={encodedTitle}";
-        var item = matchedEpisodeInfo.Item;
+        var fakeDownloadUrl = $"/api/fake_nzb_download?encodedVideoUrl={encodedVideoUrl}&encodedSubtitleUrl={encodedSubtitleUrl}&encodedTitle={encodedTitle}";
 
         return new Item
         {
@@ -821,7 +826,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             Guid = new Guid
             {
                 IsPermaLink = true,
-					Value = $"{item.UrlWebsite}#{quality}{(episodeType == EpisodeType.Daily ? "" : "-d")}",
+					Value = $"{item.UrlWebsite}#{quality}{(episodeType == EpisodeType.Daily ? "" : "-d")}-{item.Language}",
 				},
             Link = url,
             Comments = item.UrlWebsite,
@@ -844,9 +849,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
         if (episodeType == EpisodeType.Daily)
         {
-            return $"{matchedEpisodeInfo.ShowName}.{episode.Aired:yyyy-MM-dd}.{episode.Name}.GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
+            return $"{matchedEpisodeInfo.ShowName}.{episode.Aired:yyyy-MM-dd}.{episode.Name}.{matchedEpisodeInfo.Item.Language}.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
         }
-        return $"{matchedEpisodeInfo.ShowName}.S{episode.PaddedSeason}E{episode.PaddedEpisode}.{episode.Name}.GERMAN.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
+        return $"{matchedEpisodeInfo.ShowName}.S{episode.PaddedSeason}E{episode.PaddedEpisode}.{episode.Name}.{matchedEpisodeInfo.Item.Language}.{quality}.WEB.h264-MEDiATHEK".Replace(" ", ".");
     }
 
     public static bool ShouldSkipItem(ApiResultItem item)

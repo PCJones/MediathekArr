@@ -1,10 +1,12 @@
 ﻿using MediathekArrDownloader.Models;
 using MediathekArrDownloader.Models.SABnzbd;
+using MediathekArrDownloader.Utilities;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MediathekArrDownloader.Services;
 
@@ -95,7 +97,7 @@ public partial class DownloadService
     public IEnumerable<SabnzbdQueueItem> GetQueue() => [.. _downloadQueue];
     public IEnumerable<SabnzbdHistoryItem> GetHistory() => _downloadHistory;
 
-    public SabnzbdQueueItem AddToQueue(string url, string fileName, string category)
+    public SabnzbdQueueItem AddToQueue(string videoUrl, string subtitleUrl, string fileName, string category)
     {
         var queueItem = new SabnzbdQueueItem
         {
@@ -111,12 +113,12 @@ public partial class DownloadService
 
         _downloadQueue.Enqueue(queueItem);
 
-        Task.Run(() => StartDownloadAsync(url, queueItem));
+        Task.Run(() => StartDownloadAsync(videoUrl, subtitleUrl, queueItem));
 
         return queueItem;
     }
 
-    private async Task StartDownloadAsync(string url, SabnzbdQueueItem queueItem)
+    private async Task StartDownloadAsync(string videoUrl, string subtitleUrl, SabnzbdQueueItem queueItem)
     {
         await _semaphore.WaitAsync();
 
@@ -124,13 +126,17 @@ public partial class DownloadService
 
         try
         {
-            _logger.LogInformation("Starting download for {Title} from URL: {URL}", queueItem.Title, url);
-            await DownloadFileAsync(url, queueItem);
+            _logger.LogInformation("Starting download for {Title} from URL: {URL}", queueItem.Title, videoUrl);
+
+            var downloadVideoTask = DownloadFileAsync(videoUrl, queueItem);
+            var downloadSubtitlesTask = DownloadSubtitlesAsync(subtitleUrl, queueItem);
+            await Task.WhenAll(downloadVideoTask, downloadSubtitlesTask);
+            var subtitlesAvailable = downloadSubtitlesTask.Result;
 
             if (queueItem.Status != SabnzbdDownloadStatus.Failed)
             {
                 _logger.LogInformation("Download complete for {Title}. Starting conversion to MKV.", queueItem.Title);
-                await ConvertMp4ToMkvAsync(queueItem, stopwatch);
+                await ConvertMp4ToMkvAsync(queueItem, stopwatch, subtitlesAvailable);
             }
             else
             {
@@ -147,6 +153,71 @@ public partial class DownloadService
             _downloadQueue.TryDequeue(out _);
             stopwatch.Stop();
         }
+    }
+
+    private async Task<bool> DownloadSubtitlesAsync(string subtitleUrl, SabnzbdQueueItem queueItem)
+    {
+        string? xmlFilePath = null;
+        try
+        {
+            if (string.IsNullOrEmpty(subtitleUrl))
+            {
+                _logger.LogWarning("Subtitle URL is empty for {Title}. Skipping subtitle download.", queueItem.Title);
+                return false;
+            }
+
+            xmlFilePath = Path.Combine(_config.IncompletePath, queueItem.Title + ".xml");
+            var srtFilePath = Path.Combine(_config.IncompletePath, queueItem.Title + ".srt");
+
+            // Download XML subtitle file
+            _logger.LogInformation("Starting download of subtitle XML for {Title} to path: {Path}", queueItem.Title, xmlFilePath);
+            var response = await _httpClient.GetAsync(subtitleUrl, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            await using (var contentStream = await response.Content.ReadAsStreamAsync())
+            await using (var fileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await contentStream.CopyToAsync(fileStream);
+            }
+
+            _logger.LogInformation("Subtitle XML downloaded for {Title}. Converting to SRT format.", queueItem.Title);
+
+            // Convert XML to SRT
+            var xmlContent = await File.ReadAllTextAsync(xmlFilePath, Encoding.UTF8);
+            var srtContent = SubtitleConverter.ConvertXmlToSrt(xmlContent);
+
+            if (string.IsNullOrEmpty(srtContent))
+            {
+                return false;
+            }
+
+            // Save SRT file
+            await File.WriteAllTextAsync(srtFilePath, srtContent, Encoding.UTF8);
+
+            _logger.LogInformation("Subtitle conversion to SRT completed for {Title}. File saved to {Path}", queueItem.Title, srtFilePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Subtitle download or conversion failed for {Title}.", queueItem.Title);
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(xmlFilePath) && File.Exists(xmlFilePath))
+            {
+                try
+                {
+                    File.Delete(xmlFilePath);
+                    _logger.LogInformation("Temporary subtitle XML file deleted: {Path}", xmlFilePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete temporary subtitle XML file: {Path}", xmlFilePath);
+                }
+            }
+        }
+
+        return false;
     }
 
     private async Task DownloadFileAsync(string url, SabnzbdQueueItem queueItem)
@@ -238,13 +309,14 @@ public partial class DownloadService
         return true;
     }
 
-    private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch)
+    private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch, bool subtitlesAvailable)
     {
         var completeCategoryDir = _config.CompletePath;
         _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, completeCategoryDir);
         Directory.CreateDirectory(completeCategoryDir);
 
         var mp4Path = Path.Combine(_config.IncompletePath, queueItem.Title + ".mp4");
+        var subtitlePath = Path.Combine(_config.IncompletePath, queueItem.Title + ".srt");
         var mkvPath = Path.Combine(completeCategoryDir, queueItem.Title + ".mkv");
 
         if (!File.Exists(mp4Path))
@@ -254,10 +326,22 @@ public partial class DownloadService
             return;
         }
 
+        if (subtitlesAvailable && !File.Exists(subtitlePath))
+        {
+            _logger.LogError("Subtitle file not found for conversion. Path: {SubtitlePath}. Continuing without subtitles.", subtitlePath);
+            subtitlesAvailable = false;
+
+        }
+
         queueItem.Status = SabnzbdDownloadStatus.Extracting;
         _logger.LogInformation("Starting conversion of {Title} from MP4 to MKV. MP4 Path: {Mp4Path}, MKV Path: {MkvPath}", queueItem.Title, mp4Path, mkvPath);
 
-        var ffmpegArgs = $"-i \"{mp4Path}\" -map 0:v -map 0:a -c copy -metadata:s:v:0 language=ger -metadata:s:a:0 language=ger \"{mkvPath}\"";
+        var ffmpegArgs = subtitlesAvailable
+            ? $"-y -i \"{mp4Path}\" -i \"{subtitlePath}\" -map 0:v -map 0:a -map 1 -c copy -map_metadata -1 " +
+              $"-metadata:s:v:0 language=ger -metadata:s:a:0 language=ger -metadata:s:s:0 language=de \"{mkvPath}\""
+            : $"-y -i \"{mp4Path}\" -map 0:v -map 0:a -c copy -map_metadata -1 " +
+              $"-metadata:s:v:0 language=ger -metadata:s:a:0 language=ger \"{mkvPath}\"";
+
 
         var process = new Process
         {
@@ -294,6 +378,10 @@ public partial class DownloadService
             }
 
             File.Delete(mp4Path);
+            if (subtitlesAvailable)
+            {
+                File.Delete(subtitlePath);
+            }
 
             double sizeInMB = 0;
             if (double.TryParse(queueItem.Size.Replace("GB", "").Replace("MB", "").Trim(), out double size))

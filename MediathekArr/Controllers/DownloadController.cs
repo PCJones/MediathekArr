@@ -53,19 +53,23 @@ public partial class DownloadController(DownloadService downloadService, Config 
         using var reader = new StreamReader(Request.Body);
         var requestBody = await reader.ReadToEndAsync();
 
-        var filenameMatch = FileNameRegex().Match(requestBody);
-        var urlMatch = UrlRegex().Match(requestBody);
+        string[] lines = requestBody.Split(Environment.NewLine);
 
-        if (!filenameMatch.Success || !urlMatch.Success)
+        var filenameMatch = FileNameRegex().Match(requestBody);
+        var videoUrlMatch = UrlRegex().Match(lines[7]);
+        var subtitleUrlMatch = UrlRegex().Match(lines[8]);
+
+        if (!filenameMatch.Success || !videoUrlMatch.Success)
         {
             return BadRequest(new { error = "Invalid NZB format" });
         }
 
         var fileName = filenameMatch.Groups[1].Value;
-        var downloadUrl = urlMatch.Groups[1].Value;
+        var videoDownloadUrl = videoUrlMatch.Groups[1].Value;
+        var subtitleDownloadUrl = subtitleUrlMatch.Groups[1].Value;
 
         // Add to the download queue using DownloadService and capture the created queue item
-        var queueItem = _downloadService.AddToQueue(downloadUrl, fileName, cat);
+        var queueItem = _downloadService.AddToQueue(videoDownloadUrl, subtitleDownloadUrl, fileName, cat);
 
         // Return response in the specified format
         return Ok(new

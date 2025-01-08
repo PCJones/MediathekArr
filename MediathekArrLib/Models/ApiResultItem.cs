@@ -41,5 +41,9 @@ public class ApiResultItem
     public string UrlVideoLow { get; set; }
 
     [JsonPropertyName("url_video_hd")]
-    public string UrlVideoHd { get; set; }
+    public string UrlVideoHd { get; set; }   
+    [JsonPropertyName("url_subtitle")]
+    public string UrlSubtitle { get; set; }
+    [JsonIgnore]
+    public string Language => Title?.Contains("(Englisch)") ?? false ? "ENGLISH" : "GERMAN";
 }
