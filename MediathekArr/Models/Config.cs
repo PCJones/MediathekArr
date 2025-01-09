@@ -1,4 +1,4 @@
-﻿namespace MediathekArrDownloader.Models;
+﻿namespace MediathekArr.Models;
 
 public record Config
 {

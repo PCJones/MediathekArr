@@ -1,11 +1,11 @@
-﻿using MediathekArrDownloader.Models;
-using MediathekArrDownloader.Models.SABnzbd;
-using MediathekArrDownloader.Services;
+﻿using MediathekArr.Models;
+using MediathekArr.Models.SABnzbd;
+using MediathekArr.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
 
-namespace MediathekArrDownloader.Controllers;
+namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -84,7 +84,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
     {
         var queueItems = _downloadService.GetQueue();
 
-        var queue = new SabnzbdQueue
+        var queue = new Queue
         {
             Items = queueItems.ToList()
         };
@@ -99,7 +99,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
     {
         var historytems = _downloadService.GetHistory();
 
-        var history = new SabnzbdHistory
+        var history = new History
         {
             Items = historytems.ToList()
         };

@@ -1,9 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MediathekArrDownloader.Models.SABnzbd;
+namespace MediathekArr.Models.SABnzbd;
 
 public class QueueWrapper
 {
     [JsonPropertyName("queue")]
-    public SabnzbdQueue Queue { get; set; }
+    public Queue Queue { get; set; }
 }

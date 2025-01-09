@@ -1,21 +1,20 @@
-﻿using MediathekArrDownloader.Models;
-using MediathekArrDownloader.Models.SABnzbd;
-using MediathekArrDownloader.Utilities;
+﻿using MediathekArr.Models;
+using MediathekArr.Models.SABnzbd;
+using MediathekArr.Utilities;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MediathekArrDownloader.Services;
+namespace MediathekArr.Services;
 
 public partial class DownloadService
 {
     private readonly ILogger<DownloadService> _logger;
     private readonly Config _config;
-    private readonly ConcurrentQueue<SabnzbdQueueItem> _downloadQueue = new();
-    private readonly List<SabnzbdHistoryItem> _downloadHistory = [];
+    private readonly ConcurrentQueue<QueueItem> _downloadQueue = new();
+    private readonly List<HistoryItem> _downloadHistory = [];
     private static readonly HttpClient _httpClient = new();
     private static readonly SemaphoreSlim _semaphore = new(2); // Limit concurrent downloads to 2
     private readonly string _mkvMergePath;
@@ -94,14 +93,14 @@ public partial class DownloadService
         }
     }
 
-    public IEnumerable<SabnzbdQueueItem> GetQueue() => [.. _downloadQueue];
-    public IEnumerable<SabnzbdHistoryItem> GetHistory() => _downloadHistory;
+    public IEnumerable<QueueItem> GetQueue() => [.. _downloadQueue];
+    public IEnumerable<HistoryItem> GetHistory() => _downloadHistory;
 
-    public SabnzbdQueueItem AddToQueue(string videoUrl, string subtitleUrl, string fileName, string category)
+    public QueueItem AddToQueue(string videoUrl, string subtitleUrl, string fileName, string category)
     {
-        var queueItem = new SabnzbdQueueItem
+        var queueItem = new QueueItem
         {
-            Status = SabnzbdDownloadStatus.Queued,
+            Status = DownloadStatus.Queued,
             Index = _downloadQueue.Count,
             Timeleft = "10:00:00",
             Size = "0",
@@ -118,7 +117,7 @@ public partial class DownloadService
         return queueItem;
     }
 
-    private async Task StartDownloadAsync(string videoUrl, string subtitleUrl, SabnzbdQueueItem queueItem)
+    private async Task StartDownloadAsync(string videoUrl, string subtitleUrl, QueueItem queueItem)
     {
         await _semaphore.WaitAsync();
 
@@ -133,7 +132,7 @@ public partial class DownloadService
             await Task.WhenAll(downloadVideoTask, downloadSubtitlesTask);
             var subtitlesAvailable = downloadSubtitlesTask.Result;
 
-            if (queueItem.Status != SabnzbdDownloadStatus.Failed)
+            if (queueItem.Status != DownloadStatus.Failed)
             {
                 _logger.LogInformation("Download complete for {Title}. Starting conversion to MKV.", queueItem.Title);
                 await ConvertMp4ToMkvAsync(queueItem, stopwatch, subtitlesAvailable);
@@ -155,7 +154,7 @@ public partial class DownloadService
         }
     }
 
-    private async Task<bool> DownloadSubtitlesAsync(string subtitleUrl, SabnzbdQueueItem queueItem)
+    private async Task<bool> DownloadSubtitlesAsync(string subtitleUrl, QueueItem queueItem)
     {
         string? xmlFilePath = null;
         try
@@ -220,7 +219,7 @@ public partial class DownloadService
         return false;
     }
 
-    private async Task DownloadFileAsync(string url, SabnzbdQueueItem queueItem)
+    private async Task DownloadFileAsync(string url, QueueItem queueItem)
     {
         try
         {
@@ -233,7 +232,7 @@ public partial class DownloadService
             }
 
             _logger.LogInformation("Starting download of file to path: {Path} with extension {Extension}", filePath, fileExtension);
-            queueItem.Status = SabnzbdDownloadStatus.Downloading;
+            queueItem.Status = DownloadStatus.Downloading;
 
             var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
             var totalSize = response.Content.Headers.ContentLength ?? 0;
@@ -266,10 +265,10 @@ public partial class DownloadService
         }
         catch (Exception ex)
         {
-            queueItem.Status = SabnzbdDownloadStatus.Failed;
+            queueItem.Status = DownloadStatus.Failed;
             _logger.LogError(ex, "Download failed for {Title}. Adding to download history as failed.", queueItem.Title);
 
-            _downloadHistory.Add(new SabnzbdHistoryItem
+            _downloadHistory.Add(new HistoryItem
             {
                 Title = queueItem.Title,
                 NzbName = queueItem.Title,
@@ -277,7 +276,7 @@ public partial class DownloadService
                 Size = 0,
                 DownloadTime = 0,
                 Storage = null,
-                Status = SabnzbdDownloadStatus.Failed,
+                Status = DownloadStatus.Failed,
                 Id = queueItem.Id
             });
         }
@@ -309,7 +308,7 @@ public partial class DownloadService
         return true;
     }
 
-    private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch, bool subtitlesAvailable)
+    private async Task ConvertMp4ToMkvAsync(QueueItem queueItem, Stopwatch stopwatch, bool subtitlesAvailable)
     {
         var completeCategoryDir = _config.CompletePath;
         _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, completeCategoryDir);
@@ -321,7 +320,7 @@ public partial class DownloadService
 
         if (!File.Exists(mp4Path))
         {
-            queueItem.Status = SabnzbdDownloadStatus.Failed;
+            queueItem.Status = DownloadStatus.Failed;
             _logger.LogWarning("MP4 file not found for conversion. Path: {Mp4Path}. Marking as failed.", mp4Path);
             return;
         }
@@ -332,19 +331,19 @@ public partial class DownloadService
             subtitlesAvailable = false;
         }
 
-        queueItem.Status = SabnzbdDownloadStatus.Extracting;
+        queueItem.Status = DownloadStatus.Extracting;
         _logger.LogInformation("Starting conversion of {Title} from MP4 to MKV. MP4 Path: {Mp4Path}, MKV Path: {MkvPath}", queueItem.Title, mp4Path, mkvPath);
 
         var (success, exitCode, errorOutput) = await MkvMergeUtils.StartMkvmergeProcessAsync(_mkvMergePath, mp4Path, subtitlePath, mkvPath, subtitlesAvailable, queueItem.Title, _logger);
 
         if (success)
         {
-            queueItem.Status = SabnzbdDownloadStatus.Completed;
+            queueItem.Status = DownloadStatus.Completed;
             _logger.LogInformation("Conversion completed successfully for {Title}. Output path: {MkvPath}", queueItem.Title, mkvPath);
         }
         else
         {
-            queueItem.Status = SabnzbdDownloadStatus.Failed;
+            queueItem.Status = DownloadStatus.Failed;
             _logger.LogError("Mkvmerge conversion failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, exitCode, errorOutput);
         }
 
@@ -357,7 +356,7 @@ public partial class DownloadService
         }
 
         // Move completed download to history
-        var historyItem = new SabnzbdHistoryItem
+        var historyItem = new HistoryItem
         {
             Title = $"{queueItem.Title}.mkv",
             NzbName = queueItem.Title,

@@ -3,22 +3,23 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
-using MediathekArrLib.Models.Rulesets;
-using MediathekArrLib.Models.Tvdb;
-using MediathekArrLib.Utilities;
+using MediathekArr.Services;
+using MediathekArr.Models;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Models.Rulesets;
+using MediathekArr.Models.Tvdb;
+using MediathekArr.Utilities;
 using Microsoft.Extensions.Caching.Memory;
-using Guid = MediathekArrLib.Models.Newznab.Guid;
-using MatchType = MediathekArrLib.Models.Rulesets.MatchType;
+using Guid = MediathekArr.Models.Newznab.Guid;
+using MatchType = MediathekArr.Models.Rulesets.MatchType;
 
-namespace MediathekArrServer.Services;
+namespace MediathekArr.Services;
 
 public partial class MediathekSearchService(IHttpClientFactory httpClientFactory, IMemoryCache cache, ItemLookupService itemLookupService)
 {
     private readonly IMemoryCache _cache = cache;
     private readonly ItemLookupService _itemLookupService = itemLookupService;
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("MediathekClient");
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(Constants.MediathekArrConstants.Mediathek_HttpClient);
     private readonly TimeSpan _cacheTimeSpan = TimeSpan.FromMinutes(55);
     private static readonly string[] _skipTitleKeywords = ["Audiodeskription", "Hörfassung", "(klare Sprache)", "Gebärdensprache", "Trailer", "Outtakes:"];
     private static readonly string[] _skipUrlKeywords = ["YXVkaW9kZXNrcmlwdGlvbg"]; // base64 for ARD, YXVkaW9kZXNrcmlwdGlvbg = audiodeskription
@@ -886,7 +887,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 Url = fakeDownloadUrl,
                 Length = adjustedSize,
-                Type = MediathekArrLib.Utilities.NewznabUtils.Application.Nzb
+                Type = MediathekArr.Utilities.NewznabUtils.Application.Nzb
             },
             Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo, categoryValues, episodeType)
         };

@@ -1,7 +1,7 @@
-﻿using MediathekArrDownloader.Models;
+﻿using MediathekArr.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MediathekArrDownloader.Controllers;
+namespace MediathekArr.Controllers;
 
 public partial class DownloadController
 {

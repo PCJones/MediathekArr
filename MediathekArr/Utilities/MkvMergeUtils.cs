@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace MediathekArrDownloader.Utilities;
+namespace MediathekArr.Utilities;
 
 public static class MkvMergeUtils
 {

@@ -1,10 +1,10 @@
-﻿using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
-using MediathekArrLib.Models.Rulesets;
+﻿using MediathekArr.Models;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Models.Rulesets;
 using System.Xml.Serialization;
-using Attribute = MediathekArrLib.Models.Newznab.Attribute;
+using Attribute = MediathekArr.Models.Newznab.Attribute;
 
-namespace MediathekArrLib.Utilities;
+namespace MediathekArr.Utilities;
 public static class NewznabUtils
 {
     public static class Application

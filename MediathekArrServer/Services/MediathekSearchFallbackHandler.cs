@@ -1,15 +1,15 @@
-﻿using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
-using MediathekArrLib.Models.Rulesets;
-using MediathekArrLib.Models.Tvdb;
-using MediathekArrLib.Utilities;
+﻿using MediathekArr.Models;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Models.Rulesets;
+using MediathekArr.Models.Tvdb;
+using MediathekArr.Utilities;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Guid = MediathekArrLib.Models.Newznab.Guid;
+using Guid = MediathekArr.Models.Newznab.Guid;
 
-namespace MediathekArrServer.Services;
+namespace MediathekArr.Services;
 
 public partial class MediathekSearchFallbackHandler
 {
@@ -118,7 +118,7 @@ public partial class MediathekSearchFallbackHandler
             {
                 Url = fakeDownloadUrl,
                 Length = adjustedSize,
-                Type = MediathekArrLib.Utilities.NewznabUtils.Application.Nzb
+                Type = MediathekArr.Utilities.NewznabUtils.Application.Nzb
             },
             Attributes = NewznabUtils.GenerateAttributes(item, yearSeason ?? season, episode, categoryValues, formattedDate == null ? EpisodeType.Standard : EpisodeType.Daily)
         };

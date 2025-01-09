@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MediathekArrLib.Models.Newznab;
-using MediathekArrLib.Utilities;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Utilities;
 
 namespace MediathekArr.Utilities;
 

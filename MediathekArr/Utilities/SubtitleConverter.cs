@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 
-namespace MediathekArrDownloader.Utilities;
+namespace MediathekArr.Utilities;
 
 public partial class SubtitleConverter
 {

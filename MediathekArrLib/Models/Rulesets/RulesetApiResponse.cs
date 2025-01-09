@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MediathekArrLib.Models.Rulesets;
+namespace MediathekArr.Models.Rulesets;
 
 public class RulesetApiResponse
 {

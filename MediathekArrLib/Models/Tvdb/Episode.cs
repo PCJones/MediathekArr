@@ -1,4 +1,4 @@
-﻿namespace MediathekArrLib.Models.Tvdb;
+﻿namespace MediathekArr.Models.Tvdb;
 
 public record Episode(string Name, DateTime? Aired, int? Runtime, int SeasonNumber, int EpisodeNumber)
 {

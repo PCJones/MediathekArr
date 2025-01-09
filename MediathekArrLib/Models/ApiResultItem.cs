@@ -1,7 +1,7 @@
-﻿using MediathekArrLib.Converters;
+﻿using MediathekArr.Converters;
 using System.Text.Json.Serialization;
 
-namespace MediathekArrLib.Models;
+namespace MediathekArr.Models;
 
 public class ApiResultItem
 {

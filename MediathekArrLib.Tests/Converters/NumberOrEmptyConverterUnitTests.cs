@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using MediathekArrLib.Converters;
+using MediathekArr.Converters;
 
 namespace MediathekArr.Converters;
 

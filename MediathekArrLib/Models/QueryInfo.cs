@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MediathekArrLib.Models;
+namespace MediathekArr.Models;
 
 public class QueryInfo
 {

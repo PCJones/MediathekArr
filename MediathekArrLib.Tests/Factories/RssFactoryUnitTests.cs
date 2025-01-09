@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MediathekArrLib.Models.Newznab;
+using MediathekArr.Models.Newznab;
 
 namespace MediathekArr.Factories;
 

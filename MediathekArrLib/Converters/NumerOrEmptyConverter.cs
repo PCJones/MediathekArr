@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
 
-namespace MediathekArrLib.Converters;
+namespace MediathekArr.Converters;
 
 public class NumberOrEmptyConverter<T> : JsonConverter<T>
     where T : struct, IConvertible
