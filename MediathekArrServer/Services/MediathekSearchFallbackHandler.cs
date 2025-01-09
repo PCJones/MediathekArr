@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Guid = MediathekArr.Models.Newznab.Guid;
 
 namespace MediathekArr.Services;
 
@@ -104,7 +103,7 @@ public partial class MediathekSearchFallbackHandler
         return new Item
         {
             Title = translatedTitle,
-            Guid = new Guid
+            Guid = new NewznabGuid
             {
                 IsPermaLink = true,
                 Value = $"{item.UrlWebsite}#{quality}{(string.IsNullOrEmpty(formattedDate) ? "" : "-a")}-{item.Language}",
@@ -118,7 +117,7 @@ public partial class MediathekSearchFallbackHandler
             {
                 Url = fakeDownloadUrl,
                 Length = adjustedSize,
-                Type = MediathekArr.Utilities.NewznabUtils.Application.Nzb
+                Type = NewznabUtils.Application.Nzb
             },
             Attributes = NewznabUtils.GenerateAttributes(item, yearSeason ?? season, episode, categoryValues, formattedDate == null ? EpisodeType.Standard : EpisodeType.Daily)
         };

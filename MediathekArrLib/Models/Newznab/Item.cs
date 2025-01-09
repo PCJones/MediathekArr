@@ -9,7 +9,7 @@ public class Item
     public string Title { get; set; }
 
     [XmlElement("guid")]
-    public Guid Guid { get; set; }
+    public NewznabGuid Guid { get; set; }
 
     [XmlElement("link")]
     public string Link { get; set; }

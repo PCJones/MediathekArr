@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MediathekArr.Services;
-using MediathekArr.Models;
 using Scalar.AspNetCore;
 using MediathekArr.Extensions;
 using System.Net.Mime;
+using MediathekArr.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,7 +67,7 @@ using (var scope = app.Services.CreateScope())
 }
 app.Run();
 
-static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
+static DownloaderConfiguration ConfigureAppConfig(IConfiguration configuration, ILogger logger)
 {
     var configPathEnv = Environment.GetEnvironmentVariable(MediathekArr.Constants.EnvironmentVariableConstants.Config_Path);
 
@@ -83,18 +83,18 @@ static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
     logger.LogInformation("Config path set to: {configFilePath}", configFilePath);
 
     bool existingConfig;
-    Config config;
+    DownloaderConfiguration config;
 
     if (File.Exists(configFilePath))
     {
         var jsonContent = File.ReadAllText(configFilePath);
-        config = System.Text.Json.JsonSerializer.Deserialize<Config>(jsonContent) ?? new Config();
+        config = System.Text.Json.JsonSerializer.Deserialize<DownloaderConfiguration>(jsonContent) ?? new DownloaderConfiguration();
         logger.LogInformation("Loaded configuration from {configFilePath}", configFilePath);
         existingConfig = true;
     }
     else
     {
-        config = new Config();
+        config = new DownloaderConfiguration();
         existingConfig = false;
     }
 

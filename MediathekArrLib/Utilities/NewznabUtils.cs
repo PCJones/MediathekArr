@@ -63,5 +63,5 @@ public static class NewznabUtils
         return result;
     }
 
-    public static Rss GetEmptyRssResult() => MediathekArr.Factories.RssFactory.Empty;
+    public static Rss GetEmptyRssResult() => Factories.RssFactory.Empty;
 }

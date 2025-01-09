@@ -134,6 +134,6 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
         // Set the .nzb file name
         var nzbFileName = $"mediathek-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.nzb";
 
-        return File(fileContent, MediathekArr.Utilities.NewznabUtils.Application.Nzb, nzbFileName);
+        return File(fileContent, Utilities.NewznabUtils.Application.Nzb, nzbFileName);
     }
 }

@@ -1,5 +1,4 @@
-﻿using MediathekArr.Models;
-using MediathekArr.Models.SABnzbd;
+﻿using MediathekArr.Models.SABnzbd;
 using MediathekArr.Utilities;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -7,13 +6,14 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using MediathekArr.Factories;
+using MediathekArr.Configuration;
 
 namespace MediathekArr.Services;
 
 public partial class DownloadService
 {
     private readonly ILogger<DownloadService> _logger;
-    private readonly Config _config;
+    private readonly DownloaderConfiguration _config;
     private readonly ConcurrentQueue<QueueItem> _downloadQueue = new();
     private readonly List<HistoryItem> _downloadHistory = [];
     private static readonly HttpClient _httpClient = new();
@@ -21,7 +21,7 @@ public partial class DownloadService
     private readonly string _mkvMergePath;
     private readonly bool _isWindows;
 
-    public DownloadService(ILogger<DownloadService> logger, Config config)
+    public DownloadService(ILogger<DownloadService> logger, DownloaderConfiguration config)
     {
         _logger = logger;
         _config = config;

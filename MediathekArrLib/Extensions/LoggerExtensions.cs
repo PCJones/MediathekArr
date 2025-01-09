@@ -89,18 +89,7 @@ public class ColourConsoleLoggerConfiguration
     };
 }
 
-/// <summary>
-/// Extensions to inject MediathekArr Logger
-/// </summary>
-public static class LoggerExtensions
-{
-    public static ILoggingBuilder AddMediathekArrLogger(this ILoggingBuilder builder)
-    {
-        builder.ClearProviders();
-        builder.AddProvider(new MediathekArrLoggerProvider(new ColourConsoleLoggerConfiguration()));
-        return builder;
-    }
-}
+
 
 /// <summary>
 /// Logging Handler for HttpClient

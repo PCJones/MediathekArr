@@ -1,4 +1,4 @@
-﻿using MediathekArr.Models;
+﻿using MediathekArr.Configuration;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediathekArr.Controllers;
@@ -25,7 +25,7 @@ public partial class DownloadController
     }
 
     [HttpPost("config")]
-    public IActionResult UpdateConfig([FromBody] Config newConfig)
+    public IActionResult UpdateConfig([FromBody] DownloaderConfiguration newConfig)
     {
         var incompleteEnv = Environment.GetEnvironmentVariable("DOWNLOAD_INCOMPLETE_PATH");
         var completeEnv = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");

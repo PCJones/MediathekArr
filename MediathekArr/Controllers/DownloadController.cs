@@ -1,4 +1,4 @@
-﻿using MediathekArr.Models;
+﻿using MediathekArr.Configuration;
 using MediathekArr.Models.SABnzbd;
 using MediathekArr.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +9,10 @@ namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class DownloadController(DownloadService downloadService, Config config, IWebHostEnvironment environment) : ControllerBase
+public partial class DownloadController(DownloadService downloadService, DownloaderConfiguration config, IWebHostEnvironment environment) : ControllerBase
 {
     private readonly DownloadService _downloadService = downloadService;
-    private readonly Config _config = config;
+    private readonly DownloaderConfiguration _config = config;
     private readonly IWebHostEnvironment _environment = environment;
 
     [HttpGet("api")]

@@ -3,7 +3,8 @@ using System.Xml.Serialization;
 
 namespace MediathekArr.Models.Newznab;
 
-public class Guid
+[XmlRoot("Guid")]
+public class NewznabGuid
 {
     [XmlAttribute("isPermaLink")]
     public bool IsPermaLink { get; set; }

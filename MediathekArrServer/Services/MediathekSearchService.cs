@@ -3,14 +3,12 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using MediathekArr.Services;
 using MediathekArr.Models;
 using MediathekArr.Models.Newznab;
 using MediathekArr.Models.Rulesets;
 using MediathekArr.Models.Tvdb;
 using MediathekArr.Utilities;
 using Microsoft.Extensions.Caching.Memory;
-using Guid = MediathekArr.Models.Newznab.Guid;
 using MatchType = MediathekArr.Models.Rulesets.MatchType;
 
 namespace MediathekArr.Services;
@@ -226,6 +224,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
         var paginatedItems = items.Skip(offset).Take(limit).ToList();
 
+        // TODO: use Factory
         var rss = new Rss
         {
             Channel = new Channel
@@ -251,12 +250,12 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             return matchedEpisodes;
         }
 
-        return matchedEpisodes.Where(matched =>
+        return [.. matchedEpisodes.Where(matched =>
             desiredEpisodes.Any(desiredEpisode =>
                 desiredEpisode.SeasonNumber == matched.Episode.SeasonNumber &&
                 desiredEpisode.EpisodeNumber == matched.Episode.EpisodeNumber
             )
-        ).ToList();
+        )];
     }
 
     private async Task<MatchedEpisodeInfo?> MatchesSeasonAndEpisode(ApiResultItem item, Ruleset ruleset)
@@ -873,7 +872,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return new Item
         {
             Title = translatedTitle,
-            Guid = new Guid
+            Guid = new NewznabGuid
             {
                 IsPermaLink = true,
 					Value = $"{item.UrlWebsite}#{quality}{(episodeType == EpisodeType.Daily ? "" : "-d")}-{item.Language}",
@@ -887,7 +886,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             {
                 Url = fakeDownloadUrl,
                 Length = adjustedSize,
-                Type = MediathekArr.Utilities.NewznabUtils.Application.Nzb
+                Type = NewznabUtils.Application.Nzb
             },
             Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo, categoryValues, episodeType)
         };
