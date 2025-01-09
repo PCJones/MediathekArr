@@ -1,5 +1,6 @@
 ﻿using MediathekArrLib.Models;
 using MediathekArrLib.Models.Newznab;
+using MediathekArrLib.Models.Rulesets;
 using MediathekArrLib.Utilities;
 using System.Globalization;
 using System.Text;
@@ -118,7 +119,7 @@ public partial class MediathekSearchFallbackHandler
                 Length = adjustedSize,
                 Type = "application/x-nzb"
             },
-            Attributes = NewznabUtils.GenerateAttributes(yearSeason ?? season, episode, categoryValues)
+            Attributes = NewznabUtils.GenerateAttributes(item, yearSeason ?? season, episode, categoryValues, formattedDate == null ? EpisodeType.Standard : EpisodeType.Daily)
         };
     }
 

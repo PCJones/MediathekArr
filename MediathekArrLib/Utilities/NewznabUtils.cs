@@ -1,29 +1,44 @@
-﻿using MediathekArrLib.Models.Newznab;
+﻿using MediathekArrLib.Models;
+using MediathekArrLib.Models.Newznab;
+using MediathekArrLib.Models.Rulesets;
 using System.Xml.Serialization;
+using Attribute = MediathekArrLib.Models.Newznab.Attribute;
 
 namespace MediathekArrLib.Utilities;
 public static class NewznabUtils
 {
-    public static List<Models.Newznab.Attribute> GenerateAttributes(string? season, string? episode, string[] categoryValues)
+    public static List<Attribute> GenerateAttributes(ApiResultItem item, string? season, string? episode, string[] categoryValues, EpisodeType episodeType)
     {
-        var attributes = new List<Models.Newznab.Attribute>();
+        var attributes = new List<Attribute>();
 
         foreach (var categoryValue in categoryValues)
         {
-            attributes.Add(new Models.Newznab.Attribute { Name = "category", Value = categoryValue });
+            attributes.Add(new Attribute { Name = "category", Value = categoryValue });
         }
 
         if (season != null)
         {
-            attributes.Add(new Models.Newznab.Attribute { Name = "season", Value = season });
+            attributes.Add(new Attribute { Name = "season", Value = season });
         }
 
         if (episode != null)
         {
-            attributes.Add(new Models.Newznab.Attribute { Name = "episode", Value = episode });
+            attributes.Add(new Attribute { Name = "episode", Value = episode });
         }
 
+        if (string.IsNullOrEmpty(item.UrlSubtitle))
+        {
+            attributes.Add(new Attribute { Name = "subs", Value = "German" });
+        }
+
+        attributes.Add(new Attribute { Name = "seriestype", Value = episodeType.ToString() }); // this is no official newznab attribute
+
         return attributes;
+    }
+
+    public static List<Attribute> GenerateAttributes(MatchedEpisodeInfo matchedEpisodeInfo, string[] categoryValues, EpisodeType episodeType)
+    {
+        return GenerateAttributes(matchedEpisodeInfo.Item, matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues, episodeType); 
     }
     public static string SerializeRss(Rss rss)
     {

@@ -73,7 +73,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         // Sort each topic group by priority
         foreach (var topic in _rulesetsByTopic.Keys.ToList())
         {
-            _rulesetsByTopic[topic] = _rulesetsByTopic[topic].OrderBy(ruleset => ruleset.Priority).ToList();
+            _rulesetsByTopic[topic] = [.. _rulesetsByTopic[topic].OrderBy(ruleset => ruleset.Priority)];
         }
     }
 
@@ -814,7 +814,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return items;
     }
 
-    private List<Item> CreateRssItems(MatchedEpisodeInfo matchedEpisodeInfo, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
+    private static List<Item> CreateRssItems(MatchedEpisodeInfo matchedEpisodeInfo, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
     {
         var items = new List<Item>
         {
@@ -887,7 +887,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 Length = adjustedSize,
                 Type = "application/x-nzb"
             },
-            Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues)
+            Attributes = NewznabUtils.GenerateAttributes(matchedEpisodeInfo, categoryValues, episodeType)
         };
     }
 
