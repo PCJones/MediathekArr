@@ -368,3 +368,5 @@ config.json
 *.mkv
 ffmpeg/
 /MediathekArrApi/tvdb_cache.sqlite-shm
+/MediathekArrApi/tvdb_cache.sqlite
+/MediathekArrApi/tvdb_cache.sqlite-wal
