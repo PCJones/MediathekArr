@@ -1,0 +1,82 @@
+﻿body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+    header .logo {
+        width: 80px;
+        height: 80px;
+        margin-right: 20px;
+    }
+
+h1 {
+    font-size: 2em;
+    color: #333;
+}
+
+main {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#statusLog {
+    border: 1px solid #ccc;
+    padding: 10px;
+    height: 210px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    background-color: #f4f4f4;
+}
+
+h3 {
+    color: #333;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+#editClientSettings, #editIndexerSettings {
+    margin-top: 20px;
+}
+
+    #editClientSettings h4, #editIndexerSettings h4 {
+        margin-bottom: 10px;
+    }
+
+    #editClientSettings div, #editIndexerSettings div {
+        margin-bottom: 10px;
+    }

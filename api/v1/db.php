@@ -1,6 +1,6 @@
 <?php
 
-define('DB_FILE', 'tvdb_cache.sqlite');
+define('DB_FILE', './db/tvdb_cache.sqlite');
 
 function initializeDatabase() {
     $isFirstRun = !file_exists(DB_FILE);
@@ -49,6 +49,7 @@ function createTables($db) {
         runtime INTEGER,
         season_number INTEGER,
         episode_number INTEGER,
+        absolute_number INTEGER,
         FOREIGN KEY(series_id) REFERENCES series_cache(series_id)
     )";
 

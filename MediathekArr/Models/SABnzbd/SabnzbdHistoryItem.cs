@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MediathekArr.Models;
+namespace MediathekArrDownloader.Models.SABnzbd;
 
 public class SabnzbdHistoryItem
 {
@@ -23,7 +23,7 @@ public class SabnzbdHistoryItem
     public string Storage { get; set; }
 
     [JsonPropertyName("status")]
-    [JsonConverter(typeof(JsonStringEnumConverter))] 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public SabnzbdDownloadStatus Status { get; set; }
 
     [JsonPropertyName("nzo_id")]

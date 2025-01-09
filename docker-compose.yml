@@ -1,13 +1,22 @@
 services:
   mediathekarr:
-    image: pcjones/mediathekarr:latest
+    image: pcjones/mediathekarr:beta
+    restart: unless-stopped
     container_name: mediathekarr
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=Europe/Berlin
-      - DOWNLOAD_FOLDER_PATH_MAPPING=/downloads/completed # Change right side for correct path mapping
-      # - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1 # Only change this if you are hosting your own API. Not needed for 99% of users
+      # You can use the web interface at http://localhost:5007 to configure the following settings
+      # Alternatively, you can set them here
+      #- DOWNLOAD_INCOMPLETE_PATH=/data/mediathek/incomplete # Path to incomplete downloads
+      #- DOWNLOAD_COMPLETE_PATH=/data/mediathek/complete # Path to complete downloads"
+
+      # Only change this if you are hosting your own API. Not needed for 99% of users
+      - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1
     volumes:
-      - ./your_temp_downloads_folder/:/app/downloads      # Change left side to your temp download folder location
+      - /docker/appdata/mediathekarr:/app/config
+      - /data/mediathek/complete:/data/mediathek/complete
+      - /data/mediathek/incomplete:/data/mediathek/incomplete
     ports:
-      - "127.0.0.1:5007:5007"                             # Port on the right side can be changed to any value you like
-    restart: unless-stopped
+      - "127.0.0.1:5007:5007" # Port on the right side can be changed to any value you like

@@ -12,7 +12,17 @@ public class Ruleset
     public int MediaId { get; set; }
 
     [JsonPropertyName("topic")]
-    public string Topic { get; set; } = string.Empty;
+    public string Topic { get; set; } = string.Empty; // Raw topic string from API
+
+    [JsonIgnore]
+    public List<string> Topics
+    {
+        get
+        {
+            // Split the Topic string by commas and return as a list
+            return Topic.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        }
+    }
 
     [JsonPropertyName("priority")]
     public int Priority { get; set; }
