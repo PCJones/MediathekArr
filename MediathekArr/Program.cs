@@ -1,3 +1,6 @@
+using MediathekArr.Services;
+using MediathekArrLib.Utilities;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MediathekArrDownloader.Models;
 using MediathekArrDownloader.Services;
 using Scalar.AspNetCore;
@@ -19,6 +22,7 @@ builder.Services.AddSingleton(provider =>
 });
 
 builder.Services.AddControllers();
+builder.Logging.AddMediathekArrLogger();
 builder.Services.AddOpenApi();
 
 builder.Services.AddMemoryCache();
@@ -31,6 +35,13 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+})
+.AddHttpMessageHandler<HttpClientLoggingHandler>(); // Add sensitive query parameters to log output
+builder.Services.TryAddTransient<HttpClientLoggingHandler>();
+builder.Services.AddSingleton<MediathekSearchService>();
+builder.Services.AddSingleton<ItemLookupService>();
+builder.Services.AddSingleton<DownloadService>();
+=======
 });
 
 builder.Services.AddSingleton<DownloadService>();
@@ -42,7 +53,6 @@ AddRedirectMiddleware(app);
 
 // Middleware to log all incoming requests
 AddIncomingRequestsLogMiddleware(app);
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -61,7 +71,6 @@ using (var scope = app.Services.CreateScope())
 {
     var downloadService = scope.ServiceProvider.GetRequiredService<DownloadService>();
 }
-
 app.Run();
 
 static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
