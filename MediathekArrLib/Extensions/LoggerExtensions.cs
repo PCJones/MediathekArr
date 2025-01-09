@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 
-namespace MediathekArrLib.Utilities;
+namespace MediathekArrLib.Extensions;
 
 /// <summary>
 /// Generic Logger for MediathekArr

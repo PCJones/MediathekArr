@@ -2,6 +2,7 @@
 using MediathekArrDownloader.Models.SABnzbd;
 using MediathekArrDownloader.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
 using System.Text.RegularExpressions;
 
 namespace MediathekArrDownloader.Controllers;
@@ -20,8 +21,8 @@ public partial class DownloadController(DownloadService downloadService, Config 
         return mode switch
         {
             "version" => Ok(new { version = "4.3.3" }),
-            "get_config" => Content(ConfigResponse, "application/json"),
-            "fullstatus" => Content(FullStatusResponse, "application/json"),
+            "get_config" => Content(ConfigResponse, MediaTypeNames.Application.Json),
+            "fullstatus" => Content(FullStatusResponse, MediaTypeNames.Application.Json),
             "queue" => Ok(GetQueue()),
             "history" => (name == "delete" && !string.IsNullOrEmpty(value))
                 ? DeleteHistoryItem(value, del_files.GetValueOrDefault() == 1)

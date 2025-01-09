@@ -1,4 +1,4 @@
-﻿using MediathekArrLib.Models;
+﻿using MediathekArrLib.Models.Tvdb;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 
@@ -18,7 +18,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         };
     }
 
-    public async Task<TvdbData?> GetShowInfoByTvdbId(int? tvdbid)
+    public async Task<Data?> GetShowInfoByTvdbId(int? tvdbid)
     {
         if (tvdbid == null)
         {
@@ -26,7 +26,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         }
 
         var cacheKey = $"TvdbInfo_{tvdbid}";
-        if (_memoryCache.TryGetValue(cacheKey, out TvdbData? cachedTvdbInfo))
+        if (_memoryCache.TryGetValue(cacheKey, out Data? cachedTvdbInfo))
         {
             if (cachedTvdbInfo != null)
             {
@@ -45,7 +45,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         }
 
         var jsonResponse = await response.Content.ReadAsStringAsync();
-        var tvdbInfo = JsonSerializer.Deserialize<TvdbInfoResponse>(jsonResponse, GetJsonSerializerOptions());
+        var tvdbInfo = JsonSerializer.Deserialize<InfoResponse>(jsonResponse, GetJsonSerializerOptions());
 
         if (tvdbInfo == null || tvdbInfo.Status != "success" || tvdbInfo.Data == null)
         {

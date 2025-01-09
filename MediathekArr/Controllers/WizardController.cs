@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -69,7 +70,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
             using var reader = new StreamReader(Request.Body);
             var rawBody = await reader.ReadToEndAsync();
 
-            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await httpClient.PostAsync($"{cleanedHostName}/api/v3/downloadclient", content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -78,7 +79,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, responseContent);
             }
 
-            return Content(responseContent, "application/json");
+            return Content(responseContent, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {
@@ -103,7 +104,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
             using var reader = new StreamReader(Request.Body);
             var rawBody = await reader.ReadToEndAsync();
 
-            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await httpClient.PutAsync($"{cleanedHostName}/api/v3/downloadclient/{id}", content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -112,7 +113,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, responseContent);
             }
 
-            return Content(responseContent, "application/json");
+            return Content(responseContent, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {
@@ -208,7 +209,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
             var rawBody = await reader.ReadToEndAsync();
 
             var apiVersion = prowlarr ? "v1" : "v3";
-            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await httpClient.PostAsync($"{cleanedHostName}/api/{apiVersion}/indexer", content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -217,7 +218,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, responseContent);
             }
 
-            return Content(responseContent, "application/json");
+            return Content(responseContent, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {
@@ -243,7 +244,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
             var rawBody = await reader.ReadToEndAsync();
 
             var apiVersion = prowlarr ? "v1" : "v3";
-            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await httpClient.PutAsync($"{cleanedHostName}/api/{apiVersion}/indexer/{id}", content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -252,7 +253,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, responseContent);
             }
 
-            return Content(responseContent, "application/json");
+            return Content(responseContent, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {
@@ -278,7 +279,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
             var rawBody = await reader.ReadToEndAsync();
 
             var apiVersion = prowlarr ? "v1" : "v3";
-            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await httpClient.PostAsync($"{cleanedHostName}/api/{apiVersion}/indexer/test", content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -287,7 +288,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, responseContent);
             }
 
-            return Content(responseContent, "application/json");
+            return Content(responseContent, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {
@@ -312,7 +313,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
             using var reader = new StreamReader(Request.Body);
             var rawBody = await reader.ReadToEndAsync();
 
-            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(rawBody, System.Text.Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await httpClient.PostAsync($"{cleanedHostName}/api/v3/downloadclient/test", content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -321,7 +322,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, responseContent);
             }
 
-            return Content(responseContent, "application/json");
+            return Content(responseContent, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {
@@ -351,7 +352,7 @@ public class WizardController(IHttpClientFactory httpClientFactory) : Controller
                 return StatusCode((int)response.StatusCode, content);
             }
 
-            return Content(content, "application/json");
+            return Content(content, MediaTypeNames.Application.Json);
         }
         catch (Exception ex)
         {

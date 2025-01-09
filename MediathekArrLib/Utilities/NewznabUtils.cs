@@ -7,6 +7,11 @@ using Attribute = MediathekArrLib.Models.Newznab.Attribute;
 namespace MediathekArrLib.Utilities;
 public static class NewznabUtils
 {
+    public static class Application
+    {
+        public const string Nzb = "application/x-nzb";
+    }
+
     public static List<Attribute> GenerateAttributes(ApiResultItem item, string? season, string? episode, string[] categoryValues, EpisodeType episodeType)
     {
         var attributes = new List<Attribute>();
@@ -38,7 +43,7 @@ public static class NewznabUtils
 
     public static List<Attribute> GenerateAttributes(MatchedEpisodeInfo matchedEpisodeInfo, string[] categoryValues, EpisodeType episodeType)
     {
-        return GenerateAttributes(matchedEpisodeInfo.Item, matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues, episodeType); 
+        return GenerateAttributes(matchedEpisodeInfo.Item, matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues, episodeType);
     }
     public static string SerializeRss(Rss rss)
     {
@@ -58,21 +63,5 @@ public static class NewznabUtils
         return result;
     }
 
-    public static Rss GetEmptyRssResult()
-    {
-        return new Rss
-        {
-            Channel = new Channel
-            {
-                Title = "MediathekArr",
-                Description = "MediathekArr API results",
-                Response = new Response
-                {
-                    Offset = 0,
-                    Total = 0
-                },
-                Items = []
-            }
-        };
-    }
+    public static Rss GetEmptyRssResult() => MediathekArr.Factories.RssFactory.Empty;
 }

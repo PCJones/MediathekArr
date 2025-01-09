@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>MediathekArr</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="TvdbClientConfig.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="coverlet.collector" Version="6.0.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="FluentAssertions" Version="7.0.0" />
+		<PackageReference Include="FluentAssertions.Analyzers" Version="0.34.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="MartinCostello.Logging.XUnit" Version="0.5.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MediathekArrApi\MediathekArrApi.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+		<Using Include="FluentAssertions" />
+	</ItemGroup>
+
+</Project>
