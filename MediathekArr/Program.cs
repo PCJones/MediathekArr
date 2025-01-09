@@ -1,9 +1,7 @@
-using MediathekArr.Services;
 using MediathekArrLib.Utilities;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using MediathekArrDownloader.Models;
 using MediathekArrDownloader.Services;
-using Scalar.AspNetCore;
+using MediathekArrDownloader.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,12 +36,6 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 })
 .AddHttpMessageHandler<HttpClientLoggingHandler>(); // Add sensitive query parameters to log output
 builder.Services.TryAddTransient<HttpClientLoggingHandler>();
-builder.Services.AddSingleton<MediathekSearchService>();
-builder.Services.AddSingleton<ItemLookupService>();
-builder.Services.AddSingleton<DownloadService>();
-=======
-});
-
 builder.Services.AddSingleton<DownloadService>();
 
 var app = builder.Build();
@@ -57,7 +49,7 @@ AddIncomingRequestsLogMiddleware(app);
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    // app.MapScalarApiReference(); @TODO @Chrison, Kunst oder kann das weg?
 }
 
 app.UseAuthorization();

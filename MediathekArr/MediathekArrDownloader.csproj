@@ -30,6 +30,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
+		<ProjectReference Include="..\MediathekArrServer\MediathekArrServer.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

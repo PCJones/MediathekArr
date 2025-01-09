@@ -113,7 +113,7 @@ public static class MkvMergeUtils
 
         if (!File.Exists(mkvmergePath))
         {
-            logger.LogInformation($"mkvmerge not found at {mkvmergePath}. Attempting to download for Windows environment...");
+            logger.LogInformation("mkvmerge not found at {mkvmergePath}. Attempting to download for Windows environment...", mkvmergePath);
 
             string mkvmergeDownloadUrl = "https://mkvtoolnix.download/windows/releases/89.0/mkvtoolnix-64-bit-89.0.7z";
             var tempFilePath = Path.Combine(Path.GetTempPath(), "mkvtoolnix.7z");
