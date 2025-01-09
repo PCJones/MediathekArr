@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using MediathekArr.Factories;
 
 namespace MediathekArr.Services;
 
@@ -268,17 +269,7 @@ public partial class DownloadService
             queueItem.Status = DownloadStatus.Failed;
             _logger.LogError(ex, "Download failed for {Title}. Adding to download history as failed.", queueItem.Title);
 
-            _downloadHistory.Add(new HistoryItem
-            {
-                Title = queueItem.Title,
-                NzbName = queueItem.Title,
-                Category = queueItem.Category,
-                Size = 0,
-                DownloadTime = 0,
-                Storage = null,
-                Status = DownloadStatus.Failed,
-                Id = queueItem.Id
-            });
+            _downloadHistory.Add(queueItem.ToFailedItem());
         }
     }
     public bool DeleteHistoryItem(string nzoId, bool delFiles)
@@ -356,17 +347,7 @@ public partial class DownloadService
         }
 
         // Move completed download to history
-        var historyItem = new HistoryItem
-        {
-            Title = $"{queueItem.Title}.mkv",
-            NzbName = queueItem.Title,
-            Category = queueItem.Category,
-            Size = (long)(sizeInMB * 1024 * 1024), // Convert MB to bytes
-            DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
-            Storage = mkvPath,
-            Status = queueItem.Status,
-            Id = queueItem.Id
-        };
+        var historyItem = queueItem.ToHistoryItem(mkvPath, sizeInMB, stopwatch.Elapsed.TotalSeconds);
         _downloadHistory.Add(historyItem);
 
         _logger.LogInformation("Download history updated for {Title}. Status: {Status}, Download Time: {DownloadTime}s, Size: {Size} bytes",
