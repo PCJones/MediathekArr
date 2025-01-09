@@ -2,6 +2,7 @@ using MediathekArrLib.Utilities;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MediathekArrDownloader.Services;
 using MediathekArrDownloader.Models;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,7 +50,7 @@ AddIncomingRequestsLogMiddleware(app);
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // app.MapScalarApiReference(); @TODO @Chrison, Kunst oder kann das weg?
+    app.MapScalarApiReference();
 }
 
 app.UseAuthorization();
