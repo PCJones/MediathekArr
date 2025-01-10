@@ -22,7 +22,7 @@ public class SeriesController(MediathekArrContext context, ISeriesClient seriesC
     #endregion
 
     [HttpGet]
-    public async Task<IActionResult> GetSeriesData([FromQuery] int tvdbId)
+    public async Task<ActionResult<Series>> GetSeriesData([FromQuery] int tvdbId)
     {
         /* Return cached version of Series whenever possible */
         if (await Context.Series.AnyAsync(s => s.SeriesId == tvdbId))

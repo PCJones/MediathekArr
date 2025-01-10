@@ -7,6 +7,12 @@
 		<RootNamespace>MediathekArr</RootNamespace>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
+		<OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+		<OpenApiOutputPath>$(MSBuildProjectDirectory)\swagger.json</OpenApiOutputPath>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
 		<PackageReference Include="Scalar.AspNetCore" Version="1.2.44" />

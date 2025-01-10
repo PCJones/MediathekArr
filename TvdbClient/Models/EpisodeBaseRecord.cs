@@ -18,8 +18,9 @@ public class EpisodeBaseRecord : AbstractBaseRecord
     [JsonPropertyName("absoluteNumber")]
     public int? AbsoluteNumber { get; set; }
 
+    [JsonConverter(typeof(Converters.DateTimeConverter))]
     [JsonPropertyName("aired")]
-    public DateTime Aired { get; set; }
+    public DateTime? Aired { get; set; }
 
     [JsonPropertyName("airsAfterSeason")]
     public int? AirsAfterSeason { get; set; }
@@ -69,7 +70,7 @@ public class EpisodeBaseRecord : AbstractBaseRecord
     public ICollection<string> OverviewTranslations { get; set; }
 
     [JsonPropertyName("runtime")]
-    public int Runtime { get; set; }
+    public int? Runtime { get; set; }
 
     [JsonPropertyName("seasonNumber")]
     public int SeasonNumber { get; set; }

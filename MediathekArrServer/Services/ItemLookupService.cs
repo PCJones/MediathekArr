@@ -34,7 +34,8 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
             }
         }
 
-        var requestUrl = $"{_apiBaseUrl}/get_show.php?tvdbid={tvdbid}";
+        var requestUrl = $"{_apiBaseUrl}/Series?tvdbid={tvdbid}";
+        if (_apiBaseUrl == "https://mediathekarr.pcjones.de/api/v1") requestUrl = $"{_apiBaseUrl}/get_show.php?tvdbid={tvdbid}";
 
         var response = await _httpClient.GetAsync(requestUrl);
 

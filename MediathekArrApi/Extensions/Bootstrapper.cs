@@ -1,4 +1,5 @@
-﻿using MediathekArr.Infrastructure;
+﻿using System.Text.Json.Serialization;
+using MediathekArr.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -32,7 +33,11 @@ public static class Bootstrapper
         builder.Services.AddTvdbClient(config);
         #endregion
 
-        builder.Services.AddControllers();
+        /* Prevent circular endless loops */
+        builder.Services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        }); ;
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
