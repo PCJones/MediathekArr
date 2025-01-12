@@ -8,11 +8,10 @@ namespace MediathekArrDownloader.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class DownloadController(DownloadService downloadService, Config config, IWebHostEnvironment environment) : ControllerBase
+public partial class DownloadController(DownloadService downloadService, Config config) : ControllerBase
 {
     private readonly DownloadService _downloadService = downloadService;
     private readonly Config _config = config;
-    private readonly IWebHostEnvironment _environment = environment;
 
     [HttpGet("api")]
     public IActionResult GetVersion([FromQuery] string mode, [FromQuery] string? name = null, [FromQuery] string? value = null, [FromQuery] int? del_files = 0)
@@ -55,7 +54,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
 
         string[] lines = requestBody.Split(Environment.NewLine);
 
-        var filenameMatch = FileNameRegex().Match(requestBody);
+        var filenameMatch = FileNameRegex().Match(lines[6]);
         var videoUrlMatch = UrlRegex().Match(lines[7]);
         var subtitleUrlMatch = UrlRegex().Match(lines[8]);
 
@@ -64,7 +63,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
             return BadRequest(new { error = "Invalid NZB format" });
         }
 
-        var fileName = filenameMatch.Groups[1].Value;
+        var fileName = $"{filenameMatch.Groups[1].Value.Trim()}";
         var videoDownloadUrl = videoUrlMatch.Groups[1].Value;
         var subtitleDownloadUrl = subtitleUrlMatch.Groups[1].Value;
 
@@ -181,7 +180,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
         }}
     }}";
 
-    [GeneratedRegex(@"filename=""([^""]+)\.nzb""")]
+    [GeneratedRegex(@"<!--\s*([^<>]+)\s*-->")]
     private static partial Regex FileNameRegex();
     [GeneratedRegex(@"<!--\s*(https?://[^\s]+)\s*-->")]
     private static partial Regex UrlRegex();
