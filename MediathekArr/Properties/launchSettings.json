@@ -6,10 +6,10 @@
       "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5010"
+        "ASPNETCORE_URLS": "http://localhost:5007"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5010"
+      "applicationUrl": "http://localhost:5007"
     },
     "https": {
       "commandName": "Project",
