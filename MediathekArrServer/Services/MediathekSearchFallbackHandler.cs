@@ -200,6 +200,7 @@ public partial class MediathekSearchFallbackHandler
         title = title.Replace(".(Englisch)", "");
 
         // Remove unwanted characters
+        title = title.Replace("–", "-");
         title = TitleRegexUnd().Replace(title, "und");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
@@ -395,7 +396,7 @@ public partial class MediathekSearchFallbackHandler
 
     [GeneratedRegex(@"[&]")]
     private static partial Regex TitleRegexUnd();
-    [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>,()]")]
+    [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>,()|]")]
     private static partial Regex TitleRegexSymbols();
     [GeneratedRegex(@"\s+")]
     private static partial Regex TitleRegexWhitespace();
