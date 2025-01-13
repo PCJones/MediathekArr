@@ -21,6 +21,8 @@
         <!-- Step 0: Enter Sonarr Details -->
         <div id="wizardStep0">
             <h3>Enter Sonarr Details</h3>
+            <p>Note: If you are using Prowlarr you still need to enter your Sonarr details here to create the download client.
+            <br />You will be prompted for Prowlarr Host & API key at a later stage.</p>
             <div>
                 <label for="sonarrHost">Sonarr Host:</label>
                 <input type="text" id="sonarrHost" value="http://localhost:8989/" placeholder="http://localhost:8989" />
@@ -29,7 +31,7 @@
                 <label for="apiKey">Sonarr API Key:</label>
                 <input type="password" id="apiKey" value="" placeholder="Enter your API Key" />
             </div>
-            <p style="color: red; font-size: 0.9em;">Note: Both the Host and API key are not saved anywhere and will only be used for this session.</p>
+            <p style="color: red; font-size: 0.9em;">Both the Host and API key are not saved anywhere and will only be used for this session.</p>
             <button onclick="verifySonarrDetails()">Next</button>
         </div>
 
