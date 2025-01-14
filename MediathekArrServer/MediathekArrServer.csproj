@@ -17,6 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\MediathekArrApiClient\MediathekArrApiClient.csproj" />
 		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
 	</ItemGroup>
 

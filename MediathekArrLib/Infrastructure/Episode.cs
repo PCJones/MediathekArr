@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace MediathekArr.Infrastructure;
 
@@ -15,5 +16,6 @@ public class Episode
     public int? EpisodeNumber { get; set; }
 
     [ForeignKey("SeriesId")]
+    [JsonIgnore]
     public Series SeriesCache { get; set; }
 }

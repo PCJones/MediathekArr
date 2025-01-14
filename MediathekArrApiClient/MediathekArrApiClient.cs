@@ -4,7 +4,6 @@
 // </auto-generated>
 //----------------------
 
-
 #pragma warning disable 108 // Disable "CS0108 '{derivedDto}.ToJson()' hides inherited member '{dtoBase}.ToJson()'. Use the new keyword if hiding was intended."
 #pragma warning disable 114 // Disable "CS0114 '{derivedDto}.RaisePropertyChanged(String)' hides inherited member 'dtoBase.RaisePropertyChanged(String)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword."
 #pragma warning disable 472 // Disable "CS0472 The result of the expression is always 'false' since a value of type 'Int32' is never equal to 'null' of type 'Int32?'
@@ -73,7 +72,7 @@ namespace MediathekArr
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task SeriesAsync(int? tvdbId)
+        public virtual System.Threading.Tasks.Task<Series> SeriesAsync(int? tvdbId)
         {
             return SeriesAsync(tvdbId, System.Threading.CancellationToken.None);
         }
@@ -81,7 +80,7 @@ namespace MediathekArr
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task SeriesAsync(int? tvdbId, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<Series> SeriesAsync(int? tvdbId, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -90,6 +89,7 @@ namespace MediathekArr
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("text/plain"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
@@ -127,7 +127,12 @@ namespace MediathekArr
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Series>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -258,7 +263,83 @@ namespace MediathekArr
         }
     }
 
-    
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Episode
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("seriesId")]
+        public int SeriesId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("aired")]
+        public System.DateTimeOffset? Aired { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("runtime")]
+        public int? Runtime { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("seasonNumber")]
+        public int? SeasonNumber { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("episodeNumber")]
+        public int? EpisodeNumber { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Series
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("seriesId")]
+        public int SeriesId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("germanName")]
+        public string GermanName { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("aliases")]
+        public string Aliases { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("lastUpdated")]
+        public System.DateTimeOffset LastUpdated { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("nextAired")]
+        public System.DateTimeOffset? NextAired { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("lastAired")]
+        public System.DateTimeOffset? LastAired { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("cacheExpiry")]
+        public System.DateTimeOffset CacheExpiry { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("episodes")]
+        public System.Collections.Generic.ICollection<Episode> Episodes { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
 
 
 

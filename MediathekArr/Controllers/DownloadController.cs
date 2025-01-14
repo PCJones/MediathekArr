@@ -9,11 +9,10 @@ namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class DownloadController(DownloadService downloadService, DownloaderConfiguration config, IWebHostEnvironment environment) : ControllerBase
+public partial class DownloadController(DownloadService downloadService, DownloaderConfiguration config) : ControllerBase
 {
     private readonly DownloadService _downloadService = downloadService;
     private readonly DownloaderConfiguration _config = config;
-    private readonly IWebHostEnvironment _environment = environment;
 
     [HttpGet("api")]
     public IActionResult GetVersion([FromQuery] string mode, [FromQuery] string? name = null, [FromQuery] string? value = null, [FromQuery] int? del_files = 0)
