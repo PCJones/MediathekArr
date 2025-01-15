@@ -127,7 +127,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         {
             var queries = new List<object>
             {
-                new { fields = _queryFields, query = tvdbData.GermanName ?? tvdbData.Name }
+                new { fields = _queryFields, query = tvdbData.GermanName.Replace(" & ", " ") ?? tvdbData.Name.Replace(" & ", " ") }
             };
 
             apiResponse = await FetchMediathekViewApiResponseAsync(queries, 10000);
@@ -843,6 +843,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                      .Replace("Ü", "Ue");
 
         // Remove unwanted characters
+        title = title.Replace("–", "-");
         title = TitleRegexUnd().Replace(title, "and");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
@@ -910,7 +911,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     [GeneratedRegex(@"[&]")]
     private static partial Regex TitleRegexUnd();
-    [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>,()]")]
+    [GeneratedRegex(@"[/:;,""'’@#?$%^*+=!|<>,()|]")]
     private static partial Regex TitleRegexSymbols();
     [GeneratedRegex(@"\s+")]
     private static partial Regex TitleRegexWhitespace();

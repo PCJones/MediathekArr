@@ -11,8 +11,7 @@ public static class NewznabUtils
     {
         public const string Nzb = "application/x-nzb";
     }
-
-    public static List<Attribute> GenerateAttributes(ApiResultItem item, string? season, string? episode, string[] categoryValues, EpisodeType episodeType)
+    public static List<Attribute> GenerateAttributes(ApiResultItem item, string? season, string? episode, string[] categoryValues, EpisodeType episodeType, DateTime? airDate = null)
     {
         var attributes = new List<Attribute>();
 
@@ -31,6 +30,11 @@ public static class NewznabUtils
             attributes.Add(new Attribute { Name = "episode", Value = episode });
         }
 
+        if (airDate != null)
+        {
+            attributes.Add(new Attribute { Name = "tvairdate", Value = airDate.Value.ToString("yyyy-MM-dd") });
+        }
+
         if (string.IsNullOrEmpty(item.UrlSubtitle))
         {
             attributes.Add(new Attribute { Name = "subs", Value = "German" });
@@ -43,7 +47,7 @@ public static class NewznabUtils
 
     public static List<Attribute> GenerateAttributes(MatchedEpisodeInfo matchedEpisodeInfo, string[] categoryValues, EpisodeType episodeType)
     {
-        return GenerateAttributes(matchedEpisodeInfo.Item, matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues, episodeType);
+        return GenerateAttributes(matchedEpisodeInfo.Item, matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues, episodeType, matchedEpisodeInfo.Episode.Aired); 
     }
     public static string SerializeRss(Rss rss)
     {

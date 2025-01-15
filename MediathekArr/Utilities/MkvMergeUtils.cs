@@ -8,8 +8,8 @@ public static class MkvMergeUtils
     private static string GetMkvMergeArguments(string mp4Path, string subtitlePath, string mkvPath, bool subtitlesAvailable)
     {
         return subtitlesAvailable
-            ? $"-o {mkvPath} --language 0:ger --language 1:ger {mp4Path} --language 0:ger {subtitlePath}"
-            : $"-o {mkvPath} --language 0:ger --language 1:ger {mp4Path}";
+            ? $"-o \"{mkvPath}\" --language 0:ger --language 1:ger \"{mp4Path}\" --language 0:ger --default-track 0:0 \"{subtitlePath}\""
+            : $"-o \"{mkvPath}\" --language 0:ger --language 1:ger \"{mp4Path}\"";
     }
 
     public static async Task<(bool Success, int ExitCode, string ErrorOutput)> StartMkvmergeProcessAsync
