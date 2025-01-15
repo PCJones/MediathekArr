@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -7,14 +7,22 @@
 		<RootNamespace>MediathekArr</RootNamespace>
 	</PropertyGroup>
 
+	<!--<PropertyGroup>
+		<OpenApiDocumentsDirectory>.</OpenApiDocumentsDirectory>
+	</PropertyGroup>-->
+
 	<PropertyGroup>
 		<OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
 		<OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
-		<OpenApiOutputPath>$(MSBuildProjectDirectory)\swagger.json</OpenApiOutputPath>
+		<OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="9.0.1">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Scalar.AspNetCore" Version="1.2.44" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />

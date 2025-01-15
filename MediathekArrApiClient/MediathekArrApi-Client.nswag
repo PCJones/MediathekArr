@@ -4,7 +4,7 @@
   "documentGenerator": {
     "fromDocument": {
       "json": "",
-      "url": "http://localhost:5036/openapi/v1.json",
+      "url": "../MediathekArrApi/openapi.json",
       "output": null,
       "newLineBehavior": "Auto"
     }
@@ -62,10 +62,10 @@
       "responseClass": "SwaggerResponse",
       "namespace": "MediathekArr",
       "requiredPropertiesMustBeDefined": true,
-      "dateType": "System.DateTimeOffset",
+      "dateType": "System.DateOnly",
       "jsonConverters": null,
       "anyType": "object",
-      "dateTimeType": "System.DateTimeOffset",
+      "dateTimeType": "System.DateTime",
       "timeType": "System.TimeSpan",
       "timeSpanType": "System.TimeSpan",
       "arrayType": "System.Collections.Generic.ICollection",

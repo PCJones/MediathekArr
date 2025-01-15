@@ -15,6 +15,7 @@ public static class Bootstrapper
     public static WebApplicationBuilder AddMediathekArrApi(this WebApplicationBuilder builder)
     {
         builder.Logging.AddMediathekArrLogger();
+
         #region Database
         /* Add DbContext with specific DB Implementation 
          * Uncomment whatever Database you want to use and comment the other one(s) out :-)

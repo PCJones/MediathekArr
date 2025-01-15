@@ -34,10 +34,10 @@ namespace MediathekArr
         private System.Text.Json.JsonSerializerOptions _instanceSettings;
 
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public SeriesClient(System.Net.Http.HttpClient httpClient)
+        public SeriesClient(string baseUrl, System.Net.Http.HttpClient httpClient)
     #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
-            BaseUrl = "http://localhost:5036";
+            BaseUrl = baseUrl;
             _httpClient = httpClient;
             Initialize();
         }
@@ -277,7 +277,7 @@ namespace MediathekArr
         public string Name { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("aired")]
-        public System.DateTimeOffset? Aired { get; set; }
+        public System.DateTime? Aired { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("runtime")]
         public int? Runtime { get; set; }
@@ -316,16 +316,16 @@ namespace MediathekArr
         public string Aliases { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("lastUpdated")]
-        public System.DateTimeOffset LastUpdated { get; set; }
+        public System.DateTime LastUpdated { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("nextAired")]
-        public System.DateTimeOffset? NextAired { get; set; }
+        public System.DateTime? NextAired { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("lastAired")]
-        public System.DateTimeOffset? LastAired { get; set; }
+        public System.DateTime? LastAired { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("cacheExpiry")]
-        public System.DateTimeOffset CacheExpiry { get; set; }
+        public System.DateTime CacheExpiry { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("episodes")]
         public System.Collections.Generic.ICollection<Episode> Episodes { get; set; }
