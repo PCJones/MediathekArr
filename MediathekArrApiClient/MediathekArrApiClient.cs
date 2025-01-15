@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+using MediathekArr.Infrastructure;
+
 #pragma warning disable 108 // Disable "CS0108 '{derivedDto}.ToJson()' hides inherited member '{dtoBase}.ToJson()'. Use the new keyword if hiding was intended."
 #pragma warning disable 114 // Disable "CS0114 '{derivedDto}.RaisePropertyChanged(String)' hides inherited member 'dtoBase.RaisePropertyChanged(String)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword."
 #pragma warning disable 472 // Disable "CS0472 The result of the expression is always 'false' since a value of type 'Int32' is never equal to 'null' of type 'Int32?'
@@ -263,83 +265,7 @@ namespace MediathekArr
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Episode
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        public int Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("seriesId")]
-        public int SeriesId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("aired")]
-        public System.DateTime? Aired { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("runtime")]
-        public int? Runtime { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("seasonNumber")]
-        public int? SeasonNumber { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("episodeNumber")]
-        public int? EpisodeNumber { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Series
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("seriesId")]
-        public int SeriesId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("germanName")]
-        public string GermanName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("aliases")]
-        public string Aliases { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("lastUpdated")]
-        public System.DateTime LastUpdated { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("nextAired")]
-        public System.DateTime? NextAired { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("lastAired")]
-        public System.DateTime? LastAired { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("cacheExpiry")]
-        public System.DateTime CacheExpiry { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("episodes")]
-        public System.Collections.Generic.ICollection<Episode> Episodes { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
+    
 
 
 
