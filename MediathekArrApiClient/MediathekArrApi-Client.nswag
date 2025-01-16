@@ -62,7 +62,7 @@
       "wrapResponseMethods": [],
       "generateResponseClasses": true,
       "responseClass": "ApiResponse",
-      "namespace": "MediathekArr",
+      "namespace": "MediathekArr.Api",
       "requiredPropertiesMustBeDefined": true,
       "dateType": "System.DateOnly",
       "jsonConverters": null,
