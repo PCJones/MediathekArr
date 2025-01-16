@@ -7,7 +7,7 @@ namespace MediathekArr.Services;
 public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfiguration configuration, IMemoryCache memoryCache)
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
-    private readonly string _apiBaseUrl = configuration[Constants.EnvironmentVariableConstants.Api_Base_Url] ?? "https://mediathekarr.pcjones.de/api/v1";
+    private readonly string _apiBaseUrl = configuration[Constants.EnvironmentVariableConstants.Api_Base_Url] ?? Constants.MediathekArrConstants.MediathekArr_Api_Base_Url;
     private readonly IMemoryCache _memoryCache = memoryCache;
 
     private static JsonSerializerOptions GetJsonSerializerOptions()
@@ -20,6 +20,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
 
     public async Task<Data?> GetShowInfoByTvdbId(int? tvdbid)
     {
+
         if (tvdbid == null)
         {
             return null;

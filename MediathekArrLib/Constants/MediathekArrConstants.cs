@@ -9,6 +9,7 @@ namespace MediathekArr.Constants;
 public static class MediathekArrConstants
 {
     public const string Mediathek_HttpClient = "MediathekClient";
+    public const string MediathekArr_Api_Base_Url = "https://mediathekarr.pcjones.de/api/v1";
 }
 
 public static class EnvironmentVariableConstants
