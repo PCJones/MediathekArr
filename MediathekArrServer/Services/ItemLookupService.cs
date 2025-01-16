@@ -1,62 +1,33 @@
-﻿using MediathekArr.Models.Tvdb;
+﻿using MediathekArr.Clients;
+using MediathekArr.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
-using System.Text.Json;
 
 namespace MediathekArr.Services;
 
-public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfiguration configuration, IMemoryCache memoryCache)
+public class ItemLookupService(IMemoryCache memoryCache, ISeriesClient seriesClient, ILogger<ItemLookupService> logger)
 {
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
-    private readonly string _apiBaseUrl = configuration[Constants.EnvironmentVariableConstants.Api_Base_Url] ?? Constants.MediathekArrConstants.MediathekArr_Api_Base_Url;
     private readonly IMemoryCache _memoryCache = memoryCache;
+    private readonly ISeriesClient seriesClient = seriesClient;
+    private readonly ILogger<ItemLookupService> logger = logger;
 
-    private static JsonSerializerOptions GetJsonSerializerOptions()
+    public async Task<Series?> GetShowInfoByTvdbId(int? tvdbid)
     {
-        return new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-    }
+        if (tvdbid == null) return null;
 
-    public async Task<Data?> GetShowInfoByTvdbId(int? tvdbid)
-    {
+        /* Return cached value if possible */
+        var cacheKey = $"Series_{tvdbid}";
+        if (_memoryCache.TryGetValue(cacheKey, out Series? cachedTvdbInfo) && cachedTvdbInfo is not null) return cachedTvdbInfo;
 
-        if (tvdbid == null)
+        /* Fetch from API */
+        var result = await seriesClient.SeriesAsync(tvdbid);
+        if(result.StatusCode != (int) System.Net.HttpStatusCode.OK)
         {
-            return null;
+            logger.LogError("Failed to fetch TVDB data. Response: {StatusCode}", result.StatusCode);
+            throw new HttpRequestException($"Failed to fetch TVDB data. Response: {result.StatusCode}");
         }
 
-        var cacheKey = $"TvdbInfo_{tvdbid}";
-        if (_memoryCache.TryGetValue(cacheKey, out Data? cachedTvdbInfo))
-        {
-            if (cachedTvdbInfo != null)
-            {
-                return cachedTvdbInfo;
-            }
-        }
+        _memoryCache.Set(cacheKey, result.Result, TimeSpan.FromHours(12));
 
-        var requestUrl = $"{_apiBaseUrl}/Series?tvdbid={tvdbid}";
-        if (_apiBaseUrl == "https://mediathekarr.pcjones.de/api/v1") requestUrl = $"{_apiBaseUrl}/get_show.php?tvdbid={tvdbid}";
-
-        var response = await _httpClient.GetAsync(requestUrl);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new HttpRequestException($"Error fetching data: {errorContent}");
-        }
-
-        var jsonResponse = await response.Content.ReadAsStringAsync();
-        var tvdbInfo = JsonSerializer.Deserialize<InfoResponse>(jsonResponse, GetJsonSerializerOptions());
-
-        if (tvdbInfo == null || tvdbInfo.Status != "success" || tvdbInfo.Data == null)
-        {
-            throw new HttpRequestException($"Failed to fetch TVDB data. Response: {jsonResponse}");
-            // TODO log and return null
-        }
-
-        _memoryCache.Set(cacheKey, tvdbInfo.Data, TimeSpan.FromHours(12));
-
-        return tvdbInfo.Data;
+        return result.Result;
     }
 }
