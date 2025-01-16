@@ -187,20 +187,12 @@ public partial class MediathekSearchFallbackHandler
     }
     private static string FormatTitle(string title)
     {
-        // Replace German Umlaute and special characters
-        title = title.Replace("ä", "ae")
-                     .Replace("ö", "oe")
-                     .Replace("ü", "ue")
-                     .Replace("ß", "ss")
-                     .Replace("Ä", "Ae")
-                     .Replace("Ö", "Oe")
-                     .Replace("Ü", "Ue");
-
         // Remove "Englisch" at the end
         title = title.Replace(".(Englisch)", "");
 
         // Remove unwanted characters
         title = title.Replace("–", "-");
+        title = title.RemoveAccentButKeepGermanUmlauts();
         title = TitleRegexUnd().Replace(title, "und");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");

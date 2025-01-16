@@ -833,17 +833,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     private static string FormatTitle(string title)
     {
-        // Replace German Umlaute and special characters
-        title = title.Replace("ä", "ae")
-                     .Replace("ö", "oe")
-                     .Replace("ü", "ue")
-                     .Replace("ß", "ss")
-                     .Replace("Ä", "Ae")
-                     .Replace("Ö", "Oe")
-                     .Replace("Ü", "Ue");
-
         // Remove unwanted characters
         title = title.Replace("–", "-");
+        title = title.RemoveAccentButKeepGermanUmlauts();
         title = TitleRegexUnd().Replace(title, "and");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
