@@ -19,10 +19,24 @@ public static class Bootstrapper
         #region Caching
         builder.Services.AddMemoryCache();
         /* Caching architecture:
+         * Ideally we build up some form of caching across all components. There are basically two different types of caching,
+         * internal caching within the application and outgoing caching to the client.
+         * 
+         * Internal Caching:
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-9.0
+         * 
+         * Output Caching:
          * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/overview?view=aspnetcore-9.0#output-caching
          * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/output?view=aspnetcore-9.0
          * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/middleware?view=aspnetcore-9.0
-         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-9.0
+         * 
+         * Distributed Cache:
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed?view=aspnetcore-9.0
+         * https://github.com/leonibr/community-extensions-cache-postgres
+         * https://github.com/neosmart/SqliteCache
+         * 
+         * Hybrid Cache (Still in Preview, combines local and distributed cache):
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-9.0
          */
         #endregion
 
