@@ -1,9 +1,19 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace MediathekArrLib.Utilities;
+namespace MediathekArr.Extensions;
+
 public static class StringExtensions
 {
+    /// <summary>
+    /// Remove all accents from a string but keep German Umlauts
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
     public static string RemoveAccentButKeepGermanUmlauts(this string text)
     {
         var normalizedString = text.Normalize(NormalizationForm.FormD);
