@@ -261,7 +261,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private async Task<MatchedEpisodeInfo?> MatchesSeasonAndEpisode(ApiResultItem item, Ruleset ruleset)
     {
         // Fetch TVDB episode information
-        var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+        var tvdbData = await _itemLookupService.GetShowInfoById(ruleset.Media.TvdbId);
 
         if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
         {
@@ -327,7 +327,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private async Task<MatchedEpisodeInfo?> MatchesAbsoluteEpisodeNumber(ApiResultItem item, Ruleset ruleset)
     {
         // Fetch TVDB episode information
-        var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+        var tvdbData = await _itemLookupService.GetShowInfoById(ruleset.Media.TvdbId);
 
         if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
         {
@@ -395,7 +395,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private async Task<MatchedEpisodeInfo?> MatchesItemTitleIncludes(ApiResultItem item, Ruleset ruleset)
     {
         // Fetch TVDB episode information
-        var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+        var tvdbData = await _itemLookupService.GetShowInfoById(ruleset.Media.TvdbId);
 
         if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
         {
@@ -432,7 +432,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     private async Task<MatchedEpisodeInfo?> MatchesItemTitleExact(ApiResultItem item, Ruleset ruleset)
 		{
 			// Fetch TVDB episode information
-			var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+			var tvdbData = await _itemLookupService.GetShowInfoById(ruleset.Media.TvdbId);
 
 			if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
 			{
@@ -493,7 +493,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 		private async Task<MatchedEpisodeInfo?> MatchesItemTitleEqualsAirdate(ApiResultItem item, Ruleset ruleset)
     {
         // Fetch TVDB episode information
-        var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(ruleset.Media.TvdbId);
+        var tvdbData = await _itemLookupService.GetShowInfoById(ruleset.Media.TvdbId);
 
         if (tvdbData?.Episodes == null || tvdbData.Episodes.Count == 0)
         {

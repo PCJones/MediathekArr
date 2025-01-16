@@ -57,7 +57,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
             {
                 if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
                 {
-                    var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
+                    var tvdbData = await _itemLookupService.GetShowInfoById(parsedTvdbid);
 
                     string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode, limit, offset);
 

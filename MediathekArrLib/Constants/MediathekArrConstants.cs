@@ -10,6 +10,10 @@ public static class MediathekArrConstants
 {
     public const string Mediathek_HttpClient = "MediathekClient";
     public const string MediathekArr_Api_Base_Url = "https://mediathekarr.pcjones.de/api/v1";
+    
+    /* Caching (int in Hours) */
+    public const int MediathekArr_MemoryCache_Expiry = 12;
+    public const int MediathekArr_DatabaseCache_Expiry = 24;
 }
 
 public static class EnvironmentVariableConstants

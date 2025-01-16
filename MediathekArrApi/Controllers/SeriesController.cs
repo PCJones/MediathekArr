@@ -7,27 +7,42 @@ using Tvdb.Types;
 using MediathekArr.Extensions;
 using System.Net;
 using Tvdb.Extensions;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SeriesController(MediathekArrContext context, ISeriesClient seriesClient, ILogger<SeriesController> logger) : Controller
+public class SeriesController(ILogger<SeriesController> logger, MediathekArrContext context, ISeriesClient seriesClient, IMemoryCache memoryCache) : Controller
 {
     #region Properties
     public MediathekArrContext Context { get; } = context;
     public ISeriesClient SeriesClient { get; } = seriesClient;
-
+    public IMemoryCache MemoryCache { get; } = memoryCache;
     public ILogger<SeriesController> Logger { get; } = logger;
     #endregion
 
     [HttpGet]
     public async Task<ActionResult<Series>> GetSeriesData([FromQuery] int tvdbId)
     {
+        /* Fetch Series Data:
+         * 1. Look in Memory Cache
+         * 2. Look in DB Cache
+         * 3. Fetch live value via TVDB API
+         */
+
+        /* Return cached Value */
+        var cacheKey = $"Series_{tvdbId}";
+        if(MemoryCache.TryGetValue(cacheKey, out Series? cachedResult) && cachedResult is not null)
+        {
+            Logger.LogTrace("Found {tvdbId} in Memory Cache", tvdbId);
+            return Ok(cachedResult);
+        }
+
         /* Return cached version of Series whenever possible */
         if (await Context.Series.AnyAsync(s => s.SeriesId == tvdbId))
         {
-            Logger.LogTrace("Found {tvdbId} in Cache", tvdbId);
+            Logger.LogTrace("Found {tvdbId} in Database Cache", tvdbId);
             var seriesData = await Context.Series
                 .Include(s => s.Episodes)
                 .FirstAsync(s => s.SeriesId == tvdbId);
@@ -71,7 +86,7 @@ public class SeriesController(MediathekArrContext context, ISeriesClient seriesC
             LastUpdated = series.LastUpdated ?? DateTime.Today, // Dont really care about this but lets set it to today as a secondary marker of when we've cached this
             NextAired = series.NextAired.ToDateTime(),
             LastAired = series.LastAired.ToDateTime(),
-            CacheExpiry = DateTime.Today.AddDays(1), // add one day caching (TODO: configurable)
+            CacheExpiry = DateTime.Today.AddHours(Constants.MediathekArrConstants.MediathekArr_DatabaseCache_Expiry),
             Episodes = [.. series.Episodes.Select(e => new Episode
             {
                 Id = e.Id,
@@ -89,6 +104,12 @@ public class SeriesController(MediathekArrContext context, ISeriesClient seriesC
         await Context.Series.AddAsync(record);
         await Context.SaveChangesAsync();
         Logger.LogInformation("Added Series {tvdbId} from TVDB into the Cache.", tvdbId);
+
+        /* Clear existing cache in Memory and then recreate one cached item */
+        var cacheKey = $"Series_{tvdbId}";
+        MemoryCache.Remove(cacheKey);
+        MemoryCache.Set(cacheKey, record, TimeSpan.FromHours(Constants.MediathekArrConstants.MediathekArr_MemoryCache_Expiry));
+
         return record;
     }
 }

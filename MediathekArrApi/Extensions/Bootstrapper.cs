@@ -16,6 +16,16 @@ public static class Bootstrapper
     {
         builder.Logging.AddMediathekArrLogger();
 
+        #region Caching
+        builder.Services.AddMemoryCache();
+        /* Caching architecture:
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/overview?view=aspnetcore-9.0#output-caching
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/output?view=aspnetcore-9.0
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/middleware?view=aspnetcore-9.0
+         * https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-9.0
+         */
+        #endregion
+
         #region Database
         /* Add DbContext with specific DB Implementation 
          * Uncomment whatever Database you want to use and comment the other one(s) out :-)
