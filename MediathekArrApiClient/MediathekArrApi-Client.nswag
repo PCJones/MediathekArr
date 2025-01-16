@@ -17,7 +17,7 @@
       "suppressClientClassesOutput": false,
       "generateClientInterfaces": true,
       "suppressClientInterfacesOutput": false,
-      "clientBaseInterface": null,
+      "clientBaseInterface": "IMediathekArrApiClient",
       "injectHttpClient": true,
       "disposeHttpClient": true,
       "protectedMethods": [],
@@ -62,7 +62,7 @@
       "wrapResponseMethods": [],
       "generateResponseClasses": true,
       "responseClass": "ApiResponse",
-      "namespace": "MediathekArr.Api",
+      "namespace": "MediathekArr.Clients",
       "requiredPropertiesMustBeDefined": true,
       "dateType": "System.DateOnly",
       "jsonConverters": null,
@@ -96,7 +96,7 @@
       "templateDirectory": null,
       "serviceHost": null,
       "serviceSchemes": null,
-      "output": "MediathekArrApiClient.cs",
+      "output": "Clients/MediathekArrApiClient.cs",
       "newLineBehavior": "Auto"
     }
   }
