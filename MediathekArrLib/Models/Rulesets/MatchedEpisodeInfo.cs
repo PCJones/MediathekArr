@@ -1,4 +1,4 @@
-﻿using MediathekArr.Models.Tvdb;
+﻿using MediathekArr.Infrastructure;
 
 namespace MediathekArr.Models.Rulesets;
 

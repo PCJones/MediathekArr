@@ -18,4 +18,9 @@ public class Episode
     [ForeignKey("SeriesId")]
     [JsonIgnore]
     public Series SeriesCache { get; set; }
+
+    [JsonIgnore]
+    public string PaddedSeason => SeasonNumber.Value.ToString("D2") ?? string.Empty;
+    [JsonIgnore]
+    public string PaddedEpisode => EpisodeNumber.Value.ToString("D2") ?? string.Empty;
 }

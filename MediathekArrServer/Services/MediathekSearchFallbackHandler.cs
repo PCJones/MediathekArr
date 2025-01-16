@@ -1,7 +1,8 @@
-﻿using MediathekArr.Models;
+﻿using MediathekArr.Extensions;
+using MediathekArr.Infrastructure;
+using MediathekArr.Models;
 using MediathekArr.Models.Newznab;
 using MediathekArr.Models.Rulesets;
-using MediathekArr.Models.Tvdb;
 using MediathekArr.Utilities;
 using System.Globalization;
 using System.Text;
@@ -12,7 +13,7 @@ namespace MediathekArr.Services;
 
 public partial class MediathekSearchFallbackHandler
 {
-    public static List<Item> GetFallbackSearchResultItemsById(string? apiResponse, Episode episode, Data tvdbData)
+    public static List<Item> GetFallbackSearchResultItemsById(string? apiResponse, Episode episode, Series tvdbData)
     {
         if (string.IsNullOrWhiteSpace(apiResponse))
         {
@@ -36,7 +37,7 @@ public partial class MediathekSearchFallbackHandler
     }
 
 
-    private static List<Item> GenerateRssItems(ApiResultItem item, string? season, string? episode, Data? tvdbData = null)
+    private static List<Item> GenerateRssItems(ApiResultItem item, string? season, string? episode, Series? tvdbData = null)
     {
         var items = new List<Item>();
 
@@ -61,7 +62,7 @@ public partial class MediathekSearchFallbackHandler
         return items;
     }
 
-    private static List<Item> CreateRssItems(ApiResultItem item, string? season, string? episode, Data? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
+    private static List<Item> CreateRssItems(ApiResultItem item, string? season, string? episode, Series? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
     {
         var items = new List<Item>();
 
@@ -83,7 +84,7 @@ public partial class MediathekSearchFallbackHandler
         return items;
     }
 
-    private static Item CreateRssItem(ApiResultItem item, string? yearSeason, string? season, string? episode, Data? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
+    private static Item CreateRssItem(ApiResultItem item, string? yearSeason, string? season, string? episode, Series? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
     {
         var adjustedSize = (long)(item.Size * sizeMultiplier);
         if (!string.IsNullOrEmpty(item.UrlSubtitle))
@@ -125,7 +126,7 @@ public partial class MediathekSearchFallbackHandler
 
     // TODO refactor and make this look good, It's too late right now:D
     // TODO now it's even worse :D oh god
-    private static string GenerateTitle(Data? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
+    private static string GenerateTitle(Series? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
     {
         var showName = tvdbData?.Name ?? topic;
         var language = title.Contains("(Englisch)") ? "ENGLISH" : "GERMAN";

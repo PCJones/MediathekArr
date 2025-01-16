@@ -3,10 +3,11 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using MediathekArr.Infrastructure;
+using MediathekArr.Extensions;
 using MediathekArr.Models;
 using MediathekArr.Models.Newznab;
 using MediathekArr.Models.Rulesets;
-using MediathekArr.Models.Tvdb;
 using MediathekArr.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using MatchType = MediathekArr.Models.Rulesets.MatchType;
@@ -100,9 +101,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return string.Empty;
     }
 
-    public async Task<string> FetchSearchResultsFromApiById(Data tvdbData, string? season, string? episodeNumber, int limit, int offset)
+    public async Task<string> FetchSearchResultsFromApiById(Series tvdbData, string? season, string? episodeNumber, int limit, int offset)
     {
-        var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}";
+        var cacheKey = $"tvdb_{tvdbData.SeriesId}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}";
 
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
         {
@@ -117,7 +118,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             return response;
         }
 
-        var mediathekViewRequestCacheKey = $"mediathekapi_{tvdbData.Id}";
+        var mediathekViewRequestCacheKey = $"mediathekapi_{tvdbData.SeriesId}";
         string apiResponse;
         if (_cache.TryGetValue(mediathekViewRequestCacheKey, out string? cachedApiResponse))
         {
@@ -163,7 +164,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return newznabRssResponse;
     }
 
-    private static List<Episode>? GetDesiredEpisodes(Data tvdbData, string? season, string? episodeNumber)
+    private static List<Episode>? GetDesiredEpisodes(Series tvdbData, string? season, string? episodeNumber)
     {
         List<Episode>? desiredEpisodes;
         if (season != null)
@@ -631,7 +632,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return _rulesetsByTopic.TryGetValue(topic, out var rulesets) ? rulesets : [];
     }
 
-    private async Task<(List<MatchedEpisodeInfo> matchedEpisodes, List<ApiResultItem> unmatchedFilteredResultItems)> ApplyRulesetFilters(List<ApiResultItem> results, Data? tvdbData = null)
+    private async Task<(List<MatchedEpisodeInfo> matchedEpisodes, List<ApiResultItem> unmatchedFilteredResultItems)> ApplyRulesetFilters(List<ApiResultItem> results, Series? tvdbData = null)
     {
         var matchedFilteredResults = new List<MatchedEpisodeInfo>();
         var unmatchedFilteredResults = new List<ApiResultItem>(results);
@@ -647,7 +648,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             // Get applicable rulesets for the topic or specific TVDB data
             var rulesets = tvdbData is null
                 ? GetRulesetsForTopic(item.Topic)
-                : GetRulesetsForTopic(item.Topic).Where(r => r.Media?.TvdbId == tvdbData.Id).ToList();
+                : GetRulesetsForTopic(item.Topic).Where(r => r.Media?.TvdbId == tvdbData.SeriesId).ToList();
 
             foreach (var ruleset in rulesets)
             {
