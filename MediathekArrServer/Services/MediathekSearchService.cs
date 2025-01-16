@@ -834,6 +834,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     {
         // Remove unwanted characters
         title = title.Replace("–", "-");
+        title = title.RemoveAccentButKeepGermanUmlauts();
         title = TitleRegexUnd().Replace(title, "and");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");

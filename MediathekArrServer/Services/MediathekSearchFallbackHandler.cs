@@ -192,6 +192,7 @@ public partial class MediathekSearchFallbackHandler
 
         // Remove unwanted characters
         title = title.Replace("–", "-");
+        title = title.RemoveAccentButKeepGermanUmlauts();
         title = TitleRegexUnd().Replace(title, "und");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
