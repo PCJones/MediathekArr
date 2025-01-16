@@ -15,6 +15,14 @@ Example screenshot:
 
 
 ## Install using Docker
+
+# Important Note:
+**I strongly recommend to use the 1.0 beta instead, which is much more stable and can find shows more consistently:**
+
+[https://github.com/PCJones/MediathekArr/releases](https://github.com/PCJones/MediathekArr/releases)
+
+## Installation
+
 1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
 2. In Sonarr/Radarr go to Settings>Download Clients
 3. Enable Advanced Settings at the top
