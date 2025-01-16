@@ -124,7 +124,7 @@ static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
     if (!existingConfig && (string.IsNullOrEmpty(incompletePath) || string.IsNullOrEmpty(completePath)))
     {
         logger.LogWarning("Attention!");
-        logger.LogWarning("Configuration file was not found. Please visit http://localhost:5008/ to setup MediathekArr.");
+        logger.LogWarning("Configuration file was not found. Please visit http://localhost:5007/ to setup MediathekArr.");
         logger.LogWarning("Alternatively use environment variables (see https://github.com/PCJones/MediathekArr).");
         logger.LogWarning("MediathekArr will use default values:");
     }
