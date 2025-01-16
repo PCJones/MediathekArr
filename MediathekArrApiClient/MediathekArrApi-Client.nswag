@@ -15,7 +15,7 @@
       "configurationClass": null,
       "generateClientClasses": true,
       "suppressClientClassesOutput": false,
-      "generateClientInterfaces": false,
+      "generateClientInterfaces": true,
       "suppressClientInterfacesOutput": false,
       "clientBaseInterface": null,
       "injectHttpClient": true,
