@@ -187,15 +187,6 @@ public partial class MediathekSearchFallbackHandler
     }
     private static string FormatTitle(string title)
     {
-        // Replace German Umlaute and special characters
-        title = title.Replace("ä", "ae")
-                     .Replace("ö", "oe")
-                     .Replace("ü", "ue")
-                     .Replace("ß", "ss")
-                     .Replace("Ä", "Ae")
-                     .Replace("Ö", "Oe")
-                     .Replace("Ü", "Ue");
-
         // Remove "Englisch" at the end
         title = title.Replace(".(Englisch)", "");
 
