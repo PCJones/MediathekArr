@@ -8,6 +8,7 @@ using MediathekArr.Extensions;
 using System.Net;
 using Tvdb.Extensions;
 using Microsoft.Extensions.Caching.Memory;
+using MediathekArr.Models.Tvdb;
 
 namespace MediathekArr.Controllers;
 

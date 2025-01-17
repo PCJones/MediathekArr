@@ -1,8 +1,8 @@
 ﻿using MediathekArr.Extensions;
-using MediathekArr.Infrastructure;
 using MediathekArr.Models;
 using MediathekArr.Models.Newznab;
 using MediathekArr.Models.Rulesets;
+using MediathekArr.Models.Tvdb;
 using MediathekArr.Utilities;
 using System.Globalization;
 using System.Text;

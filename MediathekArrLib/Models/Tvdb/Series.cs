@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MediathekArr.Infrastructure;
+namespace MediathekArr.Models.Tvdb;
 
 public class Series
 {

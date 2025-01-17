@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using MediathekArr.Infrastructure;
 using MediathekArr.Extensions;
 using MediathekArr.Models;
 using MediathekArr.Models.Newznab;
@@ -11,6 +10,7 @@ using MediathekArr.Models.Rulesets;
 using MediathekArr.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using MatchType = MediathekArr.Models.Rulesets.MatchType;
+using MediathekArr.Models.Tvdb;
 
 namespace MediathekArr.Services;
 

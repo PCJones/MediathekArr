@@ -1,5 +1,5 @@
 ﻿using MediathekArr.Clients;
-using MediathekArr.Infrastructure;
+using MediathekArr.Models.Tvdb;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace MediathekArr.Services;

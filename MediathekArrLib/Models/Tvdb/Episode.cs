@@ -1,7 +1,26 @@
-﻿namespace MediathekArr.Models.Tvdb;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
-public record Episode(string Name, DateTime? Aired, int? Runtime, int SeasonNumber, int EpisodeNumber)
+namespace MediathekArr.Models.Tvdb;
+
+public class Episode
 {
-    public string PaddedSeason => SeasonNumber.ToString("D2");
-    public string PaddedEpisode => EpisodeNumber.ToString("D2");
-};
+    [Key]
+    public int Id { get; set; }
+    public int SeriesId { get; set; }
+    public string? Name { get; set; }
+    public DateTime? Aired { get; set; }
+    public int? Runtime { get; set; }
+    public int? SeasonNumber { get; set; }
+    public int? EpisodeNumber { get; set; }
+
+    [ForeignKey("SeriesId")]
+    [JsonIgnore]
+    public Series SeriesCache { get; set; }
+
+    [JsonIgnore]
+    public string PaddedSeason => SeasonNumber.Value.ToString("D2") ?? string.Empty;
+    [JsonIgnore]
+    public string PaddedEpisode => EpisodeNumber.Value.ToString("D2") ?? string.Empty;
+}
