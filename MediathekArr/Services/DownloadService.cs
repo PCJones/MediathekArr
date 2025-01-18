@@ -1,6 +1,7 @@
 ﻿using MediathekArrDownloader.Models;
 using MediathekArrDownloader.Models.SABnzbd;
 using MediathekArrDownloader.Utilities;
+using MediathekArrLib.Utilities;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -332,10 +333,29 @@ public partial class DownloadService
             subtitlesAvailable = false;
         }
 
-        queueItem.Status = SabnzbdDownloadStatus.Extracting;
-        _logger.LogInformation("Starting conversion of {Title} from MP4 to MKV. MP4 Path: {Mp4Path}, MKV Path: {MkvPath}", queueItem.Title, mp4Path, mkvPath);
+        // Temporarily remove umlauts as mkvmerge can't handle them on linux
+        var mp4PathWithoutUmlauts = mp4Path.RemoveUmlauts();
+        var subtitlePathWithoutUmlauts = subtitlePath.RemoveUmlauts();
+        var mkvPathWithoutUmlauts = mkvPath.RemoveUmlauts();
+        if (mp4PathWithoutUmlauts != mp4Path)
+        {
+            File.Move(mp4Path, mp4PathWithoutUmlauts);
+        }
+        if (subtitlePathWithoutUmlauts != subtitlePath)
+        {
+            File.Move(subtitlePath, subtitlePathWithoutUmlauts);
+        }
 
-        var (success, exitCode, errorOutput) = await MkvMergeUtils.StartMkvmergeProcessAsync(_mkvMergePath, mp4Path, subtitlePath, mkvPath, subtitlesAvailable, queueItem.Title, _logger);
+        queueItem.Status = SabnzbdDownloadStatus.Extracting;
+        _logger.LogInformation("Starting conversion of {Title} from MP4 to MKV. MP4 Path: {Mp4Path}, MKV Path: {MkvPath}", queueItem.Title, mp4Path, mkvPathWithoutUmlauts);
+
+        var (success, exitCode, errorOutput) = await MkvMergeUtils.StartMkvmergeProcessAsync(_mkvMergePath, mp4PathWithoutUmlauts, subtitlePathWithoutUmlauts, mkvPathWithoutUmlauts, subtitlesAvailable, queueItem.Title, _logger);
+
+        // Restore umlauts so *arrs correctly identify the show
+        if (mkvPathWithoutUmlauts != mkvPath)
+        {
+            File.Move(mkvPathWithoutUmlauts, mkvPath);
+        }
 
         if (success)
         {

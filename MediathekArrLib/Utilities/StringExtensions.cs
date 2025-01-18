@@ -21,4 +21,19 @@ public static class StringExtensions
 
         return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
     }
+
+    public static string RemoveUmlauts(this string text)
+    {
+        var normalizedString = text.Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder();
+        foreach (var c in normalizedString)
+        {
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+            {
+                stringBuilder.Append(c);
+            }
+        }
+        return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+    }
 }
