@@ -7,6 +7,7 @@ RUN dotnet restore
 RUN dotnet publish -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
+LABEL org.opencontainers.image.source="https://github.com/PCJones/MediathekArr"
 
 RUN apt-get update && apt-get install -y tar xz-utils && rm -rf /var/lib/apt/lists/*
 
