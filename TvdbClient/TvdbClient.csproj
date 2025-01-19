@@ -18,7 +18,7 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Scrutor.Extensions.HttpClient" Version="5.0.1" />
+		<PackageReference Include="Scrutor.Extensions.HttpClient" Version="5.1.2-alpha.2" />
 	</ItemGroup>
 
 </Project>
