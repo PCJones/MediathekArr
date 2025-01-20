@@ -19,7 +19,7 @@
 		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1" />
-		<PackageReference Include="Scrutor.Extensions.HttpClient" Version="5.0.1" />
+		<PackageReference Include="Scrutor.Extensions.HttpClient" Version="5.1.2-alpha.2" />
 	</ItemGroup>
 
 	<ItemGroup>

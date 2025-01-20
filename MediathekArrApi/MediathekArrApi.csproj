@@ -28,11 +28,12 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.1" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+		<PackageReference Include="Scrutor.Extensions.HttpClient" Version="5.1.2-alpha.2" />
+		<PackageReference Include="TvdbClient" Version="4.7.10-alpha.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
-		<ProjectReference Include="..\TvdbClient\TvdbClient.csproj" />
 	</ItemGroup>
 
 </Project>

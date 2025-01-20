@@ -9,6 +9,7 @@ using System.Net;
 using Tvdb.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 using MediathekArr.Models.Tvdb;
+using MediathekArr.Exceptions;
 
 namespace MediathekArr.Controllers;
 
@@ -63,11 +64,11 @@ public class SeriesController(ILogger<SeriesController> logger, MediathekArrCont
         return Ok(newSeriesData);
     }
 
-    private async Task<Series> FetchAndCacheSeriesData(int tvdbId)
+    public async Task<Series> FetchAndCacheSeriesData(int tvdbId)
     {
         /* Fetch from TVDB */
         var seriesData = await SeriesClient.ExtendedAsync(tvdbId, SeriesMeta.Episodes, true);
-        if (!seriesData.IsSuccess) return null;
+        if (!seriesData.IsSuccess || seriesData.Data is null) throw new SeriesNotFoundException(tvdbId);
 
         /* Caching:
          * Place the record in our DB
@@ -76,7 +77,7 @@ public class SeriesController(ILogger<SeriesController> logger, MediathekArrCont
          */
         var series = seriesData.Data;
         var germanName = series.NameTranslations.Any(t => t == "deu") ? series.NameTranslations.First(t => t == "deu") : series.Name;
-        var germanAliases = series.Aliases.ToList()?.Where(a => a.Language == "deu").ToList();
+        var germanAliases = series.Aliases.Where(a => a.Language == "deu").ToList();
 
         var record = new Series
         {
