@@ -1,12 +1,16 @@
-﻿using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
-using MediathekArrLib.Models.Rulesets;
+﻿using MediathekArr.Models;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Models.Rulesets;
 using System.Xml.Serialization;
-using Attribute = MediathekArrLib.Models.Newznab.Attribute;
+using Attribute = MediathekArr.Models.Newznab.Attribute;
 
-namespace MediathekArrLib.Utilities;
+namespace MediathekArr.Utilities;
 public static class NewznabUtils
 {
+    public static class Application
+    {
+        public const string Nzb = "application/x-nzb";
+    }
     public static List<Attribute> GenerateAttributes(ApiResultItem item, string? season, string? episode, string[] categoryValues, EpisodeType episodeType, DateTime? airDate = null)
     {
         var attributes = new List<Attribute>();
@@ -63,21 +67,5 @@ public static class NewznabUtils
         return result;
     }
 
-    public static Rss GetEmptyRssResult()
-    {
-        return new Rss
-        {
-            Channel = new Channel
-            {
-                Title = "MediathekArr",
-                Description = "MediathekArr API results",
-                Response = new Response
-                {
-                    Offset = 0,
-                    Total = 0
-                },
-                Items = []
-            }
-        };
-    }
+    public static Rss GetEmptyRssResult() => Factories.RssFactory.Empty;
 }

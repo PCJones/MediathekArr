@@ -367,3 +367,6 @@ config.json
 *.mp4
 *.mkv
 ffmpeg/
+*.sqlite-shm
+*.sqlite
+*.sqlite-wal

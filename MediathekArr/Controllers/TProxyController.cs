@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace MediathekArrDownloader.Controllers;
+namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("api")]

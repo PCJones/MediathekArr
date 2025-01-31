@@ -1,8 +1,9 @@
-using MediathekArrLib.Utilities;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using MediathekArrDownloader.Services;
-using MediathekArrDownloader.Models;
+using MediathekArr.Services;
 using Scalar.AspNetCore;
+using MediathekArr.Extensions;
+using System.Net.Mime;
+using MediathekArr.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,11 +26,11 @@ builder.Logging.AddMediathekArrLogger();
 builder.Services.AddOpenApi();
 
 builder.Services.AddMemoryCache();
-builder.Services.AddHttpClient("MediathekClient", client =>
+builder.Services.AddHttpClient(MediathekArr.Constants.MediathekArrConstants.Mediathek_HttpClient, client =>
 {
     client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0");
     client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip");
-    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+    client.DefaultRequestHeaders.Accept.ParseAdd(MediaTypeNames.Application.Json);
 })
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
@@ -66,9 +67,9 @@ using (var scope = app.Services.CreateScope())
 }
 app.Run();
 
-static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
+static DownloaderConfiguration ConfigureAppConfig(IConfiguration configuration, ILogger logger)
 {
-    var configPathEnv = Environment.GetEnvironmentVariable("CONFIG_PATH");
+    var configPathEnv = Environment.GetEnvironmentVariable(MediathekArr.Constants.EnvironmentVariableConstants.Config_Path);
 
     string configFilePath;
     if (!string.IsNullOrEmpty(configPathEnv))
@@ -82,24 +83,24 @@ static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
     logger.LogInformation("Config path set to: {configFilePath}", configFilePath);
 
     bool existingConfig;
-    Config config;
+    DownloaderConfiguration config;
 
     if (File.Exists(configFilePath))
     {
         var jsonContent = File.ReadAllText(configFilePath);
-        config = System.Text.Json.JsonSerializer.Deserialize<Config>(jsonContent) ?? new Config();
+        config = System.Text.Json.JsonSerializer.Deserialize<DownloaderConfiguration>(jsonContent) ?? new DownloaderConfiguration();
         logger.LogInformation("Loaded configuration from {configFilePath}", configFilePath);
         existingConfig = true;
     }
     else
     {
-        config = new Config();
+        config = new DownloaderConfiguration();
         existingConfig = false;
     }
 
     // Override from environment variables
-    var incompletePath = Environment.GetEnvironmentVariable("DOWNLOAD_INCOMPLETE_PATH");
-    var completePath = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");
+    var incompletePath = Environment.GetEnvironmentVariable(MediathekArr.Constants.EnvironmentVariableConstants.Download_Path_Incomplete);
+    var completePath = Environment.GetEnvironmentVariable(MediathekArr.Constants.EnvironmentVariableConstants.Download_Path_Complete);
 
     if (!string.IsNullOrEmpty(incompletePath))
     {

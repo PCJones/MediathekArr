@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace MediathekArrLib.Models.Rulesets;
+namespace MediathekArr.Models.Rulesets;
 
 public class TitleRegexRule
 {

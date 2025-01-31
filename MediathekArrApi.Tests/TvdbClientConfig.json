@@ -1,0 +1,6 @@
+{
+  "TvdbConfiguration": {
+    "BaseUrl": "https://api4.thetvdb.com/v4",
+    "ApiKey": "e82b72fe-8674-4cc1-8cbb-474ed12a3fed"
+  }
+}

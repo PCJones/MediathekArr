@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArrLib.Models.Newznab;
+namespace MediathekArr.Models.Newznab;
 
 [XmlRoot("rss")]
 public class Rss

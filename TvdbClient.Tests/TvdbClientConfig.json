@@ -1,0 +1,8 @@
+{
+  "TvdbConfiguration": {
+    "BaseUrl": "https://api4.thetvdb.com/v4",
+    /* This API Key comes from the TVDB Example and obviously needs to be replaced in production */
+    "ApiKey": "580c9239-d2f8-4460-a22e-6831900a97a3",
+    "Pin": "IPQZOCMN"
+  }
+}

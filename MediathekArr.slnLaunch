@@ -13,5 +13,25 @@
         "DebugTarget": "http"
       }
     ]
+  },
+  {
+    "Name": "Downloader+Server + Api",
+    "Projects": [
+      {
+        "Path": "MediathekArrApi\\MediathekArrApi.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "MediathekArr\\MediathekArrDownloader.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "MediathekArrServer\\MediathekArrServer.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
   }
 ]

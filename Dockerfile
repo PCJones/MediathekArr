@@ -5,6 +5,11 @@ WORKDIR /app
 COPY . ./
 RUN dotnet restore
 
+# Publish MediathekArrApi
+WORKDIR /app/MediathekArrApi
+RUN dotnet publish -c Release -o /app/out/MediathekArrApi
+
+
 # Publish MediathekArrServer
 WORKDIR /app/MediathekArrServer
 RUN dotnet publish -c Release -o /app/out/MediathekArrServer
@@ -35,6 +40,7 @@ RUN wget -O /etc/apt/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.downlo
 WORKDIR /app
 
 # Copy the built apps from the build environment
+COPY --from=build-env /app/out/MediathekArrApi /app/MediathekArrApi
 COPY --from=build-env /app/out/MediathekArrServer /app/MediathekArrServer
 COPY --from=build-env /app/out/MediathekArrDownloader /app/MediathekArrDownloader
 
