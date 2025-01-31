@@ -368,7 +368,7 @@ public partial class DownloadService
             _logger.LogError("Mkvmerge conversion failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, exitCode, errorOutput);
         }
 
-        DeleteTemporaryFiles(mp4Path, subtitlePath, subtitlesAvailable);
+        DeleteTemporaryFiles(mp4PathWithoutUmlauts, subtitlePathWithoutUmlauts, subtitlesAvailable);
 
         double sizeInMB = 0;
         if (double.TryParse(queueItem.Size.Replace("GB", "").Replace("MB", "").Trim(), out double size))
