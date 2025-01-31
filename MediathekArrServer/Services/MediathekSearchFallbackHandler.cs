@@ -14,7 +14,7 @@ public partial class MediathekSearchFallbackHandler
 {
     public static List<Item> GetFallbackSearchResultItemsById(string? apiResponse, TvdbEpisode episode, TvdbData tvdbData)
     {
-        if (string.IsNullOrWhiteSpace(apiResponse))
+        if (string.IsNullOrWhiteSpace(apiResponse) || tvdbData.Name.Length <= 3)
         {
             return [];
         }
