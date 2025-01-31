@@ -572,10 +572,14 @@ async function setProwlarrIndexerDownloadClient(indexerId) {
             'Indexer updated with download client ID successfully.',
             'Failed to update indexer with download client ID'
         );
-
+        console.log('xxxxxxxxx')
+        console.log(updateResponse) 
         if (!updateResponse) {
             alert('Failed to update the indexer with the download client ID.');
             return false;
+        }
+        else {
+            return true;
         }
     }
 
