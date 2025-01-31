@@ -341,7 +341,7 @@ public partial class DownloadService
         {
             File.Move(mp4Path, mp4PathWithoutUmlauts);
         }
-        if (subtitlePathWithoutUmlauts != subtitlePath)
+        if (subtitlesAvailable && subtitlePathWithoutUmlauts != subtitlePath)
         {
             File.Move(subtitlePath, subtitlePathWithoutUmlauts);
         }
