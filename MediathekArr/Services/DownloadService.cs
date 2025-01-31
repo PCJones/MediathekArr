@@ -239,7 +239,7 @@ public partial class DownloadService
             var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
             var totalSize = response.Content.Headers.ContentLength ?? 0;
 
-            queueItem.Size = (totalSize / (1024.0 * 1024.0)).ToString("F2");
+            queueItem.Size = (totalSize / (1024.0 * 1024.0)).ToString("F2"); // TODO: Use Units.Net for this conversion
             _logger.LogInformation("Total file size for {Title}: {Size} MB", queueItem.Title, queueItem.Size);
 
             using (var contentStream = await response.Content.ReadAsStreamAsync())
