@@ -24,7 +24,7 @@ public static class StringExtensions
 
     public static string RemoveUmlauts(this string text)
     {
-        var normalizedString = text.Normalize(NormalizationForm.FormD);
+        var normalizedString = text.Replace("ß", "ss").Normalize(NormalizationForm.FormD);
         var stringBuilder = new StringBuilder();
         foreach (var c in normalizedString)
         {
