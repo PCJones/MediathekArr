@@ -313,7 +313,7 @@ public partial class DownloadService
     private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch, bool subtitlesAvailable)
     {
         var completeCategoryDir = _config.CompletePath;
-        _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, completeCategoryDir);
+        _logger.LogInformation("Ensuring complete directory exists at path: {Path}", completeCategoryDir);
         Directory.CreateDirectory(completeCategoryDir);
 
         var mp4Path = Path.Combine(_config.IncompletePath, queueItem.Title + ".mp4");
