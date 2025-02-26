@@ -5,6 +5,11 @@ namespace MediathekArrLib.Models;
 
 public class ApiResultItem
 {
+    [JsonIgnore]
+    private readonly string[] EnglishLanguageIdentifiers = ["(Originalversion", "(Englisch"];
+    [JsonIgnore]
+    private readonly string[] BurnedInSubtitleIdentifiers = ["Originalversion mit Untertitel"];
+
     [JsonPropertyName("channel")]
     public string Channel { get; set; }
 
@@ -45,5 +50,8 @@ public class ApiResultItem
     [JsonPropertyName("url_subtitle")]
     public string UrlSubtitle { get; set; }
     [JsonIgnore]
-    public string Language => Title?.Contains("(Englisch)") ?? false ? "ENGLISH" : "GERMAN";
+    public string Language => EnglishLanguageIdentifiers.Any(Title.Contains) ? (HasBurnedInSubtitles ? "GERMAN.SUBBED" : "ENGLISH") : "GERMAN";
+
+    [JsonIgnore]
+    private bool HasBurnedInSubtitles => BurnedInSubtitleIdentifiers.Any(Title.Contains);
 }
