@@ -50,8 +50,8 @@ public class ApiResultItem
     [JsonPropertyName("url_subtitle")]
     public string UrlSubtitle { get; set; }
     [JsonIgnore]
-    public string Language => EnglishLanguageIdentifiers.Any(Title.Contains) ? (HasBurnedInSubtitles ? "GERMAN.SUBBED" : "ENGLISH") : "GERMAN";
+    public string Language => EnglishLanguageIdentifiers.Any(Title.Contains) ? (HasBurnedInSubtitles ? "GERMAN.SUBBED.HC" : "ENGLISH") : "GERMAN";
 
     [JsonIgnore]
-    private bool HasBurnedInSubtitles => BurnedInSubtitleIdentifiers.Any(Title.Contains);
+    private bool HasBurnedInSubtitles => BurnedInSubtitleIdentifiers.Any(Title.Contains) && string.IsNullOrEmpty(UrlSubtitle);
 }
