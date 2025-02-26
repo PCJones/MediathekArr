@@ -5,6 +5,15 @@ require 'token_manager.php';
 $db = initializeDatabase();
 $apiKey = getApiKey($db);
 
+header("Access-Control-Allow-Origin: https://jones-sanity.vercel.app");
+header("Access-Control-Allow-Methods: GET, OPTIONS, PATCH, DELETE, POST, PUT");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 header('Content-Type: application/json');
 
 // Helper function to determine if cache is expired
@@ -79,18 +88,14 @@ function getSeriesData($db, $tvdbId, $apiKey, $debug = false) {
     }
 }
 
-function fetchEnglishName($tvdbId, $seriesName) {
-    // API URL
+function fetchTranslationTitles($tvdbId, $defaultEnglishName, $defaultGermanName) {
     $apiUrl = "https://umlautadaptarr.pcjones.de/api/v1/tvshow_german.php?tvdbid=$tvdbId";
-    
-    // Fetch data from the API
     $apiResponse = file_get_contents($apiUrl);
-    
-    // Decode the JSON response
     $data = json_decode($apiResponse, true);
-    
-    // Return originalTitle if not null, otherwise return the provided series name
-    return $data['originalTitle'] ?? $seriesName;
+    return [
+        'englishTitle' => $data['originalTitle'] ?? $defaultEnglishName,
+        'germanTitle'  => $data['germanTitle'] ?? $defaultGermanName,
+    ];
 }
 
 // Function to fetch and cache data from TVDB
@@ -124,10 +129,11 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
 
     try {
         $series = $data['data'];
-        $germanName = $series['nameTranslations']['deu'] ?? $series['name'];
-        $seriesName = $series['name'];
-		$englishName = fetchEnglishName($tvdbId, $seriesName);
-		
+		$seriesName = $series['name'];
+		$translations = fetchTranslationTitles($tvdbId, $seriesName, $seriesName);
+		$englishName = $translations['englishTitle'];
+		$germanName  = $translations['germanTitle'];
+
         $rawAliases = $series['aliases'] ?? [];
         // Normalize aliases into an array
         $germanAliases = [];
