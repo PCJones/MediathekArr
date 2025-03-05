@@ -17,8 +17,8 @@ adjust_mounted_volumes() {
            
             echo "Checking mounted directory: $mountpoint"
             if [ -d "$mountpoint" ]; then
-                echo "Setting ownership for $mountpoint"
-                chown -R appuser:appgroup "$mountpoint"
+                echo "Setting ownership for $mountpoint to $user_name:$group_name"
+                chown -R "$user_name":"$group_name" "$mountpoint"
             else
                 echo "Skipped non-directory mountpoint: $mountpoint"
             fi
@@ -61,22 +61,44 @@ if [ -z "$PUID" ] || [ -z "$PGID" ]; then
 else
     echo "Mediathekarr: Starting with UID: $PUID, GID: $PGID"
 
-    # Create group if it doesn't exist
-    if ! getent group appgroup > /dev/null 2>&1; then
-        groupadd -g "$PGID" appgroup
+    # Determine group name based on PGID
+    existing_group=$(getent group "$PGID" | cut -d: -f1)
+    if [ -z "$existing_group" ]; then
+        # Create the group if it doesn't exist
+        group_name="appgroup"
+        if ! groupadd -g "$PGID" "$group_name"; then
+            echo "Failed to create group $group_name with GID $PGID"
+            exit 1
+        fi
+        echo "Created group $group_name with GID $PGID"
+    else
+        # Use existing group name
+        group_name="$existing_group"
+        echo "Using existing group $group_name with GID $PGID"
     fi
 
-    # Create user if it doesn't exist
-    if ! id -u appuser > /dev/null 2>&1; then
-        useradd -u "$PUID" -g appgroup -m -s /bin/bash appuser
+    # Determine user name based on PUID
+    existing_user=$(getent passwd "$PUID" | cut -d: -f1)
+    if [ -z "$existing_user" ]; then
+        # Create the user if it doesn't exist
+        user_name="appuser"
+        if ! useradd -u "$PUID" -g "$group_name" -m -s /bin/bash "$user_name"; then
+            echo "Failed to create user $user_name with UID $PUID"
+            exit 1
+        fi
+        echo "Created user $user_name with UID $PUID"
+    else
+        # Use existing user name
+        user_name="$existing_user"
+        echo "Using existing user $user_name with UID $PUID"
     fi
 
     # Adjust ownership of relevant directories
-    chown -R appuser:appgroup /app /app/config /data/mediathek
+    chown -R "$user_name":"$group_name" /app /app/config /data/mediathek
 
     # Adjust ownership dynamically for all mounted volumes
     adjust_mounted_volumes
 
-    # Switch to the created user and re-execute the script
-    exec gosu appuser /bin/bash "$0" --user-mode
+    # Switch to the determined user and re-execute the script
+    exec gosu "$user_name" /bin/bash "$0" --user-mode
 fi
