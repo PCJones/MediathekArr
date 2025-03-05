@@ -36,7 +36,16 @@ public class MediathekArrLogger : ILogger
         var originalTextColour = Console.ForegroundColor;
         Console.ForegroundColor = _config.LogLevelTextColourMapping.TryGetValue(logLevel, out ConsoleColor loggingTextColour) ? loggingTextColour : originalTextColour;
         string logLevelString = _config.LogLevelAbbreviationMapping.TryGetValue(logLevel, out string logLevelAbbreviation) ? logLevelAbbreviation : logLevel.ToString();
-        Console.WriteLine($"[{assemblyName}] {logLevelString}: {_name} - {formatter(state, exception)}");
+
+        string message = formatter(state, exception);
+
+        // Append exception details if an exception exists
+        if (exception != null)
+        {
+            message += Environment.NewLine + exception.ToString();
+        }
+
+        Console.WriteLine($"[{assemblyName}] {logLevelString}: {_name} - {message}");
         Console.ForegroundColor = originalTextColour;
     }
 }
