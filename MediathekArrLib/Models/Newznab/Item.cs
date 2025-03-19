@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Serialization;
 
-namespace MediathekArrLib.Models.Newznab;
+namespace MediathekArr.Models.Newznab;
 
 public class Item
 {
@@ -9,7 +9,7 @@ public class Item
     public string Title { get; set; }
 
     [XmlElement("guid")]
-    public Guid Guid { get; set; }
+    public NewznabGuid Guid { get; set; }
 
     [XmlElement("link")]
     public string Link { get; set; }

@@ -17,9 +17,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build_and_push_docker_image.bat = build_and_push_docker_image.bat
 		docker-compose.yml = docker-compose.yml
 		Dockerfile = Dockerfile
+		docker_start.sh = docker_start.sh
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrApi", "MediathekArrApi\MediathekArrApi.csproj", "{76940B5C-D6C2-6D63-3331-14A720E13EE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrApi.Tests", "MediathekArrApi.Tests\MediathekArrApi.Tests.csproj", "{C3F6E6E6-51EF-5018-6735-3268D2DB0ACC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrLib.Tests", "MediathekArrLib.Tests\MediathekArrLib.Tests.csproj", "{A93E9861-6B44-1222-F7C2-CA4234CBC12D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediathekArrApiClient", "MediathekArrApiClient\MediathekArrApiClient.csproj", "{86E4F2D1-DB50-4285-B7A8-0A11E5C5AEE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +48,22 @@ Global
 		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6785AB3-92DA-4DF8-8EAC-362BD3DE8AE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76940B5C-D6C2-6D63-3331-14A720E13EE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76940B5C-D6C2-6D63-3331-14A720E13EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76940B5C-D6C2-6D63-3331-14A720E13EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76940B5C-D6C2-6D63-3331-14A720E13EE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3F6E6E6-51EF-5018-6735-3268D2DB0ACC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3F6E6E6-51EF-5018-6735-3268D2DB0ACC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3F6E6E6-51EF-5018-6735-3268D2DB0ACC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3F6E6E6-51EF-5018-6735-3268D2DB0ACC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A93E9861-6B44-1222-F7C2-CA4234CBC12D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A93E9861-6B44-1222-F7C2-CA4234CBC12D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A93E9861-6B44-1222-F7C2-CA4234CBC12D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A93E9861-6B44-1222-F7C2-CA4234CBC12D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86E4F2D1-DB50-4285-B7A8-0A11E5C5AEE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86E4F2D1-DB50-4285-B7A8-0A11E5C5AEE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86E4F2D1-DB50-4285-B7A8-0A11E5C5AEE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86E4F2D1-DB50-4285-B7A8-0A11E5C5AEE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MediathekArr Setup Wizard</title>
+    <link rel="stylesheet" href="/download/css/wizard.css">
+    <script src="/download/js/wizard.js" defer></script>
+</head>
+<body>
+    <header>
+        <a href="/"><img src="/download/img/logo.png" alt="MediathekArr Logo" class="logo"></a>
+        <h1>MediathekArr Setup Wizard</h1>
+    </header>
+
+    <main>
+        <!-- Live Status Updates -->
+        <div id="statusLog">
+            <strong>Status:</strong>
+        </div>
+
+        <!-- Step 0: Enter Sonarr Details -->
+        <div id="wizardStep0">
+            <h3>Enter Sonarr Details</h3>
+            <p>Note: If you are using Prowlarr you still need to enter your Sonarr details here to create the download client.
+            <br />You will be prompted for Prowlarr Host & API key at a later stage.</p>
+            <div>
+                <label for="sonarrHost">Sonarr Host:</label>
+                <input type="text" id="sonarrHost" value="http://localhost:8989/" placeholder="http://localhost:8989" />
+            </div>
+            <div>
+                <label for="apiKey">Sonarr API Key:</label>
+                <input type="password" id="apiKey" value="" placeholder="Enter your API Key" />
+            </div>
+            <p style="color: red; font-size: 0.9em;">Both the Host and API key are not saved anywhere and will only be used for this session.</p>
+            <button onclick="verifySonarrDetails()">Next</button>
+        </div>
+
+        <!-- Step 1: Select Sabnzbd Client -->
+        <div id="wizardStep1" style="display: none;">
+            <h3>Select Existing MediathekArr download client</h3>
+            <div id="existingClients">
+                <!-- Existing clients will be listed here -->
+            </div>
+            <button id="proceedWithClient" style="display: none;" onclick="proceedWithSelectedClient()">Use Selected Client</button>
+            <button id="proceedNewClient" onclick="proceedToNewClient()">Create New Client</button>
+        </div>
+
+        <!-- Step 2: Create new/Update MediathekArr Client -->
+        <div id="wizardStep2" style="display: none;">
+            <h3>Review and Test Client Settings</h3>
+            <div id="clientDetails">
+                <p><strong>Name:</strong> <span id="clientName">MediathekArr Downloader</span></p>
+                <p><strong>Host:</strong> <span id="clientHost">localhost</span></p>
+                <p><strong>Port:</strong> <span id="clientPort">5007</span></p>
+                <p><strong>URL Base:</strong> <span id="clientUrlBase">download</span></p>
+                <p><strong>API Key:</strong> <span id="clientApiKey">x</span></p>
+                <p><strong>Category:</strong> <span id="clientCategory">mediathek</span></p>
+                <p><strong>Client Priority:</strong> <span id="clientPriority">50</span></p>
+            </div>
+            <div id="categoryChangeAlert" style="color: red; display: none;">
+                The selected client category is not "mediathek". It will be changed to "mediathek" for migration to 1.0.
+            </div>
+            <div id="priorityChangeAlert" style="color: red; display: none;">
+                The selected client priotity is not set to 50. It will be changed to 50.
+            </div>
+            <button id="testClientSettingsButton" onclick="testClientSettings()">Test Client Settings</button>
+            <div id="testResult" style="margin-top: 10px;"></div>
+
+            <!-- Editable settings if test fails -->
+            <div id="editClientSettings" style="display: none;">
+                <h4>Edit Client Settings</h4>
+                <div>
+                    <label for="editHost">Host:</label>
+                    <input type="text" id="editHost" value="localhost" oninput="document.getElementById('clientHost').textContent = this.value" />
+                </div>
+                <div>
+                    <label for="editPort">Port:</label>
+                    <input type="text" id="editPort" value="5007" oninput="document.getElementById('clientPort').textContent = this.value" />
+                </div>
+                <button onclick="retryClientSettings()">Retry</button>
+            </div>
+
+            <!-- Confirmation button -->
+            <button id="confirmClientSettingsButton" style="display: none;" onclick="updateOrCreateDownloadClient()">Confirm and Continue</button>
+        </div>
+
+        <!-- Step 3: Select or Create Indexer -->
+        <div id="wizardStep3" style="display: none;">
+            <h3>Do you use Prowlarr to manage your indexers?</h3>
+            <div>
+                <form autocomplete="off">
+                    <label for="useProwlarr">Use Prowlarr:</label>
+                    <input type="checkbox" id="useProwlarr" onchange="toggleProwlarrSettings(this.checked)" />
+                </form>
+            </div>
+            <div id="prowlarrSettings" style="display: none;">
+                <div>
+                    <label for="prowlarrHost">Prowlarr Host:</label>
+                    <input type="text" id="prowlarrHost" value="http://localhost:9696" placeholder="http://localhost:9696" />
+                </div>
+                <div>
+                    <label for="prowlarrApiKey">Prowlarr API Key:</label>
+                    <input type="password" id="prowlarrApiKey" value="" placeholder="Enter your Prowlarr API Key" />
+                </div>
+                <div>
+                    <label for="appProfile">Select App Profile:</label>
+                    <select id="appProfile"></select>
+                </div>
+            </div>
+            <button onclick="proceedToIndexerSelection()">Next</button>
+        </div>
+
+        <!-- Existing content for selecting/creating indexer -->
+        <div id="wizardStep3IndexerSelection" style="display: none;">
+            <h3>Select Existing MediathekArr Indexer</h3>
+            <div id="existingIndexers">
+                <!-- Existing indexers will be listed here -->
+            </div>
+            <button id="proceedWithIndexer" style="display: none;" onclick="proceedWithSelectedIndexer()">Use Selected Indexer</button>
+            <button id="proceedNewIndexer" onclick="proceedToNewIndexer()">Create New Indexer</button>
+        </div>
+
+        <!-- Step 4: Review and Test Indexer Settings -->
+        <div id="wizardStep4" style="display: none;">
+            <h3>Review and Test Indexer Settings</h3>
+            <div id="indexerDetails">
+                <p><strong>Name:</strong> <span id="indexerName">MediathekArr</span></p>
+                <p><strong>Base URL:</strong> <span id="indexerBaseUrl">http://localhost:5007</span></p>
+                <p><strong>Priority:</strong> <span id="indexerPriority">25</span></p>
+                <p id="indexerDownloadClientIdContainer" style="display: none;"><strong>Download Client ID:</strong> <span id="indexerDownloadClientId">1</span></p>
+                <p><strong>API Path:</strong> <span id="indexerApiPath">/api</span></p>
+                <p><strong>Enable RSS:</strong> <span id="indexerEnableRss">true</span></p>
+                <p><strong>Enable Automatic Search:</strong> <span id="indexerEnableAutomaticSearch">true</span></p>
+                <p><strong>Enable Interactive Search:</strong> <span id="indexerEnableInteractiveSearch">true</span></p>
+            </div>
+            <div id="downloadClientChangeAlert" style="color: red; display: none;">
+                The selected indexer's download client ID does not match the previously selected/created download client. It will be changed.
+            </div>
+            <button id="testIndexerSettingsButton" onclick="testIndexerSettings()">Test Indexer Settings</button>
+            <div id="testIndexerResult" style="margin-top: 10px;"></div>
+
+            <!-- Editable settings if test fails -->
+            <div id="editIndexerSettings" style="display: none;">
+                <h4>Edit Indexer Settings</h4>
+                <div>
+                    <label for="editBaseUrl">Base URL:</label>
+                    <input type="text" id="editIndexerBaseUrl" value="http://localhost:5007" oninput="document.getElementById('indexerBaseUrl').textContent = this.value" />
+                </div>
+                <div>
+                    <label for="editPort">Port:</label>
+                    <input type="text" id="editIndexerPort" value="5007" oninput="document.getElementById('indexerPort').textContent = this.value" />
+                </div>
+                <button onclick="retryIndexerSettings()">Retry</button>
+            </div>
+
+            <!-- Confirmation button -->
+            <button id="confirmIndexerSettingsButton" style="display: none;" onclick="updateOrCreateIndexer()">Confirm and Continue</button>
+        </div>
+    </main>
+</body>
+</html>

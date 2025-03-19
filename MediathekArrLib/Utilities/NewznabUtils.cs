@@ -1,25 +1,53 @@
-﻿using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
+﻿using MediathekArr.Models;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Models.Rulesets;
 using System.Xml.Serialization;
+using Attribute = MediathekArr.Models.Newznab.Attribute;
 
-namespace MediathekArrLib.Utilities;
+namespace MediathekArr.Utilities;
 public static class NewznabUtils
 {
-    public static List<Models.Newznab.Attribute> GenerateAttributes(string? season, string[] categoryValues)
+    public static class Application
     {
-        var attributes = new List<Models.Newznab.Attribute>();
+        public const string Nzb = "application/x-nzb";
+    }
+    public static List<Attribute> GenerateAttributes(ApiResultItem item, string? season, string? episode, string[] categoryValues, EpisodeType episodeType, DateTime? airDate = null)
+    {
+        var attributes = new List<Attribute>();
 
         foreach (var categoryValue in categoryValues)
         {
-            attributes.Add(new Models.Newznab.Attribute { Name = "category", Value = categoryValue });
+            attributes.Add(new Attribute { Name = "category", Value = categoryValue });
         }
 
         if (season != null)
         {
-            attributes.Add(new Models.Newznab.Attribute { Name = "season", Value = season });
+            attributes.Add(new Attribute { Name = "season", Value = season });
         }
 
+        if (episode != null)
+        {
+            attributes.Add(new Attribute { Name = "episode", Value = episode });
+        }
+
+        if (airDate != null)
+        {
+            attributes.Add(new Attribute { Name = "tvairdate", Value = airDate.Value.ToString("yyyy-MM-dd") });
+        }
+
+        if (string.IsNullOrEmpty(item.UrlSubtitle))
+        {
+            attributes.Add(new Attribute { Name = "subs", Value = "German" });
+        }
+
+        attributes.Add(new Attribute { Name = "seriestype", Value = episodeType.ToString() }); // this is no official newznab attribute
+
         return attributes;
+    }
+
+    public static List<Attribute> GenerateAttributes(MatchedEpisodeInfo matchedEpisodeInfo, string[] categoryValues, EpisodeType episodeType)
+    {
+        return GenerateAttributes(matchedEpisodeInfo.Item, matchedEpisodeInfo.Episode.PaddedSeason, matchedEpisodeInfo.Episode.PaddedEpisode, categoryValues, episodeType, matchedEpisodeInfo.Episode.Aired); 
     }
     public static string SerializeRss(Rss rss)
     {
@@ -39,21 +67,5 @@ public static class NewznabUtils
         return result;
     }
 
-    public static Rss GetEmptyRssResult()
-    {
-        return new Rss
-        {
-            Channel = new Channel
-            {
-                Title = "MediathekArr",
-                Description = "MediathekArr API results",
-                Response = new Response
-                {
-                    Offset = 0,
-                    Total = 0
-                },
-                Items = []
-            }
-        };
-    }
+    public static Rss GetEmptyRssResult() => Factories.RssFactory.Empty;
 }

@@ -1,17 +1,19 @@
-﻿using MediathekArrLib.Models;
-using MediathekArrLib.Models.Newznab;
-using MediathekArrLib.Utilities;
+﻿using MediathekArr.Extensions;
+using MediathekArr.Models;
+using MediathekArr.Models.Newznab;
+using MediathekArr.Models.Rulesets;
+using MediathekArr.Models.Tvdb;
+using MediathekArr.Utilities;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Guid = MediathekArrLib.Models.Newznab.Guid;
 
-namespace MediathekArrServer.Services;
+namespace MediathekArr.Services;
 
 public partial class MediathekSearchFallbackHandler
 {
-    public static List<Item> GetFallbackSearchResultItemsById(string? apiResponse, TvdbEpisode episode, TvdbData tvdbData)
+    public static List<Item> GetFallbackSearchResultItemsById(string? apiResponse, Episode episode, Series tvdbData)
     {
         if (string.IsNullOrWhiteSpace(apiResponse))
         {
@@ -21,7 +23,7 @@ public partial class MediathekSearchFallbackHandler
         var filteredResponse = ApplyFilters(apiResponse, episode);
         var seasonNumber = episode.SeasonNumber.ToString();
         var episodeNumber = episode.EpisodeNumber.ToString();
-        return filteredResponse?.Result.Results.SelectMany<ApiResultItem, Item>(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
+        return filteredResponse?.Result.Results.SelectMany(item => GenerateRssItems(item, seasonNumber, episodeNumber, tvdbData)).ToList() ?? [];
     }
 
     public static List<Item> GetFallbackSearchResultItemsByString(List<ApiResultItem>? unmatchedFilteredResultItems, string? season)
@@ -35,7 +37,7 @@ public partial class MediathekSearchFallbackHandler
     }
 
 
-    private static List<Item> GenerateRssItems(ApiResultItem item, string? season, string? episode, TvdbData? tvdbData = null)
+    private static List<Item> GenerateRssItems(ApiResultItem item, string? season, string? episode, Series? tvdbData = null)
     {
         var items = new List<Item>();
 
@@ -43,7 +45,7 @@ public partial class MediathekSearchFallbackHandler
 
         if (!string.IsNullOrEmpty(item.UrlVideoHd))
         {
-            items.AddRange(CreateRssItems(item, season, episode, tvdbData, "1080p", 1.6, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideoHd));
+            items.AddRange(CreateRssItems(item, season, episode, tvdbData, "1080p", 1.75, "TV > HD", [.. categories, "5040", "2040"], item.UrlVideoHd));
         }
 
         if (!string.IsNullOrEmpty(item.UrlVideo))
@@ -60,7 +62,7 @@ public partial class MediathekSearchFallbackHandler
         return items;
     }
 
-    private static List<Item> CreateRssItems(ApiResultItem item, string? season, string? episode, TvdbData? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
+    private static List<Item> CreateRssItems(ApiResultItem item, string? season, string? episode, Series? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url)
     {
         var items = new List<Item>();
 
@@ -82,26 +84,30 @@ public partial class MediathekSearchFallbackHandler
         return items;
     }
 
-    private static Item CreateRssItem(ApiResultItem item, string? yearSeason, string? season, string? episode, TvdbData? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
+    private static Item CreateRssItem(ApiResultItem item, string? yearSeason, string? season, string? episode, Series? tvdbData, string quality, double sizeMultiplier, string category, string[] categoryValues, string url, string? formattedDate = null)
     {
         var adjustedSize = (long)(item.Size * sizeMultiplier);
-        var parsedTitle = GenerateTitle(item.Topic, item.Title, quality, formattedDate, season, episode);
+        if (!string.IsNullOrEmpty(item.UrlSubtitle))
+        {
+            adjustedSize += 15000000; // Add 15MB to size if subs are available
+        }
+        var parsedTitle = GenerateTitle(tvdbData, item.Topic, item.Title, quality, formattedDate, season, episode);
         var formattedTitle = FormatTitle(parsedTitle);
         //var translatedTitle = TranslateTitle(formattedTitle, tvdbData);
         var translatedTitle = formattedTitle; // TODO see if translation is needed
         var encodedTitle = Convert.ToBase64String(Encoding.UTF8.GetBytes(translatedTitle));
-        var encodedUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+        var encodedVideoUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(url));
+        var encodedSubtitleUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(item.UrlSubtitle));
 
         // Generate the full URL for the fake_nzb_download endpoint
-        var fakeDownloadUrl = $"/api/fake_nzb_download?encodedUrl={encodedUrl}&encodedTitle={encodedTitle}";
-
+        var fakeDownloadUrl = $"/api/fake_nzb_download?encodedVideoUrl={encodedVideoUrl}&encodedSubtitleUrl={encodedSubtitleUrl}&encodedTitle={encodedTitle}";
         return new Item
         {
             Title = translatedTitle,
-            Guid = new Guid
+            Guid = new NewznabGuid
             {
                 IsPermaLink = true,
-                Value = $"{item.UrlWebsite}#{quality}{(string.IsNullOrEmpty(formattedDate) ? "" : "-a")}",
+                Value = $"{item.UrlWebsite}#{quality}{(string.IsNullOrEmpty(formattedDate) ? "" : "-a")}-{item.Language}",
             },
             Link = url,
             Comments = item.UrlWebsite,
@@ -112,16 +118,19 @@ public partial class MediathekSearchFallbackHandler
             {
                 Url = fakeDownloadUrl,
                 Length = adjustedSize,
-                Type = "application/x-nzb"
+                Type = NewznabUtils.Application.Nzb
             },
-            Attributes = NewznabUtils.GenerateAttributes(yearSeason ?? season, categoryValues)
+            Attributes = NewznabUtils.GenerateAttributes(item, yearSeason ?? season, episode, categoryValues, formattedDate == null ? EpisodeType.Standard : EpisodeType.Daily)
         };
     }
 
     // TODO refactor and make this look good, It's too late right now:D
     // TODO now it's even worse :D oh god
-    private static string GenerateTitle(string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
+    private static string GenerateTitle(Series? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
     {
+        var showName = tvdbData?.Name ?? topic;
+        var language = title.Contains("(Englisch)") ? "ENGLISH" : "GERMAN";
+
         if (!string.IsNullOrEmpty(formattedDate))
         {
             var cleanedTitle = EpisodeRegex().Replace(title, "").Trim();
@@ -131,7 +140,7 @@ public partial class MediathekSearchFallbackHandler
                 cleanedTitle = null;
             }
 
-            return $"{topic}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
         var episodePattern = @"S\d{1,4}/E\d{1,4}";
         var match = Regex.Match(title, episodePattern);
@@ -149,18 +158,18 @@ public partial class MediathekSearchFallbackHandler
             if (seasonOverride is null || episodeOverride is null)
             {
                 // use data from mediathek
-                return $"{topic}.{seasonAndEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+                return $"{topic}.{seasonAndEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
             }
 
             // use overwrite data
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
-            return $"{topic}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
 
         if (seasonOverride is null || episodeOverride is null)
         {
-            return $"{topic} - {title}.GERMAN.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
+            return $"{showName} - {title}.{language}.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
         }
         else
         {
@@ -174,21 +183,17 @@ public partial class MediathekSearchFallbackHandler
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
 
-            return $"{topic}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : title)}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : title)}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
         }
     }
     private static string FormatTitle(string title)
     {
-        // Replace German Umlaute and special characters
-        title = title.Replace("ä", "ae")
-                     .Replace("ö", "oe")
-                     .Replace("ü", "ue")
-                     .Replace("ß", "ss")
-                     .Replace("Ä", "Ae")
-                     .Replace("Ö", "Oe")
-                     .Replace("Ü", "Ue");
+        // Remove "Englisch" at the end
+        title = title.Replace(".(Englisch)", "");
 
         // Remove unwanted characters
+        title = title.Replace("–", "-");
+        title = title.RemoveAccentButKeepGermanUmlauts();
         title = TitleRegexUnd().Replace(title, "und");
         title = TitleRegexSymbols().Replace(title, ""); // Remove various symbols
         title = TitleRegexWhitespace().Replace(title, ".").Replace("..", ".");
@@ -196,7 +201,7 @@ public partial class MediathekSearchFallbackHandler
         return title;
     }
 
-    private static MediathekApiResponse? ApplyFilters(string apiResponse, TvdbEpisode episode)
+    private static MediathekApiResponse? ApplyFilters(string apiResponse, Episode episode)
     {
         var responseObject = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse);
 
@@ -207,9 +212,8 @@ public partial class MediathekSearchFallbackHandler
 
         var initialResults = responseObject.Result.Results;
         var resultsFilteredByRuntime = FilterByRuntime(initialResults, episode.Runtime);
-        var resultsByAiredDate = FilterByAiredDate(resultsFilteredByRuntime, episode.Aired!.Value).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
-        var resultsByTitleDate = FilterByTitleDate(resultsFilteredByRuntime, episode.Aired.Value).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
-        var resultsByDescriptionDate = FilterByDescriptionDate(resultsFilteredByRuntime, episode.Aired.Value).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
+        var resultsByTitleDate = FilterByTitleDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
+        var resultsByDescriptionDate = FilterByDescriptionDate(resultsFilteredByRuntime, episode.Aired).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         var resultsByEpisodeTitleMatch = FilterByEpisodeTitleMatch(resultsFilteredByRuntime, episode.Name).Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList();
         List<ApiResultItem> resultsBySeasonEpisodeMatch = [];
         // if more than 3 results we assume episode title match wasn't correct
@@ -218,23 +222,16 @@ public partial class MediathekSearchFallbackHandler
             resultsByEpisodeTitleMatch.Clear();
         }
 
-        // if we have episode title match that is the best we got
-        if (resultsByEpisodeTitleMatch.Count > 0)
+        if (resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
         {
-            // we ignore air date in this case as it is not as reliable
-            resultsByAiredDate.Clear();
-        }
-
-        if (resultsByAiredDate.Count == 0 && resultsByTitleDate.Count == 0 && resultsByDescriptionDate.Count == 0 && resultsByEpisodeTitleMatch.Count == 0)
-        {
-            // Only trust Mediathek season/episode if no other match:
+            // Only trust Mediathek season/episode if no other match (aside from airedDate):
             resultsBySeasonEpisodeMatch =
                 FilterBySeasonEpisodeMatch(resultsFilteredByRuntime, episode.SeasonNumber.ToString(), episode.EpisodeNumber.ToString())
                 .Where(item => !MediathekSearchService.ShouldSkipItem(item)).ToList(); ;
         }
 
         // HashSet to remove duplicates
-        HashSet<ApiResultItem> filteredResults = [.. resultsByAiredDate, .. resultsByTitleDate, .. resultsByDescriptionDate, .. resultsByEpisodeTitleMatch, .. resultsBySeasonEpisodeMatch];
+        HashSet<ApiResultItem> filteredResults = [ .. resultsByTitleDate, .. resultsByDescriptionDate, .. resultsByEpisodeTitleMatch, .. resultsBySeasonEpisodeMatch];
 
         // Create a filtered API response
         var filteredApiResponse = new MediathekApiResponse
@@ -263,16 +260,25 @@ public partial class MediathekSearchFallbackHandler
             .ToList();
     }
 
-    private static List<ApiResultItem> FilterByAiredDate(List<ApiResultItem> results, DateTime airedDate)
+    private static List<ApiResultItem> FilterByAiredDate(List<ApiResultItem> results, DateTime? airedDate)
     {
+        if (airedDate is null)
+        {
+            return [];
+        }
         return results.Where(item =>
             ConvertToBerlinTimezone(UnixTimeStampToDateTime(item.Timestamp)).Date == airedDate)
             .ToList();
     }
 
-    private static List<ApiResultItem> FilterByTitleDate(List<ApiResultItem> results, DateTime airedDate)
+    private static List<ApiResultItem> FilterByTitleDate(List<ApiResultItem> results, DateTime? airedDate)
     {
-        var formattedAiredDate = airedDate.ToString("yyyy-MM-dd");
+        if (airedDate is null)
+        {
+            return [];
+        }
+
+        var formattedAiredDate = airedDate.Value.ToString("yyyy-MM-dd");
 
         return results.Where(item =>
         {
@@ -281,9 +287,14 @@ public partial class MediathekSearchFallbackHandler
         }).ToList();
     }
 
-    private static List<ApiResultItem> FilterByDescriptionDate(List<ApiResultItem> results, DateTime airedDate)
+    private static List<ApiResultItem> FilterByDescriptionDate(List<ApiResultItem> results, DateTime? airedDate)
     {
-        var formattedAiredDate = airedDate.ToString("yyyy-MM-dd");
+        if (airedDate is null)
+        {
+            return [];
+        }
+
+        var formattedAiredDate = airedDate.Value.ToString("yyyy-MM-dd");
 
         return results.Where(item =>
         {
@@ -378,7 +389,7 @@ public partial class MediathekSearchFallbackHandler
 
     [GeneratedRegex(@"[&]")]
     private static partial Regex TitleRegexUnd();
-    [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>],()")]
+    [GeneratedRegex(@"[/:;""'@#?$%^*+=!<>,()|]")]
     private static partial Regex TitleRegexSymbols();
     [GeneratedRegex(@"\s+")]
     private static partial Regex TitleRegexWhitespace();

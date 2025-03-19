@@ -1,0 +1,6 @@
+@MediathekArrApi_HostAddress = http://localhost:5036
+
+GET {{MediathekArrApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

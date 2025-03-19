@@ -1,0 +1,170 @@
+﻿body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+    header .logo {
+        width: 80px;
+        height: 80px;
+        margin-right: 20px;
+    }
+
+h1 {
+    font-size: 2em;
+    color: #333;
+}
+
+main {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+#configModal, #fileBrowserModal {
+    display: none;
+    position: fixed;
+    top: 5%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    z-index: 1000;
+    width: 600px;
+    height: 80%;
+    overflow-y: auto;
+}
+
+#pathCheckModal {
+    display: none;
+    position: fixed;
+    top: 5%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    z-index: 1000;
+    width: 600px;
+    height: 20%;
+    overflow-y: auto;
+}
+
+#fileBrowserContents button {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    text-align: left;
+    padding: 5px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    color: #333;    
+}
+
+    #fileBrowserContents button:hover {
+        background-color: #e9e9e9;
+    }
+
+
+#configModal {
+    display: none; /* Initially hidden */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Ensure it appears above other elements */
+    width: 400px;
+}
+
+    #configModal h3 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    #configModal form {
+        display: flex;
+        flex-direction: column;
+    }
+
+        #configModal form div {
+            margin-bottom: 15px;
+        }
+
+        #configModal form label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #configModal form input[type="text"] {
+            width: calc(100% - 90px); /* Adjust width to accommodate the browse button */
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #configModal form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+            #configModal form button:hover {
+                background-color: #0056b3;
+            }
+
+        #configModal form small {
+            display: block;
+            margin-top: 5px;
+            color: red;
+        }

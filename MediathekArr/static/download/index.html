@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MediathekArr - Download Queue</title>
+    <link rel="stylesheet" href="/download/css/queue.css">
+    <script src="/download/js/queue.js" defer></script>
+</head>
+<body>
+    <header>
+        <a href="/"><img src="/download/img/logo.png" alt="MediathekArr Logo" class="logo"></a>
+        <h1>MediathekArr - Download Queue</h1>
+    </header>
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Status</th>
+                    <th>Size</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody id="queueBody">
+            </tbody>
+        </table>
+
+        <h3>Setup & Configuration:</h3>
+        <button onclick="openConfigModal()">Open Config</button>
+        <button onclick="checkPathsBeforeWizard()">Open Setup & Migration Wizard</button>
+    </main>
+
+    <!-- Configuration Modal -->
+    <div id="configModal">
+        <h3>Configuration</h3>
+        <form>
+            <div>
+                <label>Incomplete Path:</label>
+                <input type="text" id="incompletePath" />
+                <button type="button" id="browseIncomplete" onclick="browsePath('incompletePath')">Browse</button>
+                <small id="incompletePathWarning" style="color: red; display:none;">Overwritten by environment variable</small>
+            </div>
+            <div>
+                <label>Complete Path:</label>
+                <input type="text" id="completePath" />
+                <button type="button" id="browseComplete" onclick="browsePath('completePath')">Browse</button>
+                <small id="completePathWarning" style="color: red; display:none;">Overwritten by environment variable</small>
+            </div>
+            <button type="button" class="button-group" onclick="saveConfig()">Save</button>
+            <button type="button" class="button-group" onclick="closeConfigModal()">Close</button>
+        </form>
+    </div>
+
+    <!-- File Browser Modal -->
+    <div id="fileBrowserModal">
+        <h3>Browse Directories</h3>
+        <div id="fileBrowserContents"></div>
+        <button type="button" onclick="closeFileBrowser()">Close</button>
+    </div>
+
+    <!-- Path Check Modal -->
+    <div id="pathCheckModal" style="display:none;">
+        <h3>Path Configuration</h3>
+        <p>Have you already configured the complete and incomplete paths?</p>
+        <button type="button" onclick="openConfigModal()">No, configure now</button>
+        <button type="button" onclick="proceedToWizard()">Yes, proceed to wizard</button>
+    </div>
+</body>
+</html>

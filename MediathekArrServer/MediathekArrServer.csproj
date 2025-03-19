@@ -8,37 +8,41 @@
 		<EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
 		<ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:9.0</ContainerBaseImage>
 		<UserSecretsId>6f9f5643-8dc2-4efe-8c30-608b5c2bb8c5</UserSecretsId>
+		<RootNamespace>MediathekArr</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
-		<PackageReference Include="Scalar.AspNetCore" Version="1.2.44" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.1" />
+		<PackageReference Include="Scalar.AspNetCore" Version="2.0.1" />
+		<PackageReference Include="Scrutor.Extensions.HttpClient" Version="5.1.2-alpha.2" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\MediathekArrApiClient\MediathekArrApiClient.csproj" />
 		<ProjectReference Include="..\MediathekArrLib\MediathekArrLib.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ContainerPort Include="8081" />
+		<ContainerPort Include="8081" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Update="appsettings.Development.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	  </Content>
-	  <Content Update="appsettings.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	  </Content>
-	  <Content Update="appsettings.Production.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	  </Content>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.Production.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
 	</ItemGroup>
 
 </Project>

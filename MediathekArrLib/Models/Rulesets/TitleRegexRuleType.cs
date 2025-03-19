@@ -1,4 +1,4 @@
-﻿namespace MediathekArrLib.Models.Rulesets;
+﻿namespace MediathekArr.Models.Rulesets;
 
 public enum TitleRegexRuleType
 {

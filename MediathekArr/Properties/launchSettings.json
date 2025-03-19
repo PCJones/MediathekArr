@@ -2,18 +2,18 @@
   "profiles": {
     "http": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5007"
+        "ASPNETCORE_URLS": "http://localhost:5010"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5007"
+      "applicationUrl": "http://localhost:5010"
     },
     "https": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
@@ -24,11 +24,11 @@
     },
     "Container (.NET SDK)": {
       "commandName": "SdkContainer",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_HTTPS_PORTS": "8081",
-        "ASPNETCORE_HTTP_PORTS": "8080"
+        "ASPNETCORE_HTTP_PORTS": "5007"
       },
       "publishAllPorts": true,
       "useSSL": true

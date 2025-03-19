@@ -1,8 +1,9 @@
-using MediathekArrServer.Services;
+using MediathekArr.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
 using System.Text;
 
-namespace MediathekArrServer.Controllers;
+namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("api")]
@@ -48,7 +49,7 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
     </categories>
 </caps>";
 
-            return Content(xmlContent, "application/xml", Encoding.UTF8);
+            return Content(xmlContent, MediaTypeNames.Application.Xml, Encoding.UTF8);
         }
         else if (t == "tvsearch" || t == "search" || t == "movie")
         {   
@@ -56,21 +57,21 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
             {
                 if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
                 {
-                    var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
+                    var tvdbData = await _itemLookupService.GetShowInfoById(parsedTvdbid);
 
                     string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode, limit, offset);
 
-                    return Content(searchResults, "application/xml", Encoding.UTF8);
+                    return Content(searchResults, MediaTypeNames.Application.Xml, Encoding.UTF8);
                 }
                 else if (q is null && season is null && imdbid is null && tvdbid is null && tmdbid is null)
                 {
                     string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(limit, offset);
-                    return Content(searchResults, "application/xml", Encoding.UTF8);
+                    return Content(searchResults, MediaTypeNames.Application.Xml, Encoding.UTF8);
                 }
                 else
                 {
                     string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season, limit, offset);
-                    return Content(searchResults, "application/xml", Encoding.UTF8);
+                    return Content(searchResults, MediaTypeNames.Application.Xml, Encoding.UTF8);
                 }
             }
             catch (HttpRequestException ex)
@@ -84,16 +85,26 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
 
 
     [HttpGet("fake_nzb_download")]
-    public IActionResult FakeNzbDownload([FromQuery] string encodedUrl, [FromQuery] string encodedTitle)
+    public IActionResult FakeNzbDownload([FromQuery] string encodedVideoUrl, [FromQuery] string? encodedSubtitleUrl, [FromQuery] string encodedTitle)
     {
-        string decodedUrl;
+        string decodedVideoUrl;
         string decodedTitle;
+        string decodedSubtitleUrl;
         try
             {
-            var base64EncodedBytesUrl = Convert.FromBase64String(encodedUrl);
-            decodedUrl = Encoding.UTF8.GetString(base64EncodedBytesUrl);
+            var base64EncodedBytesVideoUrl = Convert.FromBase64String(encodedVideoUrl);
+            decodedVideoUrl = Encoding.UTF8.GetString(base64EncodedBytesVideoUrl);
             var base64EncodedBytesTitle = Convert.FromBase64String(encodedTitle);
             decodedTitle = Encoding.UTF8.GetString(base64EncodedBytesTitle);
+            if (string.IsNullOrEmpty(encodedSubtitleUrl))
+            {
+                decodedSubtitleUrl = string.Empty;
+            }
+            else
+            {
+                var base64EncodedBytesSubtitleUrl = Convert.FromBase64String(encodedSubtitleUrl);
+                decodedSubtitleUrl = Encoding.UTF8.GetString(base64EncodedBytesSubtitleUrl);
+            }            
         }
         catch (FormatException)
         {
@@ -104,7 +115,8 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
         var nzbContent = $@"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 <!DOCTYPE nzb PUBLIC ""-//newzBin//DTD NZB 1.0//EN"" ""http://www.newzbin.com/DTD/nzb/nzb-1.0.dtd"">
 <!-- {decodedTitle} -->
-<!-- {decodedUrl} -->
+<!-- {decodedVideoUrl} -->
+<!-- {decodedSubtitleUrl} -->
 <nzb>
     <file post_id=""1"">
         <groups>
@@ -122,6 +134,6 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
         // Set the .nzb file name
         var nzbFileName = $"mediathek-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.nzb";
 
-        return File(fileContent, "application/x-nzb", nzbFileName);
+        return File(fileContent, Utilities.NewznabUtils.Application.Nzb, nzbFileName);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace MediathekArrServer.Services;
+﻿namespace MediathekArr.Services;
 
 using Microsoft.Extensions.Hosting;
 using System;

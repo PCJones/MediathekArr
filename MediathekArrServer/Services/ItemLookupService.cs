@@ -1,60 +1,42 @@
-﻿using MediathekArrLib.Models;
+﻿using MediathekArr.Clients;
+using MediathekArr.Models.Tvdb;
 using Microsoft.Extensions.Caching.Memory;
-using System.Text.Json;
 
-namespace MediathekArrServer.Services;
+namespace MediathekArr.Services;
 
-public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfiguration configuration, IMemoryCache memoryCache)
+public class ItemLookupService(ILogger<ItemLookupService> logger, IMemoryCache memoryCache, ISeriesClient seriesClient)
 {
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
-    private readonly string _apiBaseUrl = configuration["MEDIATHEKARR_API_BASE_URL"] ?? "https://mediathekarr.pcjones.de/api/v1";
     private readonly IMemoryCache _memoryCache = memoryCache;
+    private readonly ISeriesClient seriesClient = seriesClient;
+    private readonly ILogger<ItemLookupService> logger = logger;
 
-    private static JsonSerializerOptions GetJsonSerializerOptions()
+    /// <summary>
+    /// Get a TV Show by its TVDB ID
+    /// </summary>
+    /// <param name="tvdbid"></param>
+    /// <returns></returns>
+    /// <exception cref="HttpRequestException"></exception>
+    public async Task<Series?> GetShowInfoById(int? tvdbid)
     {
-        return new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-    }
+        if (tvdbid == null) return null;
 
-    public async Task<TvdbData?> GetShowInfoByTvdbId(int? tvdbid)
-    {
-        if (tvdbid == null)
+        /* Return cached value if possible */
+        var cacheKey = $"Series_{tvdbid}";
+        if (_memoryCache.TryGetValue(cacheKey, out Series? cachedResult) && cachedResult is not null) return cachedResult;
+
+        /* Fetch from API */
+        var result = await seriesClient.SeriesAsync(tvdbid);
+        if (result.StatusCode != (int)System.Net.HttpStatusCode.OK)
         {
-            return null;
+            logger.LogError("Failed to fetch TVDB data. Response: {StatusCode}", result.StatusCode);
+
+            /* Throw HttpRequest Exception for all the consuming services to be able to return a proper http response */
+            // TODO: We're doing flow control with exceptions here ... not ideal. Instead we should throw a custom exception and handle it in the controller
+            throw new HttpRequestException($"Failed to fetch TVDB data. Response: {result.StatusCode}");
         }
 
-        var cacheKey = $"TvdbInfo_{tvdbid}";
-        if (_memoryCache.TryGetValue(cacheKey, out TvdbData? cachedTvdbInfo))
-        {
-            if (cachedTvdbInfo != null)
-            {
-                return cachedTvdbInfo;
-            }
-        }
+        _memoryCache.Set(cacheKey, result.Result, TimeSpan.FromHours(Constants.MediathekArrConstants.MediathekArr_MemoryCache_Expiry));
 
-        var requestUrl = $"{_apiBaseUrl}/get_show.php?tvdbid={tvdbid}";
-
-        var response = await _httpClient.GetAsync(requestUrl);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new HttpRequestException($"Error fetching data: {errorContent}");
-        }
-
-        var jsonResponse = await response.Content.ReadAsStringAsync();
-        var tvdbInfo = JsonSerializer.Deserialize<TvdbInfoResponse>(jsonResponse, GetJsonSerializerOptions());
-
-        if (tvdbInfo == null || tvdbInfo.Status != "success" || tvdbInfo.Data == null)
-        {
-            throw new HttpRequestException($"Failed to fetch TVDB data. Response: {jsonResponse}");
-            // TODO log and return null
-        }
-
-        _memoryCache.Set(cacheKey, tvdbInfo.Data, TimeSpan.FromHours(12));
-
-        return tvdbInfo.Data;
+        return result.Result;
     }
 }

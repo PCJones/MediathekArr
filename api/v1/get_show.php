@@ -56,6 +56,7 @@ function getSeriesData($db, $tvdbId, $apiKey, $debug = false) {
                             "runtime" => $episode['runtime'],
                             "seasonNumber" => $episode['season_number'],
                             "episodeNumber" => $episode['episode_number'],
+                            "absoluteNumber" => $episode['absolute_number'],
                         ];
                     }, $episodes)
                 ]
@@ -76,6 +77,20 @@ function getSeriesData($db, $tvdbId, $apiKey, $debug = false) {
     } catch (Exception $e) {
         return ["status" => "error", "message" => "Error retrieving series data: " . $e->getMessage()];
     }
+}
+
+function fetchEnglishName($tvdbId, $seriesName) {
+    // API URL
+    $apiUrl = "https://umlautadaptarr.pcjones.de/api/v1/tvshow_german.php?tvdbid=$tvdbId";
+    
+    // Fetch data from the API
+    $apiResponse = file_get_contents($apiUrl);
+    
+    // Decode the JSON response
+    $data = json_decode($apiResponse, true);
+    
+    // Return originalTitle if not null, otherwise return the provided series name
+    return $data['originalTitle'] ?? $seriesName;
 }
 
 // Function to fetch and cache data from TVDB
@@ -110,6 +125,8 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
     try {
         $series = $data['data'];
         $germanName = $series['nameTranslations']['deu'] ?? $series['name'];
+        $seriesName = $series['name'];
+		$englishName = fetchEnglishName($tvdbId, $seriesName);
 		
         $rawAliases = $series['aliases'] ?? [];
         // Normalize aliases into an array
@@ -137,9 +154,9 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
         if ($lastUpdated->diff($cacheExpiry)->days < 7 ||
             ($nextAired != new DateTime('1970-01-01') && $nextAired->diff($cacheExpiry)->days < 6) ||
             ($lastAired != new DateTime('1970-01-01') && $lastAired->diff($cacheExpiry)->days < 3)) {
-            $cacheExpiry->modify('+2 days');
+            $cacheExpiry->modify('+1 days');
         } else {
-            $cacheExpiry->modify('+6 days');
+            $cacheExpiry->modify('+2 days');
         }
 
         // Cache series data
@@ -148,7 +165,7 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
         $stmt = $db->prepare("INSERT INTO series_cache (series_id, name, german_name, aliases, last_updated, next_aired, last_aired, cache_expiry) VALUES (:tvdb_id, :name, :german_name, :aliases, :last_updated, :next_aired, :last_aired, :cache_expiry)");
         $stmt->execute([
             'tvdb_id' => $tvdbId,
-            'name' => $series['name'],
+            'name' => $englishName,
             'german_name' => $germanName,
             'aliases' => json_encode($germanAliases),
             'last_updated' => $series['lastUpdated'],
@@ -158,7 +175,7 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
         ]);
 
         $db->exec("DELETE FROM episodes WHERE series_id = $tvdbId");
-        $episodesStmt = $db->prepare("INSERT INTO episodes (id, series_id, name, aired, runtime, season_number, episode_number) VALUES (:id, :tvdb_id, :name, :aired, :runtime, :season_number, :episode_number)");
+        $episodesStmt = $db->prepare("INSERT INTO episodes (id, series_id, name, aired, runtime, season_number, episode_number, absolute_number) VALUES (:id, :tvdb_id, :name, :aired, :runtime, :season_number, :episode_number, :absolute_number)");
         foreach ($series['episodes'] as $episode) {
             $episodesStmt->execute([
                 'id' => $episode['id'],
@@ -167,16 +184,17 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
                 'aired' => $episode['aired'],
                 'runtime' => $episode['runtime'],
                 'season_number' => $episode['seasonNumber'],
-                'episode_number' => $episode['number']
+                'episode_number' => $episode['number'],
+                'absolute_number' => $episode['absoluteNumber']
             ]);
         }
         $db->commit();
-
+	
         $response = [
             "status" => "success",
             "data" => [
                 "id" => $tvdbId,
-                "name" => $series['name'],
+                "name" => $englishName,
                 "german_name" => $germanName,
                 "aliases" => $germanAliases,
                 "episodes" => array_map(function ($episode) {
@@ -186,6 +204,7 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
                         "runtime" => $episode['runtime'],
                         "seasonNumber" => $episode['seasonNumber'],
                         "episodeNumber" => $episode['number'],
+                        "absoluteNumber" => $episode['absoluteNumber'],
                     ];
                 }, $series['episodes'])
             ]

@@ -11,8 +11,8 @@ docker tag %IMAGE_NAME%:%VERSION% %IMAGE_NAME%:latest
 echo Pushing Docker image with version %VERSION%...
 docker push %IMAGE_NAME%:%VERSION%
 
-echo Pushing Docker image with tag latest...
-docker push %IMAGE_NAME%:latest
+#echo Pushing Docker image with tag latest...
+#docker push %IMAGE_NAME%:latest
 
 echo Done.
 pause

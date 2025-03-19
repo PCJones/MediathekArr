@@ -4,29 +4,55 @@ WORKDIR /app
 # Copy and restore dependencies
 COPY . ./
 RUN dotnet restore
-RUN dotnet publish -c Release -o out
 
+# Publish MediathekArrApi
+WORKDIR /app/MediathekArrApi
+RUN dotnet publish -c Release -o /app/out/MediathekArrApi
+
+
+# Publish MediathekArrServer
+WORKDIR /app/MediathekArrServer
+RUN dotnet publish -c Release -o /app/out/MediathekArrServer
+
+# Publish MediathekArrDownloader
+WORKDIR /app/MediathekArr
+RUN dotnet publish -c Release -o /app/out/MediathekArrDownloader
+
+# Final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 
-RUN apt-get update && apt-get install -y tar xz-utils && rm -rf /var/lib/apt/lists/*
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    tar \
+    xz-utils \
+    gosu \
+    wget \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add MKVToolNix repository and install
+RUN wget -O /etc/apt/keyrings/gpg-pub-moritzbunkus.gpg https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/debian/ bookworm main" > /etc/apt/sources.list.d/mkvtoolnix.download.list && \
+    apt-get update && apt-get install -y \
+    mkvtoolnix
 
 # Set working directory
 WORKDIR /app
 
-# Set up environment variables for user IDs
-#ARG PUID=1000
-#ARG PGID=1000
-#ENV PUID=${PUID} \
-    #PGID=${PGID}
+# Copy the built apps from the build environment
+COPY --from=build-env /app/out/MediathekArrApi /app/MediathekArrApi
+COPY --from=build-env /app/out/MediathekArrServer /app/MediathekArrServer
+COPY --from=build-env /app/out/MediathekArrDownloader /app/MediathekArrDownloader
 
-# Create a user and group with specified IDs
-#RUN addgroup --gid ${PGID} appgroup && \
-#    adduser --disabled-password --gecos "" --uid ${PUID} --gid ${PGID} appuser
+# Copy the startup script
+COPY docker_start.sh /app/docker_start.sh
+RUN chmod +x /app/docker_start.sh
 
-# Copy the built app from the build environment
-COPY --from=build-env /app/out .
+# Create required directories
+RUN mkdir -p /data/mediathek/incomplete /data/mediathek/complete
 
-# Change ownership to non-root user
-#RUN chown -R appuser:appgroup /app
-#USER appuser
-ENTRYPOINT ["dotnet", "MediathekArrServer.dll"]
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV CONFIG_PATH=/app/config
+
+# Use the shell script to start both processes
+ENTRYPOINT ["/app/docker_start.sh"]
