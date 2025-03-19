@@ -131,8 +131,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 new { fields = _queryFields, query = tvdbData.GermanName.Replace(" & ", " ") ?? tvdbData.Name.Replace(" & ", " ") }
             };
 
-				apiResponse = await FetchMediathekViewApiResponseAsync(queries, 10000);
-			}
+			apiResponse = await FetchMediathekViewApiResponseAsync(queries, 10000);
 
 			if (string.IsNullOrEmpty(apiResponse))
 			{
