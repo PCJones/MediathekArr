@@ -17,15 +17,16 @@ public partial class DownloadService
     private readonly Config _config;
     private readonly ConcurrentQueue<SabnzbdQueueItem> _downloadQueue = new();
     private readonly List<SabnzbdHistoryItem> _downloadHistory = [];
-    private static readonly HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient;
     private static readonly SemaphoreSlim _semaphore = new(2); // Limit concurrent downloads to 2
     private readonly string _mkvMergePath;
     private readonly bool _isWindows;
 
-    public DownloadService(ILogger<DownloadService> logger, Config config)
+    public DownloadService(ILogger<DownloadService> logger, Config config, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _config = config;
+        _httpClient = httpClientFactory.CreateClient("MediathekClient");
         _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         // Set complete_dir based on the application's startup path
