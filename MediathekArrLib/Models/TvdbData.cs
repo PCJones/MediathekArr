@@ -96,7 +96,7 @@ public record TvdbData(int Id, string Name, [property: JsonPropertyName("german_
     }
 
     /// <summary>
-    /// Finds a specific episode by absolute episode number. Dangerous, unless the show only has one season or absolute season numbers
+    /// Finds a specific episode by absolute episode number. Dangerous, unless the show only has one season or absolute episode numbers
     /// </summary>
     /// <param name="absoluteEpisodeNumber">The absolute episode number of the episode.</param>
     /// <returns>The TvdbEpisode if found, or null if not found.</returns>
