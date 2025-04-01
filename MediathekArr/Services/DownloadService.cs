@@ -173,7 +173,7 @@ public partial class DownloadService
 
             // Download XML subtitle file
             _logger.LogInformation("Starting download of subtitle XML for {Title} to path: {Path}", queueItem.Title, xmlFilePath);
-            var response = await _httpClient.GetAsync(subtitleUrl, HttpCompletionOption.ResponseHeadersRead);
+            var response = await _httpClient.GetAsync(subtitleUrl);
             response.EnsureSuccessStatusCode();
 
             await using (var contentStream = await response.Content.ReadAsStreamAsync())
