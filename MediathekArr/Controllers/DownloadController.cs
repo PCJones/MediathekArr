@@ -95,11 +95,11 @@ public partial class DownloadController(DownloadService downloadService, Config 
 
     private HistoryWrapper GetHistory()
     {
-        var historytems = _downloadService.GetHistory();
+        var historyItems = _downloadService.GetHistory();
 
         var history = new SabnzbdHistory
         {
-            Items = historytems.ToList()
+            Items = historyItems.ToList()
         };
 
         return new HistoryWrapper

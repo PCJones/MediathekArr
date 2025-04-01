@@ -73,8 +73,6 @@ public static class MkvMergeUtils
         }
     }
 
-
-
     public static async Task EnsureMkvMergeExistsAsync(string mkvmergePath, ILogger logger, HttpClient httpClient)
     {
         bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
