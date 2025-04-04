@@ -280,6 +280,7 @@ public partial class DownloadService
                 DownloadTime = 0,
                 Storage = null,
                 Status = SabnzbdDownloadStatus.Failed,
+                Completed = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 Id = queueItem.Id
             });
         }
@@ -387,6 +388,7 @@ public partial class DownloadService
             DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
             Storage = mkvPath,
             Status = queueItem.Status,
+            Completed = DateTimeOffset.Now.ToUnixTimeSeconds(),
             Id = queueItem.Id
         };
         _downloadHistory.Add(historyItem);

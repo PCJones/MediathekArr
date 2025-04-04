@@ -27,7 +27,7 @@ public class SabnzbdHistoryItem
     public SabnzbdDownloadStatus Status { get; set; }
 
     [JsonPropertyName("completed")]
-    public long Completed => DateTimeOffset.Now.ToUnixTimeSeconds();
+    public long Completed { get; set; };
 
     [JsonPropertyName("nzo_id")]
     public string Id { get; set; }
