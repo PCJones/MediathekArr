@@ -59,7 +59,7 @@ Example screenshot:
 ## Kontakt & Support
 - Öffne gerne ein Issue auf GitHub falls du Unterstützung benötigst.
 - [Telegram](https://t.me/pc_jones)
-- [UsenetDE Discord Server](https://discord.gg/pZrrMcJMQM) -> #mediathekarr Channel
+- [UsenetDE Discord Server](https://discord.gg/src6zcH4rr) -> #mediathekarr Channel
 
 ## Spenden
 Über eine Spende freue ich mich natürlich immer :D
