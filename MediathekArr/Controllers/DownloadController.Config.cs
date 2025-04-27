@@ -56,7 +56,13 @@ public partial class DownloadController
         // Only update categories if not overridden by environment variable
         if (string.IsNullOrEmpty(categoriesEnv))
         {
-            _config.Categories = newConfig.Categories;
+            if (_config.Categories != newConfig.Categories)
+            {
+                _config.Categories = newConfig.Categories;
+
+                // Create directories for each category
+                _downloadService.InitializeCompleteDirectories();
+            }
         }
 
         // Persist updated config to file

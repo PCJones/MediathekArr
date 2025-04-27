@@ -34,10 +34,35 @@ public partial class DownloadService
         _mkvMergePath = _isWindows ? Path.Combine(startupPath, "mkvtoolnix", "mkvmerge.exe") : "mkvmerge";
 
         InitializeIncompleteDirectory();
+        InitializeCompleteDirectories();
         CleanupAbandondedFilesInCompleteDirectory();
 
         // Ensure Mkvmerge is available
         Task.Run(() => MkvMergeUtils.EnsureMkvMergeExistsAsync(_mkvMergePath, _logger, _httpClient)).Wait();
+    }
+
+    public void InitializeCompleteDirectories()
+    {
+        // Ensure complete directory exists
+        if (!Directory.Exists(_config.CompletePath))
+        {
+            _logger.LogInformation("Complete directory doesn't exist yet, creating directory: {completeDir}", _config.CompletePath);
+            Directory.CreateDirectory(_config.IncompletePath);
+        }
+        else
+        {
+            // Create category directories if they don't exist
+            foreach (var category in _config.Categories)
+            {
+                var categoryDir = Path.Combine(_config.CompletePath, category);
+                if (!Directory.Exists(categoryDir))
+                {
+                    _logger.LogInformation("Creating category directory: {categoryDir}", categoryDir);
+                    Directory.CreateDirectory(categoryDir);
+                }
+            }
+        }
+
     }
 
     private void CleanupAbandondedFilesInCompleteDirectory()
@@ -82,7 +107,7 @@ public partial class DownloadService
         // Ensure incomplete directory exists
         if (!Directory.Exists(_config.IncompletePath))
         {
-            _logger.LogInformation("Ensuring incomplete doesn't exist, creating directory: {incompleteDir}", _config.IncompletePath);
+            _logger.LogInformation("Incomplete directory doesn't exist yet, creating directory: {incompleteDir}", _config.IncompletePath);
             Directory.CreateDirectory(_config.IncompletePath);
         }
         else
