@@ -49,21 +49,29 @@ public partial class DownloadService
             return;
         }
 
-        var files = Directory.GetFiles(_config.CompletePath);
-        foreach (var file in files)
+        foreach (var category in _config.Categories)
         {
-            var fileInfo = new FileInfo(file);
-            if (DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromHours(48))
+            var categoryDir = Path.Combine(_config.CompletePath, category);
+            if (!Directory.Exists(categoryDir))
             {
-                _logger.LogInformation("Deleting abandoned file in complete directory: {file}", file);
-                try
+                continue;
+            }
+            var files = Directory.GetFiles(categoryDir);
+            foreach (var file in files)
+            {
+                var fileInfo = new FileInfo(file);
+                if (DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromHours(48))
                 {
-                    File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error deleting file: {file}", file);
-                    continue;
+                    _logger.LogInformation("Deleting abandoned file in complete directory: {file}", file);
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error deleting file: {file}", file);
+                        continue;
+                    }
                 }
             }
         }
@@ -313,7 +321,7 @@ public partial class DownloadService
 
     private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch, bool subtitlesAvailable)
     {
-        var completeCategoryDir = _config.CompletePath;
+        var completeCategoryDir = Path.Combine(_config.CompletePath, queueItem.Category);
         _logger.LogInformation("Ensuring complete directory exists at path: {Path}", completeCategoryDir);
         Directory.CreateDirectory(completeCategoryDir);
 

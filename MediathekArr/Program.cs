@@ -100,6 +100,7 @@ static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
     // Override from environment variables
     var incompletePath = Environment.GetEnvironmentVariable("DOWNLOAD_INCOMPLETE_PATH");
     var completePath = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");
+    var categoriesRaw = Environment.GetEnvironmentVariable("CATEGORIES");
 
     if (!string.IsNullOrEmpty(incompletePath))
     {
@@ -121,10 +122,16 @@ static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
         config.CompletePath = GetDefaultPath(AppContext.BaseDirectory, "complete", logger);
     }
 
-    if (!existingConfig && (string.IsNullOrEmpty(incompletePath) || string.IsNullOrEmpty(completePath)))
+    if (!string.IsNullOrEmpty(categoriesRaw))
+    {
+        logger.LogInformation("Overriding categories from environment variable: {categoriesRaw}", categoriesRaw);
+        config.Categories = categoriesRaw.Split(',');
+    }
+
+    if (!existingConfig && (string.IsNullOrEmpty(incompletePath) || string.IsNullOrEmpty(completePath) || string.IsNullOrEmpty(categoriesRaw)))
     {
         logger.LogWarning("Attention!");
-        logger.LogWarning("Configuration file was not found. Please visit http://localhost:5007/ to setup MediathekArr.");
+        logger.LogWarning("Configuration file was not found or is incomplete. Please visit http://localhost:5007/ to setup MediathekArr.");
         logger.LogWarning("Alternatively use environment variables (see https://github.com/PCJones/MediathekArr).");
         logger.LogWarning("MediathekArr will use default values:");
     }

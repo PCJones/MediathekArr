@@ -424,11 +424,11 @@ async function proceedWithSelectedClient() {
 
     updateStatus('Testing the selected client...');
 
-    if (selectedClientDetails.category !== 'mediathek') {
+    if (selectedClientDetails.category !== 'tv') {
         document.getElementById('categoryChangeAlert').style.display = 'block';
-        document.getElementById('categoryChangeAlert').innerText = `The selected client category is "${selectedClientDetails.category}" and not "mediathek". It will be changed to "mediathek" for migration to 1.0.`;
+        document.getElementById('categoryChangeAlert').innerText = `The selected client category is "${selectedClientDetails.category}" and not "tv". It will be changed to "tv" for migration to 1.0.`;
         updateStatus(document.getElementById('categoryChangeAlert').innerText)
-        selectedClientDetails.category = 'mediathek';
+        selectedClientDetails.category = 'tv';
     }
 
     if (selectedClientDetails.priority !== 50 && selectedClientDetails.priority !== "50") {
@@ -480,7 +480,7 @@ async function testClientSettings(tryAlternate = true) {
             { name: "apiKey", value: "x" },
             { name: "username" },
             { name: "password" },
-            { name: "tvCategory", value: "mediathek" },
+            { name: "tvCategory", value: "tv" },
             { name: "recentTvPriority", value: -100 },
             { name: "olderTvPriority", value: -100 }
         ],
@@ -603,7 +603,7 @@ async function updateOrCreateDownloadClient() {
             { name: "apiKey", value: "x" },
             { name: "username" },
             { name: "password" },
-            { name: "tvCategory", value: "mediathek" },
+            { name: "tvCategory", value: "tv" },
             { name: "recentTvPriority", value: -100 },
             { name: "olderTvPriority", value: -100 }
         ],

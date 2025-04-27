@@ -10,14 +10,25 @@ public partial class DownloadController
     {
         var incompleteEnv = Environment.GetEnvironmentVariable("DOWNLOAD_INCOMPLETE_PATH");
         var completeEnv = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");
-        
+        var categoriesEnv = Environment.GetEnvironmentVariable("CATEGORIES");
+
+        // Parse categories from environment variable if present
+        if (!string.IsNullOrEmpty(categoriesEnv))
+        {
+            _config.Categories = categoriesEnv.Split(',')
+                .Select(c => c.Trim())
+                .Where(c => !string.IsNullOrEmpty(c))
+                .ToArray();
+        }
+
         var configDetails = new
         {
             config = _config,
             overrides = new
             {
                 IncompletePath = !string.IsNullOrEmpty(incompleteEnv),
-                CompletePath = !string.IsNullOrEmpty(completeEnv)
+                CompletePath = !string.IsNullOrEmpty(completeEnv),
+                Categories = !string.IsNullOrEmpty(categoriesEnv)
             }
         };
 
@@ -29,6 +40,7 @@ public partial class DownloadController
     {
         var incompleteEnv = Environment.GetEnvironmentVariable("DOWNLOAD_INCOMPLETE_PATH");
         var completeEnv = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");
+        var categoriesEnv = Environment.GetEnvironmentVariable("CATEGORIES");
 
         // Prevent updates to fields overridden by environment variables
         if (string.IsNullOrEmpty(incompleteEnv))
@@ -39,6 +51,12 @@ public partial class DownloadController
         if (string.IsNullOrEmpty(completeEnv))
         {
             _config.CompletePath = newConfig.CompletePath;
+        }
+
+        // Only update categories if not overridden by environment variable
+        if (string.IsNullOrEmpty(categoriesEnv))
+        {
+            _config.Categories = newConfig.Categories;
         }
 
         // Persist updated config to file
@@ -61,6 +79,7 @@ public partial class DownloadController
 
         return Ok(new { status = "success" });
     }
+
 
     [HttpGet("browse")]
     public IActionResult BrowsePath([FromQuery] string path = "")
