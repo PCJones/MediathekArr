@@ -339,8 +339,8 @@ async function fetchWithStatus(url, options, successMessage, errorMessage) {
     try {
         const response = await fetch(url, options);
         if (!response.ok) {
-            const error = await response.json();
-            updateStatus(`${errorMessage}: ${error.message || 'Unknown error'}`);
+            const errorResponse = await response.json();
+            updateStatus(`${errorMessage}: ${errorResponse.error.message || 'Unknown error'}`);
             return null;
         }
         updateStatus(successMessage);
@@ -651,7 +651,7 @@ async function tryAlternateHost(testPayload) {
     testPayload.fields.find(field => field.name === "host").value = alternateHost;
 
     const response = await fetchWithStatus(
-        `${sonarrHost}/api/v3/downloadclient/test`,
+        `/wizard/downloadclient/test?sonarrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`,
         {
             method: "POST",
             headers: {
