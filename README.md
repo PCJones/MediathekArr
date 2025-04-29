@@ -14,14 +14,14 @@ Example screenshot:
 ![grafik](https://github.com/user-attachments/assets/654c42fa-4eab-4b6e-b1c7-9b23192c7a98)
 
 
-## Install using Docker
+## Automatic Installation using wizard
+1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
+2. Depending on your docker network setup, open the MediathekArr Webinterface on `https://localhost:5007`, `https://mediathekarr:5007` or `https://YOUR_HOST_IP:5007`
+3. Click on `Open Config` and configure incomplete/complete path if needed (can also be done using environment variables in docker-compose.yml). Save after.
+4. Click on `Open Setup & Migration Wizard` and follow the instructions.
+5. You are done! If there were any errors in the wizard please [report it](https://github.com/PCJones/MediathekArr/issues) and try a manual installation instead.
 
-# Important Note:
-**I strongly recommend to use the 1.0 beta instead, which is much more stable and can find shows more consistently:**
-
-[https://github.com/PCJones/MediathekArr/releases](https://github.com/PCJones/MediathekArr/releases)
-
-## Installation
+## Manual Installation
 
 1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
 2. In Sonarr/Radarr go to Settings>Download Clients
@@ -33,24 +33,21 @@ Example screenshot:
 8. Use SSL: no
 9. URL Base (important): `download`
 10. API Key: `x` (or anything else, just can't be empty)
-11. Category: `sonarr` or `tv`if Sonarr, `radarr` or `movie` if Radarr
+11. Category: `tv`if Sonarr, `movie` if Radarr
 12. Client Priority (important so it won't be used by normal indexers): `50`
-13. Remove Completed: yes
-14. Remove Failed: yes
-15. Test and Save
-16. In Prowlarr/Sonarr/Radarr Go to Settings>Indexers
-17. Add new NewzNAB(Sonarr/Radarr) / Newznab Generic(Prowlarr) Indexer (examlpe screenshot at bottom)
-18. Enable advanced settings at the bottom
-19. URL: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
-20. API Path: `/api`
-21. API Key: Leave blank
-22. Categories: SD, HD or both
-24. Download Client (important): `MediathekArr Downloader` - (if using Prowlarr, switch to Sonarr/Radarr for this)
-25. Test and Save
+13. Test and Save
+14. In Prowlarr/Sonarr/Radarr Go to Settings>Indexers
+15. Add new NewzNAB(Sonarr/Radarr) / Newznab Generic(Prowlarr) Indexer (example screenshot at bottom)
+16. Enable advanced settings at the bottom
+17. URL: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
+18. API Path: `/api`
+19. API Key: Leave blank
+20. Categories: SD, HD or both
+21. Download Client (important): `MediathekArr Downloader` - (if using Prowlarr, switch to Sonarr/Radarr for this)
+22. Test and Save
 
 ## Example Download Client
-![grafik](https://github.com/user-attachments/assets/7da76b68-f32a-41b2-b1b8-81d0e5ed1683)
-![grafik](https://github.com/user-attachments/assets/364e7fae-fc51-4a4b-bc17-ded68bca30c7)
+![image](https://github.com/user-attachments/assets/ce34159c-6aa0-42b2-81e0-03d213414837)
 
 ## Example Indexer
 ![grafik](https://github.com/user-attachments/assets/23a4c00f-4b69-4486-8213-a45021c30d16)
