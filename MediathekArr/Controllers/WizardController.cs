@@ -72,7 +72,7 @@ public class WizardController : ApiProxyControllerBase
     }
 
     [HttpGet("indexers")]
-    public async Task<IActionResult> GetIndexers([FromQuery] string apiKey, [FromQuery] string arrHost, [FromQuery] bool prowlarr = false)
+    public async Task<IActionResult> GetIndexers([FromQuery] string apiKey, [FromQuery] string arrHost, [FromQuery] int portFilter = 5007, [FromQuery] bool prowlarr = false)
     {
         string apiVersion = prowlarr ? "v1" : "v3";
 
@@ -92,20 +92,20 @@ public class WizardController : ApiProxyControllerBase
                         if (prowlarr)
                         {
                             var indexerUrls = indexer["indexerUrls"]?.ToObject<List<string>>();
-                            return indexerUrls != null && indexerUrls.Any(url => url.Contains(":5007")) &&
+                            return indexerUrls != null && indexerUrls.Any(url => url.Contains($":{portFilter}")) &&
                                    (string)indexer["protocol"] == "usenet";
                         }
                         else
                         {
                             return (string)indexer["protocol"] == "usenet" &&
                                    indexer["fields"].Any(field =>
-                                       (string)field["name"] == "baseUrl" && ((string)field["value"]).Contains(":5007"));
+                                       (string)field["name"] == "baseUrl" && ((string)field["value"]).Contains($":{portFilter}"));
                         }
                     })
                     .Select(indexer =>
                     {
                         var baseUrl = prowlarr ?
-                             indexer["indexerUrls"]?.ToObject<List<string>>().FirstOrDefault(url => url.Contains(":5007")) :
+                             indexer["indexerUrls"]?.ToObject<List<string>>().FirstOrDefault(url => url.Contains($":{portFilter}")) :
                             indexer["fields"]?.FirstOrDefault(field => (string)field["name"] == "baseUrl")?["value"]?.ToString();
 
                         return new

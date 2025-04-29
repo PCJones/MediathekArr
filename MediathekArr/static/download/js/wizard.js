@@ -147,9 +147,11 @@ function showSuccessScreen() {
 async function fetchIndexers() {
     updateStatus('Fetching existing Indexers...');
 
+    const mediathekArrIndexerPort = document.getElementById('indexerBaseUrl').textContent.split(':').pop();
+
     const url = useProwlarr
-        ? `/wizard/indexers?arrHost=${encodeURIComponent(prowlarrHost)}&apiKey=${encodeURIComponent(prowlarrApiKey)}&prowlarr=true`
-        : `/wizard/indexers?arrHost=${encodeURIComponent(sonarrHost)}&apiKey=${encodeURIComponent(apiKey)}`;
+        ? `/wizard/indexers?arrHost=${encodeURIComponent(prowlarrHost)}&apiKey=${encodeURIComponent(prowlarrApiKey)}&portFilter=${mediathekArrIndexerPort}&prowlarr=true`
+        : `/wizard/indexers?arrHost=${encodeURIComponent(sonarrHost)}&portFilter=${mediathekArrIndexerPort}&apiKey=${encodeURIComponent(apiKey)}`;
     const headers = {};
 
     const indexers = await fetchWithStatus(
@@ -242,12 +244,8 @@ async function proceedWithSelectedIndexer() {
 async function retryIndexerSettings() {
     document.getElementById('indexerBaseUrl').textContent = document.getElementById('editIndexerBaseUrl').value;
     const newBaseUrl = document.getElementById('editIndexerBaseUrl').value;
-    const newPort = document.getElementById('editIndexerPort').value;
 
-    updateStatus(`Retrying with updated base URL (${newBaseUrl}) and port (${newPort})...`);
-
-    document.getElementById('editIndexerBaseUrl').textContent = newBaseUrl;
-    document.getElementById('editIndexerPort').textContent = newPort;
+    updateStatus(`Retrying with updated base URL (${newBaseUrl})...`);
 
     document.getElementById('editIndexerSettings').style.display = "none";
     await testIndexerSettings();
@@ -527,17 +525,14 @@ async function testClientSettings(tryAlternate = true) {
 }
 
 async function setProwlarrIndexerDownloadClient(indexerId) {
-    updateStatus('Waiting for Prowlarr to sync with Sonarr...');
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds
+    updateStatus('Waiting 15 seconds for Prowlarr to sync with Sonarr...');
+    await new Promise(resolve => setTimeout(resolve, 15000));
+    const prowlarrPort = new URL(prowlarrHost).port || 9696;
 
     updateStatus('Fetching Sonarr indexers...');
     const sonarrIndexers = await fetchWithStatus(
-        `${sonarrHost}/api/v3/indexer`,
-        {
-            headers: {
-                "X-Api-Key": apiKey
-            }
-        },
+        `/wizard/indexers?apiKey=${encodeURIComponent(apiKey)}&arrHost=${encodeURIComponent(sonarrHost)}&portFilter=${prowlarrPort}`,
+        {},
         'Sonarr indexers fetched successfully.',
         'Failed to fetch Sonarr indexers'
     );
@@ -546,8 +541,7 @@ async function setProwlarrIndexerDownloadClient(indexerId) {
 
     if (sonarrIndexers) {
         const matchingIndexers = sonarrIndexers.filter(indexer =>
-            indexer.protocol === 'usenet' &&
-            indexer.fields.some(field => field.name === 'baseUrl' && field.value.endsWith(`/${indexerId}/`))
+            indexer.baseUrl && indexer.baseUrl.endsWith(`/${indexerId}/`)
         );
 
         if (matchingIndexers.length !== 1) {
@@ -557,23 +551,47 @@ async function setProwlarrIndexerDownloadClient(indexerId) {
         }
 
         const foundIndexer = matchingIndexers[0];
-        foundIndexer.downloadClientId = selectedClientId;
+
+        // Create update payload
+        const updatePayload = {
+            id: foundIndexer.id,
+            configContract: "NewznabSettings",
+            implementation: "Newznab",
+            implementationName: "Newznab",
+            enableRss: foundIndexer ? foundIndexer.enableRss : true,
+            enableAutomaticSearch: foundIndexer ? foundIndexer.enableAutomaticSearch : true,
+            enableInteractiveSearch: foundIndexer ? foundIndexer.enableInteractiveSearch : true,
+            protocol: "usenet",
+            priority: parseInt(foundIndexer.priority),
+            fields: [
+                { name: "baseUrl", value: foundIndexer.baseUrl },
+                { name: "apiPath", value: foundIndexer.apiPath   },
+                { name: "apiKey", value: "********" },
+                { name: "categories", value: [5030, 5040] },
+                { name: "animeCategories", value: [] }
+            ],
+            name: foundIndexer.name,
+            downloadClientId: selectedClientId
+        };
+
+        console.log(updatePayload);
 
         const updateResponse = await fetchWithStatus(
-            `${sonarrHost}/api/v3/indexer/${foundIndexer.id}`,
+            `/wizard/indexer/${foundIndexer.id}?apiKey=${apiKey}&arrHost=${sonarrHost}`,
             {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
-                    "X-Api-Key": apiKey
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify(foundIndexer)
+                body: JSON.stringify(updatePayload)
             },
             'Indexer updated with download client ID successfully.',
             'Failed to update indexer with download client ID'
         );
-        console.log('xxxxxxxxx')
-        console.log(updateResponse) 
+
+        console.log('xxxxxxxxx');
+        console.log(updateResponse);
+
         if (!updateResponse) {
             alert('Failed to update the indexer with the download client ID.');
             return false;
@@ -586,6 +604,7 @@ async function setProwlarrIndexerDownloadClient(indexerId) {
     alert('Failed to update the indexer with the download client ID.');
     return false;
 }
+
 
 async function updateOrCreateDownloadClient() {
     const payload = {
