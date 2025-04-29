@@ -4,12 +4,6 @@
 
 work in progress, please report bugs and ideas
 
-Thanks to https://github.com/mediathekview/mediathekviewweb for the Mediathek API
-
-Thanks to https://github.com/PCJones/UmlautAdaptarr for the German Title API
-
-Thanks to https://thetvdb.com for the metadata API
-
 Example screenshot:
 ![grafik](https://github.com/user-attachments/assets/654c42fa-4eab-4b6e-b1c7-9b23192c7a98)
 
@@ -65,6 +59,17 @@ Example screenshot:
 <a href="https://coindrop.to/pcjones" target="_blank"><img src="https://coindrop.to/embed-button.png" style="border-radius: 10px; height: 57px !important;width: 229px !important;" alt="Coindrop.to me"></img></a>
 
 Für andere Spendenmöglichkeiten gerne auf Discord oder Telegram melden - danke!
+
+## Credits
+Thanks to https://github.com/mediathekview/mediathekviewweb for the Mediathek API
+
+Thanks to https://github.com/PCJones/UmlautAdaptarr for the German Title API
+
+Thanks to https://thetvdb.com for the metadata API
+
+## Other *arr projects:
+- [UmlautAdaptarr](https://github.com/PCJones/UmlautAdaptarr) - A tool to work around Sonarr, Radarr, Lidarr and Readarrs problems with foreign languages.
+- [crowdNFO](https://crowdnfo.net) - Crowd sourced NFO and mediainfo collection (WIP)
 
 ## Star History
 
