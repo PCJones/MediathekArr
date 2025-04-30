@@ -143,12 +143,8 @@
             <div id="editIndexerSettings" style="display: none;">
                 <h4>Edit Indexer Settings</h4>
                 <div>
-                    <label for="editBaseUrl">Base URL:</label>
+                    <label for="editBaseUrl">MediathekArr Base URL:</label>
                     <input type="text" id="editIndexerBaseUrl" value="http://localhost:5007" oninput="document.getElementById('indexerBaseUrl').textContent = this.value" />
-                </div>
-                <div>
-                    <label for="editPort">Port:</label>
-                    <input type="text" id="editIndexerPort" value="5007" oninput="document.getElementById('indexerPort').textContent = this.value" />
                 </div>
                 <button onclick="retryIndexerSettings()">Retry</button>
             </div>

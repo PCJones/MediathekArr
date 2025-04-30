@@ -29,7 +29,9 @@ builder.Services.AddHttpClient("MediathekClient", client =>
 {
     client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0");
     client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip");
-    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+	client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+	client.DefaultRequestHeaders.Accept.ParseAdd("text/plain");
+	client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 })
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
