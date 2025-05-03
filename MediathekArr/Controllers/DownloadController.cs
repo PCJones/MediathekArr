@@ -116,70 +116,45 @@ public partial class DownloadController(DownloadService downloadService, Config 
     }}";
 
 
-    private string ConfigResponse => @$"{{
-        ""config"": {{
-            ""misc"": {{
-                ""complete_dir"": ""{_config.CompletePath.Replace('\\', '/')}"",
-                ""enable_tv_sorting"": false,
-                ""enable_movie_sorting"": false,
-                ""pre_check"": false,
-                ""history_retention"": """",
-                ""history_retention_option"": ""all""
-            }},
-            ""categories"": [
-                {{
-                    ""name"": ""mediathek"",
+    private string ConfigResponse
+    {
+        get
+        {
+            string completePathFixed = _config.CompletePath.Replace('\\', '/');
+
+            var categoryEntries = new List<string>();
+            foreach (var category in _config.Categories)
+            {
+                string dirPath = completePathFixed + "/" + category;
+                categoryEntries.Add($@"{{
+                    ""name"": ""{category}"",
                     ""pp"": """",
                     ""script"": ""Default"",
-                    ""dir"": ""{_config.CompletePath.Replace('\\', '/')}"",
+                    ""dir"": ""{dirPath}"",
                     ""priority"": -100
-                }},
-                {{
-                    ""name"": ""sonarr"",
-                    ""pp"": """",
-                    ""script"": ""Default"",
-                    ""dir"": """",
-                    ""priority"": -100
-                }},
-                {{
-                    ""name"": ""tv"",
-                    ""pp"": """",
-                    ""script"": ""Default"",
-                    ""dir"": """",
-                    ""priority"": -100
-                }},
-                {{
-                    ""name"": ""radarr"",
-                    ""pp"": """",
-                    ""script"": ""Default"",
-                    ""dir"": """",
-                    ""priority"": -100
-                }},
-                {{
-                    ""name"": ""movies"",
-                    ""pp"": """",
-                    ""script"": ""Default"",
-                    ""dir"": """",
-                    ""priority"": -100
-                }},
-                {{
-                    ""name"": ""sonarr_blackhole"",
-                    ""pp"": """",
-                    ""script"": ""Default"",
-                    ""dir"": """",
-                    ""priority"": -100
-                }},
-                {{
-                    ""name"": ""radarr_blackhole"",
-                    ""pp"": """",
-                    ""script"": ""Default"",
-                    ""dir"": """",
-                    ""priority"": -100
+                }}");
+            }
+
+            string categoriesJson = string.Join(",\n", categoryEntries);
+
+            return $@"{{
+                ""config"": {{
+                    ""misc"": {{
+                        ""complete_dir"": ""{completePathFixed}"",
+                        ""enable_tv_sorting"": false,
+                        ""enable_movie_sorting"": false,
+                        ""pre_check"": false,
+                        ""history_retention"": """",
+                        ""history_retention_option"": ""all""
+                    }},
+                    ""categories"": [
+                        {categoriesJson}
+                    ],
+                    ""sorters"": []
                 }}
-            ],
-            ""sorters"": []
-        }}
-    }}";
+            }}";
+        }
+    }
 
     [GeneratedRegex(@"<!--\s*([^<>]+)\s*-->")]
     private static partial Regex FileNameRegex();

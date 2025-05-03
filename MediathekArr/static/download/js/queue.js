@@ -1,6 +1,9 @@
 ﻿let currentInputId = null;
 let initialIncompletePath = '';
 let initialCompletePath = '';
+let categories = [];
+let initialCategories = [];
+let categoriesOverridden = false;
 
 async function fetchQueue() {
     try {
@@ -50,38 +53,107 @@ async function openConfigModal() {
     initialIncompletePath = config.incompletePath.replace(/\\/g, '/');
     initialCompletePath = config.completePath.replace(/\\/g, '/');
 
+    // Handle categories
+    categories = config.categories || [];
+    initialCategories = [...categories]; // Create a copy
+    categoriesOverridden = overrides.categories;
+    renderCategories();
+
     const incompleteInput = document.getElementById('incompletePath');
     const completeInput = document.getElementById('completePath');
     const incompleteBrowseButton = document.getElementById('browseIncomplete');
     const completeBrowseButton = document.getElementById('browseComplete');
     const incompleteWarning = document.getElementById('incompletePathWarning');
     const completeWarning = document.getElementById('completePathWarning');
+    const newCategoryInput = document.getElementById('newCategory');
+    const categoriesAddButton = document.querySelector('button[onclick="addCategory()"]');
+    const categoriesWarning = document.getElementById('categoriesWarning');
 
     // Handle Incomplete Path
     if (overrides.incompletePath) {
         incompleteInput.disabled = true;
-        incompleteBrowseButton.disabled = true; // Disable the "Browse" button
+        incompleteBrowseButton.disabled = true;
         incompleteWarning.style.display = 'block';
     } else {
         incompleteInput.disabled = false;
-        incompleteBrowseButton.disabled = false; // Enable the "Browse" button
+        incompleteBrowseButton.disabled = false;
         incompleteWarning.style.display = 'none';
     }
 
     // Handle Complete Path
     if (overrides.completePath) {
         completeInput.disabled = true;
-        completeBrowseButton.disabled = true; // Disable the "Browse" button
+        completeBrowseButton.disabled = true;
         completeWarning.style.display = 'block';
     } else {
         completeInput.disabled = false;
-        completeBrowseButton.disabled = false; // Enable the "Browse" button
+        completeBrowseButton.disabled = false;
         completeWarning.style.display = 'none';
+    }
+
+    // Handle Categories
+    if (categoriesOverridden) {
+        newCategoryInput.disabled = true;
+        categoriesAddButton.disabled = true;
+        categoriesWarning.style.display = 'block';
+    } else {
+        newCategoryInput.disabled = false;
+        categoriesAddButton.disabled = false;
+        categoriesWarning.style.display = 'none';
     }
 
     // Show the modal
     document.getElementById('configModal').style.display = 'block';
     document.getElementById('pathCheckModal').style.display = 'none';
+}
+
+function renderCategories() {
+    const categoriesList = document.getElementById('categoriesList');
+    categoriesList.innerHTML = '';
+
+    if (categories.length === 0) {
+        categoriesList.innerHTML = '<div style="padding: 10px; color: #666;">No categories defined</div>';
+        return;
+    }
+
+    categories.forEach((category, index) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category-item';
+        categoryDiv.style.display = 'flex';
+        categoryDiv.style.justifyContent = 'space-between';
+        categoryDiv.style.alignItems = 'center';
+        categoryDiv.style.marginBottom = '5px';
+        categoryDiv.style.padding = '5px';
+        categoryDiv.style.backgroundColor = '#f4f4f4';
+        categoryDiv.style.borderRadius = '3px';
+
+        categoryDiv.innerHTML = `
+            <span>${category}</span>
+            <button type="button" ${categoriesOverridden ? 'disabled' : ''} 
+                    onclick="removeCategory(${index})" 
+                    style="padding: 2px 6px; background-color: #dc3545; color: white; min-width: 30px; margin: 0;">
+                X
+            </button>
+        `;
+        categoriesList.appendChild(categoryDiv);
+    });
+}
+function addCategory() {
+    const newCategoryInput = document.getElementById('newCategory');
+    const newCategory = newCategoryInput.value.trim();
+
+    if (newCategory && !categories.includes(newCategory)) {
+        categories.push(newCategory);
+        renderCategories();
+        newCategoryInput.value = '';
+    } else if (categories.includes(newCategory)) {
+        alert('This category already exists!');
+    }
+}
+
+function removeCategory(index) {
+    categories.splice(index, 1);
+    renderCategories();
 }
 
 async function browsePath(inputId) {
@@ -196,8 +268,9 @@ function closeConfigModal(promptUser = true) {
     if (promptUser) {
         const incompletePath = document.getElementById('incompletePath').value;
         const completePath = document.getElementById('completePath').value;
+        const categoriesChanged = JSON.stringify(categories) !== JSON.stringify(initialCategories);
 
-        if (incompletePath !== initialIncompletePath || completePath !== initialCompletePath) {
+        if (incompletePath !== initialIncompletePath || completePath !== initialCompletePath || categoriesChanged) {
             if (!confirm('You didn\'t save your changes - are you sure you want to close?')) {
                 return;
             }
@@ -217,7 +290,8 @@ async function saveConfig() {
         },
         body: JSON.stringify({
             incompletePath,
-            completePath
+            completePath,
+            categories
         }),
     });
 

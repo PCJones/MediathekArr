@@ -46,6 +46,17 @@
                 <button type="button" id="browseComplete" onclick="browsePath('completePath')">Browse</button>
                 <small id="completePathWarning" style="color: red; display:none;">Overwritten by environment variable</small>
             </div>
+            <div>
+                <label>Categories:</label>
+                <div id="categoriesList" style="margin-top: 5px; max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 5px;">
+                    <!-- Categories will be populated here -->
+                </div>
+                <div style="display: flex; margin-top: 10px;">
+                    <input type="text" id="newCategory" placeholder="Add a new category" style="flex-grow: 1; margin-right: 10px;" />
+                    <button type="button" onclick="addCategory()">Add</button>
+                </div>
+                <small id="categoriesWarning" style="color: red; display:none;">Overwritten by environment variable</small>
+            </div>
             <button type="button" class="button-group" onclick="saveConfig()">Save</button>
             <button type="button" class="button-group" onclick="closeConfigModal()">Close</button>
         </form>

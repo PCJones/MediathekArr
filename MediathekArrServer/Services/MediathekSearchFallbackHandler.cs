@@ -351,8 +351,18 @@ public partial class MediathekSearchFallbackHandler
                 year += 2000;
             }
 
-            DateTime date = new(year, month, day);
-            return date.ToString("yyyy-MM-dd");
+            if (DateTime.TryParseExact($"{day}.{month}.{year}",
+                                       "d.M.yyyy",
+                                       CultureInfo.InvariantCulture,
+                                       DateTimeStyles.None,
+                                       out DateTime date))
+            {
+                return date.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
         var longMonthMatch = Regex.Match(title, germanMonthPattern);

@@ -34,10 +34,35 @@ public partial class DownloadService
         _mkvMergePath = _isWindows ? Path.Combine(startupPath, "mkvtoolnix", "mkvmerge.exe") : "mkvmerge";
 
         InitializeIncompleteDirectory();
+        InitializeCompleteDirectories();
         CleanupAbandondedFilesInCompleteDirectory();
 
         // Ensure Mkvmerge is available
         Task.Run(() => MkvMergeUtils.EnsureMkvMergeExistsAsync(_mkvMergePath, _logger, _httpClient)).Wait();
+    }
+
+    public void InitializeCompleteDirectories()
+    {
+        // Ensure complete directory exists
+        if (!Directory.Exists(_config.CompletePath))
+        {
+            _logger.LogInformation("Complete directory doesn't exist yet, creating directory: {completeDir}", _config.CompletePath);
+            Directory.CreateDirectory(_config.IncompletePath);
+        }
+        else
+        {
+            // Create category directories if they don't exist
+            foreach (var category in _config.Categories)
+            {
+                var categoryDir = Path.Combine(_config.CompletePath, category);
+                if (!Directory.Exists(categoryDir))
+                {
+                    _logger.LogInformation("Creating category directory: {categoryDir}", categoryDir);
+                    Directory.CreateDirectory(categoryDir);
+                }
+            }
+        }
+
     }
 
     private void CleanupAbandondedFilesInCompleteDirectory()
@@ -49,21 +74,29 @@ public partial class DownloadService
             return;
         }
 
-        var files = Directory.GetFiles(_config.CompletePath);
-        foreach (var file in files)
+        foreach (var category in _config.Categories)
         {
-            var fileInfo = new FileInfo(file);
-            if (DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromHours(48))
+            var categoryDir = Path.Combine(_config.CompletePath, category);
+            if (!Directory.Exists(categoryDir))
             {
-                _logger.LogInformation("Deleting abandoned file in complete directory: {file}", file);
-                try
+                continue;
+            }
+            var files = Directory.GetFiles(categoryDir);
+            foreach (var file in files)
+            {
+                var fileInfo = new FileInfo(file);
+                if (DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromHours(48))
                 {
-                    File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error deleting file: {file}", file);
-                    continue;
+                    _logger.LogInformation("Deleting abandoned file in complete directory: {file}", file);
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error deleting file: {file}", file);
+                        continue;
+                    }
                 }
             }
         }
@@ -74,7 +107,7 @@ public partial class DownloadService
         // Ensure incomplete directory exists
         if (!Directory.Exists(_config.IncompletePath))
         {
-            _logger.LogInformation("Ensuring incomplete doesn't exist, creating directory: {incompleteDir}", _config.IncompletePath);
+            _logger.LogInformation("Incomplete directory doesn't exist yet, creating directory: {incompleteDir}", _config.IncompletePath);
             Directory.CreateDirectory(_config.IncompletePath);
         }
         else
@@ -314,7 +347,7 @@ public partial class DownloadService
 
     private async Task ConvertMp4ToMkvAsync(SabnzbdQueueItem queueItem, Stopwatch stopwatch, bool subtitlesAvailable)
     {
-        var completeCategoryDir = _config.CompletePath;
+        var completeCategoryDir = Path.Combine(_config.CompletePath, queueItem.Category);
         _logger.LogInformation("Ensuring complete directory exists at path: {Path}", completeCategoryDir);
         Directory.CreateDirectory(completeCategoryDir);
 

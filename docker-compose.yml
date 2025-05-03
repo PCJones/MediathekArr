@@ -10,7 +10,8 @@ services:
       # You can use the web interface at http://localhost:5007 to configure the following settings
       # Alternatively, you can set them here
       #- DOWNLOAD_INCOMPLETE_PATH=/data/mediathek/incomplete # Path to incomplete downloads
-      #- DOWNLOAD_COMPLETE_PATH=/data/mediathek/complete # Path to complete downloads"
+      #- DOWNLOAD_COMPLETE_PATH=/data/mediathek/complete # Path to complete downloads
+      #- CATEGORIES=tv,movies,sonarr_blackhole,radarr_blackhole # Comma separated list of categories to expose
 
       # Only change this if you are hosting your own API. Not needed for 99% of users
       - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1
@@ -19,4 +20,4 @@ services:
       - /data/mediathek/complete:/data/mediathek/complete
       - /data/mediathek/incomplete:/data/mediathek/incomplete
     ports:
-      - "127.0.0.1:5007:5007" # Port on the right side can be changed to any value you like
+      - "127.0.0.1:5007:5007" # Port on the left side can be changed to any value you like
