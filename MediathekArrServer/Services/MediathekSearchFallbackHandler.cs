@@ -128,7 +128,7 @@ public partial class MediathekSearchFallbackHandler
     private static string GenerateTitle(TvdbData? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
     {
         var showName = tvdbData?.Name ?? topic;
-        var language = title.Contains("(Englisch)") || title.Contains("(Originalversion") ? "ENGLISH" : "GERMAN";
+        var language = title.Contains("(Englisch)") ? "ENGLISH" : title.Contains("(Originalversion") ? "ORIGINAL" : "GERMAN";
 
         if (!string.IsNullOrEmpty(formattedDate))
         {
