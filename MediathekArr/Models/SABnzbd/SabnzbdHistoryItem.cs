@@ -26,8 +26,14 @@ public class SabnzbdHistoryItem
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public SabnzbdDownloadStatus Status { get; set; }
 
+    [JsonPropertyName("completed")]
+    public long Completed { get; set; }
+
     [JsonPropertyName("nzo_id")]
     public string Id { get; set; }
+
+    [JsonPropertyName("postproc_time")]
+    public int PostprocTime => 0;
 
     [JsonPropertyName("name")]
     public string Title { get; set; }
