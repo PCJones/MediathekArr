@@ -836,8 +836,12 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return items;
     }
 
-    private static string FormatTitle(string title)
+    private static string FormatTitle(string? title)
     {
+        if (string.IsNullOrEmpty(title))
+        {
+            return string.Empty;
+        }
         // Remove unwanted characters
         title = title.Replace("–", "-");
         title = title.RemoveAccentButKeepGermanUmlauts();
