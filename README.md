@@ -34,8 +34,9 @@ Example screenshot:
 | Advanced detection system for TV shows, seasons and episodes...
 due to the horrendous lack of consistency and metadata in ARD/ZDF Mediatheken|✓     |
 | Ideas?                                                            | Wishes?   |
-* You can find a few movies via interactive search, but not a lot. You can however find all movies via a text search in prowlarr and send the result to radarr.
-* 
+
+\* You can find a few movies via interactive search, but not a lot. You can however find all movies via a text search in prowlarr and send the result to radarr.
+
 ## Installation
 
 1. Configure docker-compose.yml - you can find the most recent docker compose [here](https://github.com/PCJones/MediathekArr/releases/latest)
