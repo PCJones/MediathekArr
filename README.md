@@ -17,44 +17,35 @@ Example screenshot:
 ## Install using Docker
 
 # Important Note:
-**I strongly recommend to use the 1.0 beta instead, which is much more stable and can find shows more consistently:**
+**You should use the beta image until 1.0 is released. Latest/Main is not working.**
 
 [https://github.com/PCJones/MediathekArr/releases](https://github.com/PCJones/MediathekArr/releases)
 
+## Features
+
+| Feature                                                           | Status        |
+|-------------------------------------------------------------------|---------------|
+| Prowlarr & NZB Hydra Support                                      |✓              |
+| Sonarr (TV Show) Support                                          |✓              |
+| Radarr (Movie) Support*                                           |limited*, WIP  |
+| Subtitle Support                                                  |✓              |
+| MKV Creation                                                      |✓              |
+| Web-Interface with installation wizard                            |✓              |
+| Advanced detection system for TV shows, seasons and episodes...
+due to the horrendous lack of consistency and metadata in ARD/ZDF Mediatheken|✓     |
+| Ideas?                                                            | Wishes?   |
+* You can find a few movies via interactive search, but not a lot. You can however find all movies via a text search in prowlarr and send the result to radarr.
+* 
 ## Installation
 
-1. Configure [docker-compose.yml](https://github.com/PCJones/MediathekArr/blob/main/docker-compose.yml)
-2. In Sonarr/Radarr go to Settings>Download Clients
-3. Enable Advanced Settings at the top
-4. Create a new `SABnzbd` download client (example screenshot at bottom)
-5. Name: `MediathekArr Downloader`
-6. Host: Depending on your docker network setup either `localhost`, `mediathekarr` or `YOUR_HOST_IP`
-7. Port: `5007`
-8. Use SSL: no
-9. URL Base (important): `download`
-10. API Key: `x` (or anything else, just can't be empty)
-11. Category: `sonarr` or `tv`if Sonarr, `radarr` or `movie` if Radarr
-12. Client Priority (important so it won't be used by normal indexers): `50`
-13. Remove Completed: yes
-14. Remove Failed: yes
-15. Test and Save
-16. In Prowlarr/Sonarr/Radarr Go to Settings>Indexers
-17. Add new NewzNAB(Sonarr/Radarr) / Newznab Generic(Prowlarr) Indexer (examlpe screenshot at bottom)
-18. Enable advanced settings at the bottom
-19. URL: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
-20. API Path: `/api`
-21. API Key: Leave blank
-22. Categories: SD, HD or both
-24. Download Client (important): `MediathekArr Downloader` - (if using Prowlarr, switch to Sonarr/Radarr for this)
-25. Test and Save
+1. Configure docker-compose.yml - you can find the most recent docker compose [here](https://github.com/PCJones/MediathekArr/releases/latest)
+2. Find out your wizard url: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
+3. Open the wizard and follow the wizards instructions :-)
+4. You are done! In canse you encounter any problems please don't hesitate to create an issue or to [contact me]([url](https://github.com/PCJones/MediathekArr/tree/main?tab=readme-ov-file#kontakt--support)).
 
-## Example Download Client
-![grafik](https://github.com/user-attachments/assets/7da76b68-f32a-41b2-b1b8-81d0e5ed1683)
-![grafik](https://github.com/user-attachments/assets/364e7fae-fc51-4a4b-bc17-ded68bca30c7)
-
-## Example Indexer
-![grafik](https://github.com/user-attachments/assets/23a4c00f-4b69-4486-8213-a45021c30d16)
-![grafik](https://github.com/user-attachments/assets/eddec856-02a5-4206-a1ec-9840586cc0dd)
+## How does it work
+- Indexer: MediathekArr is pretending to be a usenet indexer, but are actually just fetching and parsing search results from MediathekViewWeb
+- Downloader: MediathekArr is pretending to be a SABnzbd usenet downloader but is actually just downloading the video and subtitles via HTTP directly from the Mediatheken
 
 ## Kontakt & Support
 - Öffne gerne ein Issue auf GitHub falls du Unterstützung benötigst.
