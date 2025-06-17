@@ -23,7 +23,7 @@ Example screenshot:
 | Subtitle Support                                                  |✓              |
 | MKV Creation                                                      |✓              |
 | Web-Interface with installation wizard                            |✓              |
-| Advanced detection system for TV shows, seasons and episodes...
+| Advanced filter and matching system for TV shows, seasons and episodes...
 due to the horrendous lack of consistency and metadata in ARD/ZDF Mediatheken|✓     |
 | Ideas?                                                            | Wishes?   |
 
