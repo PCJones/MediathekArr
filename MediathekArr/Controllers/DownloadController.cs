@@ -21,6 +21,7 @@ public partial class DownloadController(DownloadService downloadService, Config 
             "version" => Ok(new { version = "4.3.3" }),
             "get_config" => Content(ConfigResponse, "application/json"),
             "fullstatus" => Content(FullStatusResponse, "application/json"),
+            "translate" => (value == "ping") ? Ok(new { value = "pong" }) : Ok(new { value = value }),
             "queue" => Ok(GetQueue()),
             "history" => (name == "delete" && !string.IsNullOrEmpty(value))
                 ? DeleteHistoryItem(value, del_files.GetValueOrDefault() == 1)
