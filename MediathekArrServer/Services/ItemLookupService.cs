@@ -47,10 +47,15 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         var jsonResponse = await response.Content.ReadAsStringAsync();
         var tvdbInfo = JsonSerializer.Deserialize<TvdbInfoResponse>(jsonResponse, GetJsonSerializerOptions());
 
+        if (tvdbInfo?.Status == "error")
+        {
+            // TODO log error message
+            return null;
+        }
+
         if (tvdbInfo == null || tvdbInfo.Status != "success" || tvdbInfo.Data == null)
         {
             throw new HttpRequestException($"Failed to fetch TVDB data. Response: {jsonResponse}");
-            // TODO log and return null
         }
 
         _memoryCache.Set(cacheKey, tvdbInfo.Data, TimeSpan.FromHours(12));

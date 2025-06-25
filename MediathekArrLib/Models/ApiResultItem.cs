@@ -6,9 +6,16 @@ namespace MediathekArrLib.Models;
 public class ApiResultItem
 {
     [JsonIgnore]
-    private readonly string[] EnglishLanguageIdentifiers = ["(Originalversion", "(Englisch"];
+    private readonly Dictionary<string, string> LanguageIdentifiers = new()
+    {
+        { "(originalversion", "ORIGINAL" },
+        { "(englisch", "ENGLISH" },
+        { "(english version)", "ENGLISH" },
+        { "(english)", "ENGLISH" },
+    };
+
     [JsonIgnore]
-    private readonly string[] BurnedInSubtitleIdentifiers = ["Originalversion mit Untertitel"];
+    private readonly string[] BurnedInSubtitleIdentifiers = ["originalversion mit untertitel"];
 
     [JsonPropertyName("channel")]
     public string Channel { get; set; }
@@ -50,8 +57,11 @@ public class ApiResultItem
     [JsonPropertyName("url_subtitle")]
     public string UrlSubtitle { get; set; }
     [JsonIgnore]
-    public string Language => EnglishLanguageIdentifiers.Any(Title.Contains) ? (HasBurnedInSubtitles ? "GERMAN.SUBBED.HC" : "ENGLISH") : "GERMAN";
+    public string Language => HasBurnedInSubtitles 
+        ? "GERMAN.SUBBED.HC" 
+        : LanguageIdentifiers.FirstOrDefault(x => Title.Contains(x.Key, StringComparison.CurrentCultureIgnoreCase)).Value 
+        ?? "GERMAN";
 
     [JsonIgnore]
-    private bool HasBurnedInSubtitles => BurnedInSubtitleIdentifiers.Any(Title.Contains) && string.IsNullOrEmpty(UrlSubtitle);
+    private bool HasBurnedInSubtitles => BurnedInSubtitleIdentifiers.Any(Title.ToLower().Contains) && string.IsNullOrEmpty(UrlSubtitle);
 }
