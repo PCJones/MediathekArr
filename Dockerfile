@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     gosu \
     wget \
     gnupg \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Add MKVToolNix repository and install

@@ -166,19 +166,23 @@ public partial class DownloadService
         {
             _logger.LogInformation("Starting download for {Title} from URL: {URL}", queueItem.Title, videoUrl);
 
-            var downloadVideoTask = DownloadFileAsync(videoUrl, queueItem);
-            var downloadSubtitlesTask = DownloadSubtitlesAsync(subtitleUrl, queueItem);
-            await Task.WhenAll(downloadVideoTask, downloadSubtitlesTask);
-            var subtitlesAvailable = downloadSubtitlesTask.Result;
-
-            if (queueItem.Status != DownloadStatus.Failed)
+            if (videoUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogInformation("Download complete for {Title}. Starting conversion to MKV.", queueItem.Title);
-                await ConvertMp4ToMkvAsync(queueItem, stopwatch, subtitlesAvailable);
+                _logger.LogInformation("Detected M3U8 URL for {Title}. Starting direct FFmpeg download.", queueItem.Title);
+                await DownloadM3u8ToMkvAsync(videoUrl, subtitleUrl, queueItem, stopwatch);
             }
             else
             {
-                _logger.LogWarning("Download failed for {Title}, skipping conversion.", queueItem.Title);
+                var downloadVideoTask = DownloadFileAsync(videoUrl, queueItem);
+                var downloadSubtitlesTask = DownloadSubtitlesAsync(subtitleUrl, queueItem);
+                await Task.WhenAll(downloadVideoTask, downloadSubtitlesTask);
+                var subtitlesAvailable = downloadSubtitlesTask.Result;
+
+                if (queueItem.Status != DownloadStatus.Failed)
+                {
+                    _logger.LogInformation("Download complete for {Title}. Starting conversion to MKV.", queueItem.Title);
+                    await ConvertMp4ToMkvAsync(queueItem, stopwatch, subtitlesAvailable);
+                }
             }
         }
         catch (Exception ex)

@@ -633,6 +633,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             "url_video" => item.UrlVideo,
             "url_video_low" => item.UrlVideoLow,
             "url_video_hd" => item.UrlVideoHd,
+            "timestamp_date" => DateTimeOffset.FromUnixTimeSeconds(item.Timestamp).ToString("yyyyMMdd"),
             _ => string.Empty
         };
     }
@@ -897,10 +898,36 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
     {
         var item = matchedEpisodeInfo.Item;
         var adjustedSize = (long)(matchedEpisodeInfo.Item.Size * sizeMultiplier);
+
+        // Enforce m3u8 minimum size to keep Sonarr happy (dependent on quality and duration)
+        if (url.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+        {
+            long bitrate = 600000;
+            switch (quality)
+            {
+                case "1080p":
+                    bitrate = 750000;
+                    break;
+                case "720p":
+                    bitrate = 450000;
+                    break;
+                case "480p":
+                    bitrate = 250000;
+                    break;
+            }
+
+            long estimatedMinSize = (long)item.Duration * bitrate;
+            if (adjustedSize < estimatedMinSize)
+            {
+                adjustedSize = estimatedMinSize;
+            }
+        }
+        
         if (!string.IsNullOrEmpty(matchedEpisodeInfo.Item.UrlSubtitle))
         {
             adjustedSize += 15000000; // Add 15MB to size if subs are available
         }
+
         var parsedTitle = GenerateTitle(matchedEpisodeInfo, quality, episodeType);
         var formattedTitle = FormatTitle(parsedTitle);
         var translatedTitle = formattedTitle;
@@ -947,7 +974,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
 
     public static bool ShouldSkipItem(ApiResultItem item)
     {
-        if (item.UrlVideo.EndsWith(".m3u8") || _skipTitleKeywords.Any(item.Title.Contains))
+        if (_skipTitleKeywords.Any(item.Title.Contains))
         {
             return true;
         }
