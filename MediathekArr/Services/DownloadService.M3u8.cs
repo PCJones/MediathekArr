@@ -1,5 +1,6 @@
 using MediathekArr.Models;
 using MediathekArr.Models.SABnzbd;
+using MediathekArr.Utilities;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
@@ -21,22 +22,13 @@ public partial class DownloadService
         bool subtitlesAvailable = await DownloadSubtitlesAsync(subtitleUrl, queueItem);
         string subtitlePath = Path.Combine(_config.IncompletePath, queueItem.Title + ".srt");
 
-        var subInput = "";
-        var subMap = "";
-
-        if (subtitlesAvailable && File.Exists(subtitlePath))
-        {
-            subInput = $"-i \"{subtitlePath}\" ";
-            subMap = "-map 1:0 -c:s srt -metadata:s:s:0 language=ger ";
-        }
-
-        var ffmpegArgs = $"-i \"{url}\" {subInput}-map 0:v -map 0:a {subMap}-c:v copy -c:a copy -metadata:s:v:0 language=ger -metadata:s:a:0 language=ger \"{mkvPath}\"";
+        var ffmpegArgs = FfmpegUtils.GetFfmpegArguments(url, subtitlePath, mkvPath, subtitlesAvailable && File.Exists(subtitlePath));
 
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = System.Environment.GetEnvironmentVariable("FFMPEG_PATH") ?? (_isWindows ? "ffmpeg.exe" : "ffmpeg"),
+                FileName = _ffmpegPath,
                 Arguments = ffmpegArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

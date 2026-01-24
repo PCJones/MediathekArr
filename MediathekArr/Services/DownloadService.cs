@@ -19,6 +19,7 @@ public partial class DownloadService
     private readonly HttpClient _httpClient;
     private readonly SemaphoreSlim _semaphore;
     private readonly string _mkvMergePath;
+    private readonly string _ffmpegPath;
     private readonly bool _isWindows;
 
     public DownloadService(ILogger<DownloadService> logger, Config config, IHttpClientFactory httpClientFactory)
@@ -35,6 +36,7 @@ public partial class DownloadService
         // Set complete_dir based on the application's startup path
         var startupPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
         _mkvMergePath = _isWindows ? Path.Combine(startupPath, "mkvtoolnix", "mkvmerge.exe") : "mkvmerge";
+        _ffmpegPath = Environment.GetEnvironmentVariable("FFMPEG_PATH") ?? (_isWindows ? Path.Combine(startupPath, "ffmpeg.exe") : "ffmpeg");
 
         InitializeIncompleteDirectory();
         InitializeCompleteDirectories();
@@ -42,6 +44,8 @@ public partial class DownloadService
 
         // Ensure Mkvmerge is available
         Task.Run(() => MkvMergeUtils.EnsureMkvMergeExistsAsync(_mkvMergePath, _logger, _httpClient)).Wait();
+        // Ensure Ffmpeg is available
+        Task.Run(() => FfmpegUtils.EnsureFfmpegExistsAsync(_ffmpegPath, _logger)).Wait();
     }
 
     public void InitializeCompleteDirectories()
