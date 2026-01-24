@@ -36,7 +36,7 @@ public partial class DownloadService
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = _isWindows ? "ffmpeg.exe" : "ffmpeg",
+                FileName = System.Environment.GetEnvironmentVariable("FFMPEG_PATH") ?? (_isWindows ? "ffmpeg.exe" : "ffmpeg"),
                 Arguments = ffmpegArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
