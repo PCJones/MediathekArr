@@ -28,10 +28,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         var cacheKey = $"TvdbInfo_{tvdbid}";
         if (_memoryCache.TryGetValue(cacheKey, out Models.Tvdb.Data? cachedTvdbInfo))
         {
-            if (cachedTvdbInfo != null)
-            {
-                return cachedTvdbInfo;
-            }
+            return cachedTvdbInfo;
         }
 
         var requestUrl = $"{_apiBaseUrl}/get_show.php?tvdbid={tvdbid}";
@@ -50,6 +47,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         if (tvdbInfo?.Status == "error")
         {
             _logger.LogError("Error fetching TVDB data: {Status}", tvdbInfo.Status);
+            _memoryCache.Set(cacheKey, (Models.Tvdb.Data?)null, TimeSpan.FromHours(12));
             return null;
         }
 

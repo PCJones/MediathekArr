@@ -46,6 +46,11 @@ public partial class DownloadController(DownloadService downloadService, Config 
     [HttpPost("api")]
     public async Task<IActionResult> AddFileEndpoint([FromQuery] string mode, [FromQuery] string cat, [FromQuery] string? name)
     {
+        if (!_config.Categories.Contains(cat))
+        {
+            return BadRequest(new { error = "Invalid category" });
+        }
+
         if (mode == "addfile")
         {
             return await AddFileByNzb(cat);
@@ -65,7 +70,12 @@ public partial class DownloadController(DownloadService downloadService, Config 
     {
         var uri = new Uri(name);
         var query = HttpUtility.ParseQueryString(uri.Query);
-        string encodedVideoUrl = query["encodedVideoUrl"];
+        string? encodedVideoUrl = query["encodedVideoUrl"];
+        if (string.IsNullOrEmpty(encodedVideoUrl))
+        {
+            return BadRequest(new { error = "Missing encodedVideoUrl parameter" });
+        }
+
         string encodedTitle = query["encodedTitle"]?.Trim() ?? string.Empty;
         string encodedSubtitleUrl = query["encodedSubtitleUrl"] ?? string.Empty;
         var base64EncodedBytesVideoUrl = Convert.FromBase64String(encodedVideoUrl);
@@ -83,10 +93,21 @@ public partial class DownloadController(DownloadService downloadService, Config 
             decodedSubtitleUrl = Encoding.UTF8.GetString(base64EncodedBytesSubtitleUrl);
         }
 
-        // Add to the download queue using DownloadService and capture the created queue item
+        if (!decodedVideoUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !decodedVideoUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = "Invalid video URL scheme" });
+        }
+
+        if (!string.IsNullOrEmpty(decodedSubtitleUrl) &&
+            !decodedSubtitleUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !decodedSubtitleUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = "Invalid subtitle URL scheme" });
+        }
+
         var queueItem = _downloadService.AddToQueue(decodedVideoUrl, decodedSubtitleUrl, decodedTitle, cat);
 
-        // Return response in the specified format
         return Ok(new
         {
             status = true,

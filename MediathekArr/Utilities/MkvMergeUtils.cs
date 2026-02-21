@@ -5,39 +5,43 @@ namespace MediathekArr.Utilities;
 
 public static class MkvMergeUtils
 {
-    private static string GetMkvMergeArguments(string mp4Path, string subtitlePath, string mkvPath, bool subtitlesAvailable)
-    {
-        return subtitlesAvailable
-            ? $"-o \"{mkvPath}\" --language 0:ger --language 1:ger \"{mp4Path}\" --language 0:ger --default-track 0:0 \"{subtitlePath}\""
-            : $"-o \"{mkvPath}\" --language 0:ger --language 1:ger \"{mp4Path}\"";
-    }
-
     public static async Task<(bool Success, int ExitCode, string ErrorOutput)> StartMkvmergeProcessAsync
-        (string mkvmergePath, string mp4Path, string subtitlePath, string mkvPath, bool subtitlesAvailable, string title, ILogger logger)
+        (string mkvmergePath, string videoPath, string subtitlePath, string mkvPath, bool subtitlesAvailable, string title, ILogger logger)
     {
-        var mkvmergeArgs = GetMkvMergeArguments(mp4Path, subtitlePath, mkvPath, subtitlesAvailable);
-
-        using var process = new Process
+        var startInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = mkvmergePath,
-                Arguments = mkvmergeArgs,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
+            FileName = mkvmergePath,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
+        startInfo.ArgumentList.Add("-o");
+        startInfo.ArgumentList.Add(mkvPath);
+        startInfo.ArgumentList.Add("--language");
+        startInfo.ArgumentList.Add("0:ger");
+        startInfo.ArgumentList.Add("--language");
+        startInfo.ArgumentList.Add("1:ger");
+        startInfo.ArgumentList.Add(videoPath);
+        if (subtitlesAvailable)
+        {
+            startInfo.ArgumentList.Add("--language");
+            startInfo.ArgumentList.Add("0:ger");
+            startInfo.ArgumentList.Add("--default-track");
+            startInfo.ArgumentList.Add("0:0");
+            startInfo.ArgumentList.Add(subtitlePath);
+        }
+
+        using var process = new Process { StartInfo = startInfo };
 
         try
         {
             logger.LogDebug("mkvmerge path: {MkvmergePath}", mkvmergePath);
-            logger.LogDebug("Arguments: {Arguments}", mkvmergeArgs);
-            logger.LogDebug("MP4 Path: {Mp4Path}, Subtitle Path: {SubtitlePath}, MKV Path: {MkvPath}, Subtitles Available: {SubtitlesAvailable}", mp4Path, subtitlePath, mkvPath, subtitlesAvailable);
+            logger.LogDebug("Arguments: {Arguments}", string.Join(" ", startInfo.ArgumentList));
+            logger.LogDebug("Video Path: {VideoPath}, Subtitle Path: {SubtitlePath}, MKV Path: {MkvPath}, Subtitles Available: {SubtitlesAvailable}", videoPath, subtitlePath, mkvPath, subtitlesAvailable);
 
             process.Start();
-            logger.LogInformation("mkvmerge process started for {Title} with arguments: {Arguments}", title, mkvmergeArgs);
+            logger.LogInformation("mkvmerge process started for {Title} with arguments: {Arguments}", title, string.Join(" ", startInfo.ArgumentList));
 
             var standardOutputTask = process.StandardOutput.ReadToEndAsync();
             var standardErrorTask = process.StandardError.ReadToEndAsync();

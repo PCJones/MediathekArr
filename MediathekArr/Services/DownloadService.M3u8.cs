@@ -1,113 +1,51 @@
 using MediathekArr.Models;
 using MediathekArr.Models.SABnzbd;
 using MediathekArr.Utilities;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using System.Text;
 
 namespace MediathekArr.Services;
 
 public partial class DownloadService
 {
-    private async Task DownloadM3u8ToMkvAsync(string url, string subtitleUrl, QueueItem queueItem, Stopwatch stopwatch)
+    private async Task DownloadM3u8FileAsync(string url, QueueItem queueItem)
     {
-        var categoryDir = Path.Combine(_config.CompletePath, queueItem.Category);
-        _logger.LogInformation("Ensuring directory exists for category {Category} at path: {Path}", queueItem.Category, categoryDir);
-        Directory.CreateDirectory(categoryDir);
-
-        var mkvPath = Path.Combine(categoryDir, queueItem.Title + ".mkv");
-
-        queueItem.Status = DownloadStatus.Downloading;
-        
-        bool subtitlesAvailable = await DownloadSubtitlesAsync(subtitleUrl, queueItem);
-        string subtitlePath = Path.Combine(_config.IncompletePath, queueItem.Title + ".srt");
-
-        var ffmpegArgs = FfmpegUtils.GetFfmpegArguments(url, subtitlePath, mkvPath, subtitlesAvailable && File.Exists(subtitlePath));
-
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = _ffmpegPath,
-                Arguments = ffmpegArgs,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
-        };
-
         try
         {
-            process.Start();
-            _logger.LogInformation("FFmpeg download process started for {Title} with arguments: {Arguments}", queueItem.Title, ffmpegArgs);
+            var tsPath = Path.Combine(_config.IncompletePath, queueItem.Title + ".ts");
 
-            var standardErrorTask = process.StandardError.ReadToEndAsync();
+            _logger.LogInformation("Starting M3U8 download for {Title} to path: {Path}", queueItem.Title, tsPath);
+            queueItem.Status = DownloadStatus.Downloading;
 
-            await process.WaitForExitAsync();
-            string ffmpegOutput = await standardErrorTask;
+            var (success, exitCode, errorOutput) = await FfmpegUtils.StartFfmpegDownloadAsync(
+                _ffmpegPath, url, tsPath, queueItem.Title, _logger);
 
-            if (process.ExitCode == 0)
+            if (success && File.Exists(tsPath))
             {
-                queueItem.Status = DownloadStatus.Completed;
-                
-                var fileInfo = new FileInfo(mkvPath);
+                var fileInfo = new FileInfo(tsPath);
                 var sizeInMB = fileInfo.Length / (1024.0 * 1024.0);
-                queueItem.Size = $"{sizeInMB:F2} MB";
-                queueItem.Sizeleft = "0 MB";
-                queueItem.Percentage = "100";
-                queueItem.Timeleft = "00:00:00";
+                queueItem.Size = $"{sizeInMB:F2}";
 
-                _logger.LogInformation("M3U8 Download completed successfully for {Title}. Output path: {MkvPath}", queueItem.Title, mkvPath);
+                queueItem.Timeleft = "00:00:00";
+                _logger.LogInformation("M3U8 download completed for {Title}. File saved to {Path}", queueItem.Title, tsPath);
             }
             else
             {
                 queueItem.Status = DownloadStatus.Failed;
-                _logger.LogError("FFmpeg M3U8 download failed for {Title}. Exit code: {ExitCode}. Error output: {ErrorOutput}", queueItem.Title, process.ExitCode, ffmpegOutput);
+                _logger.LogError("FFmpeg M3U8 download failed for {Title}. Exit code: {ExitCode}. Error: {ErrorOutput}",
+                    queueItem.Title, exitCode, errorOutput);
             }
-
-            if (subtitlesAvailable && File.Exists(subtitlePath))
-            {
-                try
-                {
-                    File.Delete(subtitlePath);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error deleting temporary files.");
-                }
-            }
-
-            // Move completed (or failed) download to history
-            var historyItem = new HistoryItem
-            {
-                Title = $"{queueItem.Title}.mkv",
-                NzbName = queueItem.Title,
-                Category = queueItem.Category,
-                Size = File.Exists(mkvPath) ? new FileInfo(mkvPath).Length : 0,
-                DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
-                Storage = mkvPath,
-                Status = queueItem.Status,
-                Completed = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                Id = queueItem.Id
-            };
-            _downloadHistory.Add(historyItem);
-
-            _logger.LogInformation("Download history updated for {Title}. Status: {Status}, Download Time: {DownloadTime}s, Size: {Size} bytes",
-                queueItem.Title, queueItem.Status, historyItem.DownloadTime, historyItem.Size);
         }
         catch (Exception ex)
         {
             queueItem.Status = DownloadStatus.Failed;
-            _logger.LogError(ex, "An error occurred during the M3U8 download of {Title}.", queueItem.Title);
-            
-             _downloadHistory.Add(new HistoryItem
+            _logger.LogError(ex, "Download failed for {Title}. Adding to download history as failed.", queueItem.Title);
+
+            _downloadHistory.Add(new HistoryItem
             {
-                Title = $"{queueItem.Title}.mkv",
+                Title = queueItem.Title,
                 NzbName = queueItem.Title,
                 Category = queueItem.Category,
                 Size = 0,
-                DownloadTime = (int)stopwatch.Elapsed.TotalSeconds,
+                DownloadTime = 0,
                 Storage = null,
                 Status = DownloadStatus.Failed,
                 Completed = DateTimeOffset.Now.ToUnixTimeSeconds(),
