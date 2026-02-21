@@ -1,68 +1,74 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-using System.Web;
+using System.Text;
+using System.Xml.Linq;
 
 namespace MediathekArr.Utilities;
 
-public partial class SubtitleConverter
+public class SubtitleConverter
 {
+    private static readonly XNamespace TtmlNamespace = "http://www.w3.org/ns/ttml";
+
     public static string? ConvertXmlToSrt(string xmlContent)
     {
-        try
+        var doc = XDocument.Parse(xmlContent);
+        var paragraphs = doc.Descendants(TtmlNamespace + "p")
+            .Where(p => p.Attribute("begin") != null && p.Attribute("end") != null)
+            .ToList();
+
+        if (paragraphs.Count == 0)
         {
-            // Extract subtitle blocks
-            var subtitleMatches = XMLSubtitleLineRegex().Matches(xmlContent);
-
-            var srtBuilder = new StringBuilder();
-            int index = 1;
-
-            if (subtitleMatches.Count == 0)
-            {
-                return null;
-            }
-
-            foreach (Match match in subtitleMatches)
-            {
-                if (match.Groups.Count != 4) continue;
-
-                var startTime = match.Groups[1].Value.Replace('.', ',');
-                var endTime = match.Groups[2].Value.Replace('.', ',');
-                var text = CleanText(match.Groups[3].Value);
-
-                if (string.IsNullOrWhiteSpace(text)) continue;
-
-                srtBuilder.AppendLine(index.ToString())
-                          .AppendLine($"{startTime} --> {endTime}")
-                          .AppendLine(text)
-                          .AppendLine();
-                index++;
-            }
-
-            return srtBuilder.ToString().Trim();
+            return null;
         }
-        catch (Exception ex)
+
+        var srtBuilder = new StringBuilder();
+        var index = 1;
+
+        foreach (var paragraph in paragraphs)
         {
-            throw new InvalidOperationException("Failed to convert XML subtitles to SRT format.", ex);
+            var startTime = paragraph.Attribute("begin")!.Value.Replace('.', ',');
+            var endTime = paragraph.Attribute("end")!.Value.Replace('.', ',');
+            var text = NormalizeText(ExtractText(paragraph));
+
+            if (string.IsNullOrWhiteSpace(text)) continue;
+
+            srtBuilder.AppendLine(index.ToString())
+                      .AppendLine($"{startTime} --> {endTime}")
+                      .AppendLine(text)
+                      .AppendLine();
+            index++;
         }
+
+        return srtBuilder.ToString().Trim();
     }
 
-    private static string CleanText(string text)
+    private static string ExtractText(XElement element)
     {
-        // Remove unnecessary tags and decode special characters
-        text = Regex.Replace(text, @"<tt:span[^>]*>", string.Empty, RegexOptions.Singleline);
-        text = Regex.Replace(text, @"</tt:span>", string.Empty, RegexOptions.Singleline);
-        text = Regex.Replace(text, @"<tt:br\s*/>", "\n", RegexOptions.Singleline);
-        text = Regex.Replace(text, @"<.*?>", string.Empty, RegexOptions.Singleline);
+        var sb = new StringBuilder();
 
-        // Decode special characters
-        text = HttpUtility.HtmlDecode(text);
+        foreach (var node in element.Nodes())
+        {
+            switch (node)
+            {
+                case XText textNode:
+                    sb.Append(textNode.Value);
+                    break;
+                case XElement child when child.Name.LocalName == "br":
+                    sb.Append('\n');
+                    break;
+                case XElement child:
+                    sb.Append(ExtractText(child));
+                    break;
+            }
+        }
 
-        // Normalize line breaks and trim whitespace
-        text = Regex.Replace(text, @"\s*\n\s*", "\n").Trim();
-
-        return text;
+        return sb.ToString();
     }
 
-    [GeneratedRegex(@"<tt:p.*?begin=""([^""]+)"" end=""([^""]+)"".*?>(.*?)</tt:p>", RegexOptions.Singleline)]
-    private static partial Regex XMLSubtitleLineRegex();
+    private static string NormalizeText(string text)
+    {
+        var lines = text.Split('\n')
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0);
+
+        return string.Join("\n", lines);
+    }
 }
