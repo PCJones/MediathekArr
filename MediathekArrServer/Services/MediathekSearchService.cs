@@ -78,27 +78,48 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
     }
 
-    private async Task<string> FetchMediathekViewApiResponseAsync(List<object> queries, int size)
+    private const int MediathekViewApiMaxPageSize = 1000;
+
+    private async Task<List<ApiResultItem>> FetchMediathekViewApiResponseAsync(List<object> queries, int maxSize)
     {
-        var requestBody = new
-        {
-            queries,
-            sortBy = "filmlisteTimestamp",
-            sortOrder = "desc",
-            future = true,
-            offset = 0,
-            size
-        };
+        var allResults = new List<ApiResultItem>();
+        var offset = 0;
 
-        var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
-        var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
-
-        if (response.IsSuccessStatusCode)
+        while (allResults.Count < maxSize)
         {
-            return await response.Content.ReadAsStringAsync();
+            var pageSize = Math.Min(MediathekViewApiMaxPageSize, maxSize - allResults.Count);
+            var requestBody = new
+            {
+                queries,
+                sortBy = "filmlisteTimestamp",
+                sortOrder = "desc",
+                future = true,
+                offset,
+                size = pageSize
+            };
+
+            var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8);
+            var response = await _httpClient.PostAsync("https://mediathekviewweb.de/api/query", requestContent);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                break;
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var pageResults = JsonSerializer.Deserialize<MediathekApiResponse>(responseContent)?.Result.Results ?? [];
+
+            allResults.AddRange(pageResults);
+
+            if (pageResults.Count < pageSize)
+            {
+                break;
+            }
+
+            offset += pageSize;
         }
 
-        return string.Empty;
+        return allResults;
     }
 
     private async Task<List<ApiResultItem>> FetchCachedApiResponseForTvdbId(Models.Tvdb.Data tvdbData)
@@ -132,12 +153,11 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             allQueries.Add([new { fields = new[] { "topic" }, query = topic }]);
         }
 
-        var tasks = allQueries.Select(q => FetchMediathekViewApiResponseAsync(q, 10000));
+        var tasks = allQueries.Select(q => FetchMediathekViewApiResponseAsync(q, 1000));
         var responses = await Task.WhenAll(tasks);
 
         var allResults = responses
-            .Where(r => !string.IsNullOrEmpty(r))
-            .SelectMany(r => JsonSerializer.Deserialize<MediathekApiResponse>(r)?.Result.Results ?? [])
+            .SelectMany(r => r)
             .DistinctBy(item => item.UrlVideo)
             .ToList();
 
@@ -758,14 +778,13 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         else
         {
             var queries = new List<object>();
-            var apiResponse = await FetchMediathekViewApiResponseAsync(queries, 6000);
+            results = await FetchMediathekViewApiResponseAsync(queries, 10000);
 
-            if (string.IsNullOrEmpty(apiResponse))
+            if (results.Count == 0)
             {
                 return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
             }
 
-            results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
             _cache.Set(mediathekViewRequestCacheKey, results, TimeSpan.FromMinutes(20));
         }
 
@@ -794,10 +813,10 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         }
 
         var mediathekViewRequestCacheKey = $"mediathekapi_{q ?? "null"}_{season ?? "null"}";
-        string apiResponse;
-        if (_cache.TryGetValue(mediathekViewRequestCacheKey, out string? cachedApiResponse))
+        List<ApiResultItem> results;
+        if (_cache.TryGetValue(mediathekViewRequestCacheKey, out List<ApiResultItem>? cachedResults))
         {
-            apiResponse = cachedApiResponse ?? string.Empty;
+            results = cachedResults ?? [];
         }
         else
         {
@@ -813,16 +832,15 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 queries.Add(new { fields = new[] { "title" }, query = $"S{zeroBasedSeason}" });
             }
 
-            apiResponse = await FetchMediathekViewApiResponseAsync(queries, 1500);
-            if (string.IsNullOrEmpty(apiResponse))
+            results = await FetchMediathekViewApiResponseAsync(queries, 2000);
+            if (results.Count == 0)
             {
                 return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
             }
 
-            _cache.Set(mediathekViewRequestCacheKey, apiResponse, _cacheTimeSpan);
+            _cache.Set(mediathekViewRequestCacheKey, results, _cacheTimeSpan);
         }
-        // Deserialize the API response and apply ruleset filters
-        var results = JsonSerializer.Deserialize<MediathekApiResponse>(apiResponse)?.Result.Results ?? [];
+        // Apply ruleset filters
         var (matchedEpisodes, unmatchedFilteredResultItems) = await ApplyRulesetFilters(results);
 
         List<Item>? newznabItemsByRuleset = matchedEpisodes.SelectMany(GenerateRssItems).ToList();
