@@ -4,7 +4,7 @@ define('DB_FILE', './db/tvdb_cache.sqlite');
 
 function initializeDatabase() {
     $isFirstRun = !file_exists(DB_FILE);
-    
+
     $db = new PDO('sqlite:' . DB_FILE);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -52,11 +52,19 @@ function createTables($db) {
         absolute_number INTEGER,
         FOREIGN KEY(series_id) REFERENCES series_cache(series_id)
     )";
+	
+	$createTvdbIdsTableQuery = "CREATE TABLE IF NOT EXISTS tvdb_id_cache (
+		remote_id TEXT PRIMARY KEY,
+		series_id INTEGER NOT NULL,
+		cache_expiry TEXT NOT NULL
+    )";
 
     $db->exec($createApiKeyTableQuery);
     $db->exec($createTokenTableQuery);
     $db->exec($createSeriesCacheTableQuery);
     $db->exec($createEpisodesTableQuery);
+	$db->exec($createTvdbIdsTableQuery);
+    $db->exec("CREATE INDEX IF NOT EXISTS idx_episodes_series_id ON episodes(series_id)");
 }
 
 function displayApiKeyForm($db) {
@@ -105,3 +113,4 @@ function getApiKey($db) {
     }
 }
 ?>
+
