@@ -53,7 +53,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
 
         if (tvdbInfo == null || tvdbInfo.Status != "success" || tvdbInfo.Data == null)
         {
-            throw new HttpRequestException($"Failed to fetch TVDB data. Response: {jsonResponse}");
+            throw new HttpRequestException($"Failed to fetch TVDB data for tvdbid {tvdbid}. Response: {jsonResponse}");
         }
 
         _memoryCache.Set(cacheKey, tvdbInfo.Data, TimeSpan.FromHours(12));
