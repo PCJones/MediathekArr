@@ -105,31 +105,56 @@ function fetchAndCacheSeriesData($db, $tvdbId, $apiKey, $debug = false) {
         return ["status" => "error", "message" => "Failed to retrieve valid token from TVDB"];
     }
 
-    $curl = curl_init("https://api4.thetvdb.com/v4/series/$tvdbId/extended?meta=episodes&short=true");
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, [
-        "Authorization: Bearer $token",
-        "Accept: application/json"
-    ]);
-    $response = curl_exec($curl);
+    // Fetch all episodes with German translations using paginated endpoint
+    $allEpisodes = [];
+    $series = null;
+    $page = 0;
 
-    // Check for Curl errors
-    if (curl_errno($curl)) {
-        $error_msg = curl_error($curl);
+    do {
+        $url = "https://api4.thetvdb.com/v4/series/$tvdbId/episodes/default/deu?page=$page";
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $token",
+            "Accept: application/json"
+        ]);
+        $response = curl_exec($curl);
+
+        // Check for Curl errors
+        if (curl_errno($curl)) {
+            $error_msg = curl_error($curl);
+            curl_close($curl);
+            return ["status" => "error", "message" => "Curl error: " . $error_msg];
+        }
         curl_close($curl);
-        return ["status" => "error", "message" => "Curl error: " . $error_msg];
-    }
-    curl_close($curl);
+        
+        // Decode response and check for errors
+        $data = json_decode($response, true);
+        if (!$data || $data['status'] !== 'success') {
+            return ["status" => "error", "message" => "Failed to fetch data from TVDB"];
+        }
 
-    // Decode response and check for errors
-    $data = json_decode($response, true);
-    if (!$data || $data['status'] !== 'success') {
-        return ["status" => "error", "message" => "Failed to fetch data from TVDB"];
-    }
+        if ($series === null) {
+            $series = [
+                "name" => $data['data']['name'],
+                "aliases" => $data['data']['aliases'],
+                "nextAired" => $data['data']['nextAired'],
+                "lastAired" => $data['data']['lastAired'],
+                "lastUpdated" => $data['data']['lastUpdated']
+            ];
+        }
+
+        $episodes = $data['data']['episodes'] ?? [];
+        $allEpisodes = array_merge($allEpisodes, $episodes);
+
+        $nextPage = $data['links']['next'] ?? null;
+        $page++;
+    } while ($nextPage !== null);
+
+    $series['episodes'] = $allEpisodes;
 
     try {
-        $series = $data['data'];
-		$seriesName = $series['name'];
+        $seriesName = $series['name'];
 		$translations = fetchTranslationTitles($tvdbId, $seriesName, $seriesName);
 		$englishName = $translations['englishTitle'];
 		$germanName  = $translations['germanTitle'];
