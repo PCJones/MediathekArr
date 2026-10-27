@@ -1,3 +1,4 @@
+using MediathekArr.Models.Newznab;
 using MediathekArr.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
@@ -16,6 +17,9 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
     {
         var limit = int.TryParse(HttpContext.Request.Query["limit"], out var parsedLimit) ? parsedLimit : 100;
         var offset = int.TryParse(HttpContext.Request.Query["offset"], out var parsedOffset) ? parsedOffset: 0;
+        var hideNoMatch = bool.TryParse(HttpContext.Request.Query["hideNoMatch"], out var parsedHideNoMatch) && parsedHideNoMatch;
+        var hideUncertainMatch = bool.TryParse(HttpContext.Request.Query["hideUncertainMatch"], out var parsedHideUncertainMatch) && parsedHideUncertainMatch;
+        var matchConfidenceFilter = new MatchConfidenceFilter(hideNoMatch, hideUncertainMatch);
         string q = HttpContext.Request.Query["q"];
         string imdbid = HttpContext.Request.Query["imdbid"];
         string tvdbid = HttpContext.Request.Query["tvdbid"];
@@ -58,18 +62,18 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
                 {
                     var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
 
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode, limit, offset);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiById(tvdbData, season, episode, limit, offset, matchConfidenceFilter);
 
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
                 else if (q is null && season is null && imdbid is null && tvdbid is null && tmdbid is null)
                 {
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(limit, offset);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsForRssSync(limit, offset, matchConfidenceFilter);
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
                 else
                 {
-                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season, limit, offset);
+                    string searchResults = await _mediathekSearchService.FetchSearchResultsFromApiByString(q, season, limit, offset, matchConfidenceFilter);
                     return Content(searchResults, "application/xml", Encoding.UTF8);
                 }
             }

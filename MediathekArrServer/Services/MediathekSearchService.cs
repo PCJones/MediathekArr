@@ -165,9 +165,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return allResults;
     }
 
-    public async Task<string> FetchSearchResultsFromApiById(Models.Tvdb.Data tvdbData, string? season, string? episodeNumber, int limit, int offset)
+    public async Task<string> FetchSearchResultsFromApiById(Models.Tvdb.Data tvdbData, string? season, string? episodeNumber, int limit, int offset, MatchConfidenceFilter matchConfidenceFilter)
     {
-        var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}";
+        var cacheKey = $"tvdb_{tvdbData.Id}_{season ?? "null"}_{episodeNumber ?? "null"}_{limit}_{offset}_{matchConfidenceFilter.CacheKey}";
 
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
         {
@@ -204,7 +204,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             newznabItems = matchedDesiredEpisodes.SelectMany(GenerateRssItems).ToList();
         }
 
-        var newznabRssResponse = ConvertNewznabItemsToRss(newznabItems, limit, offset);
+        var newznabRssResponse = ConvertNewznabItemsToRss(newznabItems, limit, offset, matchConfidenceFilter);
 
         _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
 
@@ -263,9 +263,11 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return desiredEpisodes;
     }
 
-    private static string ConvertNewznabItemsToRss(List<Item> items, int limit, int offset)
+    private static string ConvertNewznabItemsToRss(List<Item> items, int limit, int offset, MatchConfidenceFilter matchConfidenceFilter)
     {
-        if (items == null || items.Count == 0)
+        items = items?.Where(matchConfidenceFilter.IsAllowed).ToList() ?? [];
+
+        if (items.Count == 0)
         {
             return NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult());
         }
@@ -759,9 +761,9 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         return (matchedFilteredResults, unmatchedFilteredResults);
     }
 
-    public async Task<string> FetchSearchResultsForRssSync(int limit, int offset)
+    public async Task<string> FetchSearchResultsForRssSync(int limit, int offset, MatchConfidenceFilter matchConfidenceFilter)
     {
-        var cacheKey = $"rss_{limit}_{offset}";
+        var cacheKey = $"rss_{limit}_{offset}_{matchConfidenceFilter.CacheKey}";
 
         // Return cached response if it exists
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
@@ -795,16 +797,16 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         List<Item>? newznabItemsByFallback = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsByString(unmatchedFilteredResultItems, null);
 
         // Combine the results from ruleset matching and fallback handler
-        var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset);
+        var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset, matchConfidenceFilter);
 
         // Cache the response and return it
         _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
         return newznabRssResponse;
     }
 
-    public async Task<string> FetchSearchResultsFromApiByString(string? q, string? season, int limit, int offset)
+    public async Task<string> FetchSearchResultsFromApiByString(string? q, string? season, int limit, int offset, MatchConfidenceFilter matchConfidenceFilter)
     {
-        var cacheKey = $"q_{q ?? "null"}_{season ?? "null"}_{limit}_{offset}";
+        var cacheKey = $"q_{q ?? "null"}_{season ?? "null"}_{limit}_{offset}_{matchConfidenceFilter.CacheKey}";
 
         // Return cached response if it exists
         if (_cache.TryGetValue(cacheKey, out string? cachedResponse))
@@ -847,7 +849,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         List<Item>? newznabItemsByFallback = MediathekSearchFallbackHandler.GetFallbackSearchResultItemsByString(unmatchedFilteredResultItems, season);
 
         // Combine the results from ruleset matching and fallback handler
-        var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset);
+        var newznabRssResponse = ConvertNewznabItemsToRss([.. newznabItemsByRuleset, .. newznabItemsByFallback], limit, offset, matchConfidenceFilter);
 
         // Cache the response and return it
         _cache.Set(cacheKey, newznabRssResponse, _cacheTimeSpan);
