@@ -38,7 +38,7 @@ due to the horrendous lack of consistency and metadata in ARD/ZDF Mediatheken|âœ
 1. Configure docker-compose.yml - you can find the most recent beta docker compose [here](https://github.com/PCJones/MediathekArr/releases/latest)
 2. Find out your wizard url: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
 3. Open the wizard and follow the wizards instructions :-)
-4. You are done! In canse you encounter any problems please don't hesitate to create an issue or to [contact me]([url](https://github.com/PCJones/MediathekArr/tree/main?tab=readme-ov-file#kontakt--support)).
+4. You are done! In case you encounter any problems please don't hesitate to create an issue or to [contact me](https://github.com/PCJones/MediathekArr/tree/main?tab=readme-ov-file#kontakt--support).
 
 ## How does it work
 - Indexer: MediathekArr is pretending to be a usenet indexer, but are actually just fetching and parsing search results from MediathekViewWeb
