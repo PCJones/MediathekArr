@@ -63,6 +63,20 @@
                 <small id="maxParallelWarning" style="color: red; display:none;">Overwritten by environment variable</small>
                 <small style="color: #666; display: block;">Changes require restart to take effect</small>
             </div>
+            <div>
+                <label>
+                    <input type="checkbox" id="hideNoMatchResults" />
+                    Hide "NO.MATCH" search results
+                </label>
+                <small id="hideNoMatchResultsWarning" style="color: red; display:none;">Overwritten by environment variable</small>
+            </div>
+            <div>
+                <label>
+                    <input type="checkbox" id="hideUncertainMatchResults" />
+                    Hide "MATCH.UNCERTAIN" search results
+                </label>
+                <small id="hideUncertainMatchResultsWarning" style="color: red; display:none;">Overwritten by environment variable</small>
+            </div>
             <button type="button" class="button-group" onclick="saveConfig()">Save</button>
             <button type="button" class="button-group" onclick="closeConfigModal()">Close</button>
         </form>

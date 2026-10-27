@@ -6,6 +6,8 @@ let initialCategories = [];
 let categoriesOverridden = false;
 let initialMaxParallelDownloads = 2;
 let maxParallelDownloadsOverridden = false;
+let initialHideNoMatchResults = false;
+let initialHideUncertainMatchResults = false;
 
 async function fetchQueue() {
     try {
@@ -65,6 +67,12 @@ async function openConfigModal() {
     document.getElementById('maxParallelDownloads').value = config.maxParallelDownloads || 2;
     initialMaxParallelDownloads = config.maxParallelDownloads || 2;
     maxParallelDownloadsOverridden = overrides.maxParallelDownloads;
+
+    // Handle match result filters
+    initialHideNoMatchResults = !!config.hideNoMatchResults;
+    initialHideUncertainMatchResults = !!config.hideUncertainMatchResults;
+    setCheckboxConfig('hideNoMatchResults', initialHideNoMatchResults, overrides.hideNoMatchResults);
+    setCheckboxConfig('hideUncertainMatchResults', initialHideUncertainMatchResults, overrides.hideUncertainMatchResults);
 
     const incompleteInput = document.getElementById('incompletePath');
     const completeInput = document.getElementById('completePath');
@@ -278,6 +286,13 @@ function selectPath(path) {
     closeFileBrowser();
 }
 
+function setCheckboxConfig(id, checked, overridden) {
+    const checkbox = document.getElementById(id);
+    checkbox.checked = checked;
+    checkbox.disabled = overridden;
+    document.getElementById(`${id}Warning`).style.display = overridden ? 'block' : 'none';
+}
+
 function closeFileBrowser() {
     document.getElementById('fileBrowserModal').style.display = 'none';
 }
@@ -288,7 +303,9 @@ function closeConfigModal(promptUser = true) {
             document.getElementById('incompletePath').value !== initialIncompletePath ||
             document.getElementById('completePath').value !== initialCompletePath ||
             JSON.stringify(categories) !== JSON.stringify(initialCategories) ||
-            parseInt(document.getElementById('maxParallelDownloads').value) !== initialMaxParallelDownloads;
+            parseInt(document.getElementById('maxParallelDownloads').value) !== initialMaxParallelDownloads ||
+            document.getElementById('hideNoMatchResults').checked !== initialHideNoMatchResults ||
+            document.getElementById('hideUncertainMatchResults').checked !== initialHideUncertainMatchResults;
 
         if (configChanged && !confirm('You didn\'t save your changes - are you sure you want to close?')) {
             return;
@@ -301,6 +318,8 @@ async function saveConfig() {
     const incompletePath = document.getElementById('incompletePath').value;
     const completePath = document.getElementById('completePath').value;
     const maxParallelDownloads = parseInt(document.getElementById('maxParallelDownloads').value) || 2;
+    const hideNoMatchResults = document.getElementById('hideNoMatchResults').checked;
+    const hideUncertainMatchResults = document.getElementById('hideUncertainMatchResults').checked;
 
     const response = await fetch('/download/config', {
         method: 'POST',
@@ -311,7 +330,9 @@ async function saveConfig() {
             incompletePath,
             completePath,
             categories,
-            maxParallelDownloads
+            maxParallelDownloads,
+            hideNoMatchResults,
+            hideUncertainMatchResults
         }),
     });
 
