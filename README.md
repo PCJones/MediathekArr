@@ -7,21 +7,35 @@ Example screenshot:
 ![grafik](https://github.com/user-attachments/assets/654c42fa-4eab-4b6e-b1c7-9b23192c7a98)
 
 ## Features
+
 | Feature                                                           | Status        |
 |-------------------------------------------------------------------|---------------|
 | Prowlarr & NZB Hydra Support                                      |✓              |
-| TV Show & Sonarr Support                                          |✓              |
-| Movie & Radarr Support                                            |(✓) limited, WIP|
-| MKV creation                                                      |✓              |
-| Subtitle download (if available in Mediathek)                     |✓              |
-| Webinterface                                                      |✓              |
-| Ideas?                                                            |Suggestions?   |
+| Sonarr (TV Show) Support                                          |✓              |
+| Radarr (Movie) Support*                                           |limited*, WIP  |
+| Subtitle Support                                                  |✓              |
+| MKV Creation                                                      |✓              |
+| Web-Interface with installation wizard                            |✓              |
+| Advanced filter and matching system for TV shows, seasons and episodes...
+due to the horrendous lack of consistency and metadata in ARD/ZDF Mediatheken|✓     |
+| Ideas?                                                            | Wishes?   |
 
-## Installation
-- [Docker](https://hub.docker.com/r/pcjones/mediathekarr)
-- Unraid: search for `mediathekarr`
+\* You can find a few movies via interactive search, but not a lot. You can however find all movies via a text search in prowlarr and send the result to radarr.
 
-Please follow the [installation wiki instructions](https://github.com/PCJones/MediathekArr/wiki/Installation)
+## Installation using docker
+
+## Important Note:
+**You should use the beta image until 1.0 is released. Latest/Main is not working.**
+
+
+1. Configure docker-compose.yml - you can find the most recent beta docker compose [here](https://github.com/PCJones/MediathekArr/releases/latest)
+2. Find out your wizard url: Depending on your docker network setup either `http://localhost:5007`, `http://mediathekarr:5007` or `http://YOUR_HOST_IP:5007`
+3. Open the wizard and follow the wizards instructions :-)
+4. You are done! In case you encounter any problems please don't hesitate to create an issue or to [contact me](https://github.com/PCJones/MediathekArr/tree/main?tab=readme-ov-file#kontakt--support).
+
+## How does it work
+- Indexer: MediathekArr is pretending to be a usenet indexer, but are actually just fetching and parsing search results from MediathekViewWeb
+- Downloader: MediathekArr is pretending to be a SABnzbd usenet downloader but is actually just downloading the video and subtitles via HTTP directly from the Mediatheken
 
 ## Kontakt & Support
 - Öffne gerne ein Issue auf GitHub falls du Unterstützung benötigst.
@@ -49,4 +63,10 @@ Thanks to https://thetvdb.com for the metadata API
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=pcjones/mediathekarr&type=Date)](https://star-history.com/#pcjones/mediathekarr&Date)
+<a href="https://www.star-history.com/?repos=PCJones%2FMediathekArr&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=PCJones/MediathekArr&type=date&theme=dark&legend=top-left&sealed_token=-DeYPS0ODN8onY4UxfhdwIom8uKb3ho4PNrjb4JweGq1okIMwPi9shY4qoDRu1sWR0PgOQmal7kHILjUXrvfJ1n-eM8qIiP-rbJJae1MsDmGoXB1nd95E7tGPm-QNdWT2yUdTXrFKm1R3uhXsDHlHAkaApNuZywqxqX8KSP38iLx5R3bAY0rVqe6AcXQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=PCJones/MediathekArr&type=date&legend=top-left&sealed_token=-DeYPS0ODN8onY4UxfhdwIom8uKb3ho4PNrjb4JweGq1okIMwPi9shY4qoDRu1sWR0PgOQmal7kHILjUXrvfJ1n-eM8qIiP-rbJJae1MsDmGoXB1nd95E7tGPm-QNdWT2yUdTXrFKm1R3uhXsDHlHAkaApNuZywqxqX8KSP38iLx5R3bAY0rVqe6AcXQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=PCJones/MediathekArr&type=date&legend=top-left&sealed_token=-DeYPS0ODN8onY4UxfhdwIom8uKb3ho4PNrjb4JweGq1okIMwPi9shY4qoDRu1sWR0PgOQmal7kHILjUXrvfJ1n-eM8qIiP-rbJJae1MsDmGoXB1nd95E7tGPm-QNdWT2yUdTXrFKm1R3uhXsDHlHAkaApNuZywqxqX8KSP38iLx5R3bAY0rVqe6AcXQ" />
+ </picture>
+</a>
