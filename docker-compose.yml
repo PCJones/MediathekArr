@@ -16,6 +16,7 @@ services:
 
       # Only change this if you are hosting your own API. Not needed for 99% of users
       - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1
+      #- MEDIATHEKARR_RULESETS_API_BASE_URL=https://mediathekarr.pcjones.de/api/v2
     volumes:
       - /docker/appdata/mediathekarr:/app/config
       - /data/mediathek/complete:/data/mediathek/complete
