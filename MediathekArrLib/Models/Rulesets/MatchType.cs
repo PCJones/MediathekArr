@@ -2,9 +2,9 @@
 
 public enum MatchType
 {
-    ExactMatch,
-    Contains,
-    Regex,
     GreaterThan,
-    LowerThan
+    LessThan,
+    Equals,
+    Contains,
+    Regex
 }

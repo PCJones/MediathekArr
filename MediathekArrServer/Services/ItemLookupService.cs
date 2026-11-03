@@ -6,7 +6,9 @@ namespace MediathekArr.Services;
 public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfiguration configuration, IMemoryCache memoryCache, ILogger<ItemLookupService> logger)
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
-    private readonly string _apiBaseUrl = configuration["MEDIATHEKARR_API_BASE_URL"] ?? "https://mediathekarr.pcjones.de/api/v1";
+    private readonly string _apiBaseUrl = string.IsNullOrWhiteSpace(configuration["MEDIATHEKARR_API_BASE_URL"])
+        ? "https://mediathekarr.pcjones.de/api/v1"
+        : configuration["MEDIATHEKARR_API_BASE_URL"]!;
     private readonly IMemoryCache _memoryCache = memoryCache;
     private readonly ILogger<ItemLookupService> _logger = logger;
 
