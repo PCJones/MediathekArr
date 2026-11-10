@@ -642,7 +642,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
             }
         }
 
-        return stringBuilder.ToString().Trim();
+        return stringBuilder.ToString();
     }
 
     private static string GetFieldValue(ApiResultItem item, string fieldName)
