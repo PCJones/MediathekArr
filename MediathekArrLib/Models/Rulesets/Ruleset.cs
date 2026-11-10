@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace MediathekArr.Models.Rulesets;
 
@@ -9,7 +8,7 @@ public class Ruleset
     public int Id { get; set; }
 
     [JsonPropertyName("mediaId")]
-    public int MediaId { get; set; }
+    public int? MediaId { get; set; }
 
     [JsonPropertyName("topic")]
     public string Topic { get; set; } = string.Empty; // Raw topic string from API
@@ -25,45 +24,27 @@ public class Ruleset
 
     [JsonPropertyName("priority")]
     public int Priority { get; set; }
-    [JsonPropertyName("filters")]
-    public string FiltersJson { get; set; } = string.Empty;
 
-    [JsonIgnore]
-    public List<Filter> Filters
-    {
-        get
-        {
-            return JsonSerializer.Deserialize<List<Filter>>(FiltersJson) ?? [];
-        }
-    }
+    private List<Filter> _filters = [];
+    private List<TitleRegexRule> _titleRegexRules = [];
+
+    // The API may send null for these lists
+    [JsonPropertyName("filters")]
+    public List<Filter> Filters { get => _filters; set => _filters = value ?? []; }
 
     [JsonPropertyName("titleRegexRules")]
-    public string TitleRegexRulesJson { get; set; } = string.Empty;
-
-    [JsonIgnore]
-    public List<TitleRegexRule> TitleRegexRules
-    {
-        get
-        {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-            };
-            return JsonSerializer.Deserialize<List<TitleRegexRule>>(TitleRegexRulesJson, options) ?? [];
-        }
-    }
+    public List<TitleRegexRule> TitleRegexRules { get => _titleRegexRules; set => _titleRegexRules = value ?? []; }
 
     [JsonPropertyName("episodeRegex")]
-    public string? EpisodeRegex { get; set; } = string.Empty;
+    public string? EpisodeRegex { get; set; }
 
     [JsonPropertyName("seasonRegex")]
-    public string? SeasonRegex { get; set; } = string.Empty;
+    public string? SeasonRegex { get; set; }
 
     [JsonPropertyName("matchingStrategy")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public MatchingStrategy MatchingStrategy { get; set; }
 
     [JsonPropertyName("media")]
-    public Media Media { get; set; } = new Media();
+    public Media? Media { get; set; }
 }

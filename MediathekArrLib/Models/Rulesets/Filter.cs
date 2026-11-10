@@ -12,5 +12,5 @@ public class Filter
     public MatchType Type { get; set; }
 
     [JsonPropertyName("value")]
-    public object Value { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 }

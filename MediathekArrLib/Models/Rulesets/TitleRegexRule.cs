@@ -5,6 +5,7 @@ namespace MediathekArr.Models.Rulesets;
 public class TitleRegexRule
 {
     [JsonPropertyName("type")]
+    [JsonConverter(typeof(JsonStringEnumConverter<TitleRegexRuleType>))]
     public TitleRegexRuleType Type { get; set; }
 
     [JsonPropertyName("value")]
