@@ -734,7 +734,6 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
         {
             if (ShouldSkipItem(item))
             {
-                unmatchedFilteredResults.Remove(item);
                 continue;
             }
 
@@ -743,6 +742,7 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 ? GetRulesetsForTopic(item.Topic)
                 : [.. GetRulesetsForTopic(item.Topic).Where(r => r.Media?.TvdbId == tvdbData?.Id)];
 
+            var matched = false;
             foreach (var ruleset in rulesets)
             {
                 if (!ruleset.Filters.All(filter => FilterMatches(item, filter)))
@@ -774,12 +774,14 @@ public partial class MediathekSearchService(IHttpClientFactory httpClientFactory
                 if (matchInfo != null)
                 {
                     matchedFilteredResults.Add(matchInfo);
+                    matched = true;
                     break;
                 }
-                else
-                {
-                    unmatchedFilteredResults.Add(item);
-                }
+            }
+
+            if (!matched)
+            {
+                unmatchedFilteredResults.Add(item);
             }
         }
 
