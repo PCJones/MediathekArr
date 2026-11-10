@@ -137,6 +137,20 @@ static Config ConfigureAppConfig(IConfiguration configuration, ILogger logger)
         config.MaxParallelDownloads = maxParallelDownloads;
     }
 
+    var hideNoMatchResultsRaw = Environment.GetEnvironmentVariable("HIDE_NO_MATCH_RESULTS");
+    if (!string.IsNullOrEmpty(hideNoMatchResultsRaw) && bool.TryParse(hideNoMatchResultsRaw, out var hideNoMatchResults))
+    {
+        logger.LogInformation("Overriding hide no match results from environment variable: {HideNoMatchResults}", hideNoMatchResults);
+        config.HideNoMatchResults = hideNoMatchResults;
+    }
+
+    var hideUncertainMatchResultsRaw = Environment.GetEnvironmentVariable("HIDE_UNCERTAIN_MATCH_RESULTS");
+    if (!string.IsNullOrEmpty(hideUncertainMatchResultsRaw) && bool.TryParse(hideUncertainMatchResultsRaw, out var hideUncertainMatchResults))
+    {
+        logger.LogInformation("Overriding hide uncertain match results from environment variable: {HideUncertainMatchResults}", hideUncertainMatchResults);
+        config.HideUncertainMatchResults = hideUncertainMatchResults;
+    }
+
     if (!existingConfig && (string.IsNullOrEmpty(incompletePath) || string.IsNullOrEmpty(completePath) || string.IsNullOrEmpty(categoriesRaw)))
     {
         logger.LogWarning("Attention!");

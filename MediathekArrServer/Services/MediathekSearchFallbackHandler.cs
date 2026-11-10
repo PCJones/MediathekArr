@@ -115,7 +115,7 @@ public partial class MediathekSearchFallbackHandler
         {
             adjustedSize += 15000000; // Add 15MB to size if subs are available
         }
-        var parsedTitle = GenerateTitle(tvdbData, item.Topic, item.Title, quality, formattedDate, season, episode);
+        var (parsedTitle, matchConfidence) = GenerateTitle(tvdbData, item.Topic, item.Title, quality, formattedDate, season, episode);
         var formattedTitle = FormatTitle(parsedTitle);
         //var translatedTitle = TranslateTitle(formattedTitle, tvdbData);
         var translatedTitle = formattedTitle; // TODO see if translation is needed
@@ -144,13 +144,14 @@ public partial class MediathekSearchFallbackHandler
                 Length = adjustedSize,
                 Type = "application/x-nzb"
             },
-            Attributes = NewznabUtils.GenerateAttributes(item, yearSeason ?? season, episode, categoryValues, formattedDate == null ? EpisodeType.Standard : EpisodeType.Daily)
+            Attributes = NewznabUtils.GenerateAttributes(item, yearSeason ?? season, episode, categoryValues, formattedDate == null ? EpisodeType.Standard : EpisodeType.Daily),
+            MatchConfidence = matchConfidence
         };
     }
 
     // TODO refactor and make this look good, It's too late right now:D
     // TODO now it's even worse :D oh god
-    private static string GenerateTitle(Models.Tvdb.Data? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
+    private static (string Title, MatchConfidence MatchConfidence) GenerateTitle(Models.Tvdb.Data? tvdbData, string topic, string title, string quality, string? formattedDate, string? seasonOverride, string? episodeOverride)
     {
         var showName = tvdbData?.Name ?? topic;
         var language = title.Contains("(Englisch)") ? "ENGLISH" : title.Contains("(Originalversion") ? "ORIGINAL" : "GERMAN";
@@ -164,7 +165,7 @@ public partial class MediathekSearchFallbackHandler
                 cleanedTitle = null;
             }
 
-            return $"{showName}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return ($"{showName}.{formattedDate}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", "."), MatchConfidence.Uncertain);
         }
         var episodePattern = @"S\d{1,4}/E\d{1,4}";
         var match = Regex.Match(title, episodePattern);
@@ -182,18 +183,18 @@ public partial class MediathekSearchFallbackHandler
             if (seasonOverride is null || episodeOverride is null)
             {
                 // use data from mediathek
-                return $"{topic}.{seasonAndEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+                return ($"{topic}.{seasonAndEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", "."), MatchConfidence.Uncertain);
             }
 
             // use overwrite data
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
-            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return ($"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : "")}{language}.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", "."), MatchConfidence.Uncertain);
         }
 
         if (seasonOverride is null || episodeOverride is null)
         {
-            return $"{showName} - {title}.{language}.{quality}.WEB.h264.NO.MATCH-MEDiATHEK";
+            return ($"{showName} - {title}.{language}.{quality}.WEB.h264.NO.MATCH-MEDiATHEK", MatchConfidence.NoMatch);
         }
         else
         {
@@ -207,7 +208,7 @@ public partial class MediathekSearchFallbackHandler
             var zeroBasedSeason = seasonOverride.Length >= 2 ? seasonOverride : $"0{seasonOverride}";
             var zeroBasedEpisode = episodeOverride.Length >= 2 ? episodeOverride : $"0{episodeOverride}";
 
-            return $"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : title)}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", ".");
+            return ($"{showName}.S{zeroBasedSeason}E{zeroBasedEpisode}.{(cleanedTitle != null ? $"{cleanedTitle}." : title)}GERMAN.{quality}.WEB.h264.MATCH.UNCERTAIN-MEDiATHEK".Replace(" ", "."), MatchConfidence.Uncertain);
         }
     }
     private static string FormatTitle(string title)

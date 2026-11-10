@@ -1,12 +1,14 @@
+using MediathekArr.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("api")]
-public class TProxyController(IHttpClientFactory httpClientFactory) : ControllerBase
+public class TProxyController(IHttpClientFactory httpClientFactory, Config config) : ControllerBase
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
+    private readonly Config _config = config;
 
     // Route when there is no path
     [HttpGet("")]
@@ -27,7 +29,22 @@ public class TProxyController(IHttpClientFactory httpClientFactory) : Controller
     [HttpPatch("{*path}")]
     public async Task<IActionResult> Proxy(string path)
     {
-        var queryString = Request.QueryString.Value;
+        var queryString = Request.QueryString;
+
+        // Pass match result filters to the newznab endpoint
+        if (string.IsNullOrEmpty(path))
+        {
+            if (_config.HideNoMatchResults)
+            {
+                queryString = queryString.Add("hideNoMatch", "true");
+            }
+
+            if (_config.HideUncertainMatchResults)
+            {
+                queryString = queryString.Add("hideUncertainMatch", "true");
+            }
+        }
+
         var targetUrl = $"http://localhost:5008/api/{path}{queryString}";
 
         var requestMessage = new HttpRequestMessage

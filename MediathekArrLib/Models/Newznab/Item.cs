@@ -31,4 +31,7 @@ public class Item
 
     [XmlElement("newznab:attr", Namespace = "http://www.newznab.com/DTD/2010/feeds/attributes/")]
     public List<Attribute> Attributes { get; set; } = [];
+
+    [XmlIgnore]
+    public MatchConfidence MatchConfidence { get; set; } = MatchConfidence.Certain;
 }

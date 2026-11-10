@@ -12,6 +12,8 @@ public partial class DownloadController
         var completeEnv = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");
         var categoriesEnv = Environment.GetEnvironmentVariable("CATEGORIES");
         var maxParallelDownloadsEnv = Environment.GetEnvironmentVariable("MAX_PARALLEL_DOWNLOADS");
+        var hideNoMatchResultsEnv = Environment.GetEnvironmentVariable("HIDE_NO_MATCH_RESULTS");
+        var hideUncertainMatchResultsEnv = Environment.GetEnvironmentVariable("HIDE_UNCERTAIN_MATCH_RESULTS");
 
         // Parse categories from environment variable if present
         if (!string.IsNullOrEmpty(categoriesEnv))
@@ -30,7 +32,9 @@ public partial class DownloadController
                 IncompletePath = !string.IsNullOrEmpty(incompleteEnv),
                 CompletePath = !string.IsNullOrEmpty(completeEnv),
                 Categories = !string.IsNullOrEmpty(categoriesEnv),
-                MaxParallelDownloads = !string.IsNullOrEmpty(maxParallelDownloadsEnv)
+                MaxParallelDownloads = !string.IsNullOrEmpty(maxParallelDownloadsEnv),
+                HideNoMatchResults = !string.IsNullOrEmpty(hideNoMatchResultsEnv),
+                HideUncertainMatchResults = !string.IsNullOrEmpty(hideUncertainMatchResultsEnv)
             }
         };
 
@@ -44,6 +48,8 @@ public partial class DownloadController
         var completeEnv = Environment.GetEnvironmentVariable("DOWNLOAD_COMPLETE_PATH");
         var categoriesEnv = Environment.GetEnvironmentVariable("CATEGORIES");
         var maxParallelDownloadsEnv = Environment.GetEnvironmentVariable("MAX_PARALLEL_DOWNLOADS");
+        var hideNoMatchResultsEnv = Environment.GetEnvironmentVariable("HIDE_NO_MATCH_RESULTS");
+        var hideUncertainMatchResultsEnv = Environment.GetEnvironmentVariable("HIDE_UNCERTAIN_MATCH_RESULTS");
 
         bool requiresRestart = false;
 
@@ -77,6 +83,16 @@ public partial class DownloadController
                 _config.MaxParallelDownloads = Math.Clamp(newConfig.MaxParallelDownloads, 1, 10);
                 requiresRestart = true;
             }
+        }
+
+        if (string.IsNullOrEmpty(hideNoMatchResultsEnv))
+        {
+            _config.HideNoMatchResults = newConfig.HideNoMatchResults;
+        }
+
+        if (string.IsNullOrEmpty(hideUncertainMatchResultsEnv))
+        {
+            _config.HideUncertainMatchResults = newConfig.HideUncertainMatchResults;
         }
 
         // Persist updated config to file

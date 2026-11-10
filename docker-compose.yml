@@ -13,6 +13,8 @@ services:
       #- DOWNLOAD_COMPLETE_PATH=/data/mediathek/complete # Path to complete downloads
       #- CATEGORIES=tv,movies,sonarr_blackhole,radarr_blackhole # Comma separated list of categories to expose
       #- MAX_PARALLEL_DOWNLOADS=2 # Number of parallel downloads (1-10, default: 2)
+      #- HIDE_NO_MATCH_RESULTS=false # Hide search results without any match (NO.MATCH)
+      #- HIDE_UNCERTAIN_MATCH_RESULTS=false # Hide search results with an uncertain match (MATCH.UNCERTAIN)
 
       # Only change this if you are hosting your own API. Not needed for 99% of users
       - MEDIATHEKARR_API_BASE_URL=https://mediathekarr.pcjones.de/api/v1
