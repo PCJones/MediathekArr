@@ -49,7 +49,7 @@ public class ItemLookupService(IHttpClientFactory httpClientFactory, IConfigurat
         if (tvdbInfo?.Status == "error")
         {
             _logger.LogError("Error fetching TVDB data: {Status}", tvdbInfo.Status);
-            _memoryCache.Set(cacheKey, (Models.Tvdb.Data?)null, TimeSpan.FromHours(12));
+            _memoryCache.Set(cacheKey, (Models.Tvdb.Data?)null, TimeSpan.FromHours(1));
             return null;
         }
 
