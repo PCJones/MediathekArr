@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+.git/
+.gitignore
+.gitattributes
+api/
+.env
+.env.example
+docker-compose.yml
+Dockerfile
+.dockerignore
+build_and_push_docker_image.bat
+*.md
