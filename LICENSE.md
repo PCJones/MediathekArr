@@ -16,10 +16,10 @@ This project includes and/or uses the following third-party software with their 
 
 | Component | License | Source |
 |-----------|---------|--------|
-| **FFmpeg** | LGPL v2.1+ | https://ffmpeg.org |
+| **FFmpeg** | GPL v2+ | https://ffmpeg.org |
 | **MKVToolNix** (mkvmerge) | GPL v2+ | https://mkvtoolnix.download |
 | **gosu** | Apache 2.0 | https://github.com/tianon/gosu |
-| **Debian/Linux Packages** | Various (GPL, LGPL, others) | https://packages.debian.org |
+| **Ubuntu/Linux Packages** | Various (GPL, LGPL, others) | https://packages.ubuntu.com |
 
 ### Important: Docker Image Distribution
 
@@ -30,7 +30,7 @@ When MediathekArr is distributed as a **Docker image** (via Docker Hub or simila
 1. **Source Code Availability**: The source code for GPL-licensed components must remain publicly available. These are available from:
    - FFmpeg: https://github.com/FFmpeg/FFmpeg
    - MKVToolNix: https://github.com/mkvtoolnix/mkvtoolnix
-   - Debian packages: Available via `deb-src` repositories at https://deb.debian.org
+   - Ubuntu packages: Available via `deb-src` repositories at https://archive.ubuntu.com/ubuntu and on https://launchpad.net/ubuntu
 
 2. **Attribution**: The GPL and LGPL licenses require that copyright notices and license attributions be preserved. This file serves as that attribution for the Docker image distribution.
 
@@ -46,9 +46,9 @@ If you redistribute this Docker image or derivative works:
 1. **Include this LICENSE.md file** or equivalent attribution
 2. **Preserve the Dockerfile** (which documents the build process)
 3. **Link to source repositories**: Users should be able to obtain GPL source code via:
-   - The Dockerfile recipe (which references Debian packages)
+   - The Dockerfile recipe (which references Ubuntu packages)
    - Direct links to FFmpeg and MKVToolNix repositories
-   - Debian's source package repositories
+   - Ubuntu's source package repositories
 
 ### Relicensing Note
 
