@@ -1,4 +1,5 @@
 using MediathekArr.Models.Newznab;
+using MediathekArr.Utilities;
 using MediathekArr.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
@@ -7,10 +8,11 @@ namespace MediathekArr.Controllers;
 
 [ApiController]
 [Route("api")]
-public class TController(MediathekSearchService mediathekSearchService, ItemLookupService itemLookupService) : ControllerBase
+public class TController(MediathekSearchService mediathekSearchService, ItemLookupService itemLookupService, MovieLookupService movieLookupService) : ControllerBase
 {
     private readonly MediathekSearchService _mediathekSearchService = mediathekSearchService;
     private readonly ItemLookupService _itemLookupService = itemLookupService;
+    private readonly MovieLookupService _movieLookupService = movieLookupService;
 
     [HttpGet]
     public async Task<IActionResult> GetCapsXml([FromQuery] string t)
@@ -58,6 +60,27 @@ public class TController(MediathekSearchService mediathekSearchService, ItemLook
         {   
             try
             {
+                // Movie search: resolve the IMDb id to titles/year and match films only
+                if (t == "movie" && (!string.IsNullOrEmpty(imdbid) || !string.IsNullOrEmpty(q)))
+                {
+                    var movieInfo = await _movieLookupService.GetMovieInfoByImdbId(imdbid);
+                    if (movieInfo is null && string.IsNullOrEmpty(q))
+                    {
+                        // unknown id and no text: nothing to search for (never return the whole feed)
+                        return Content(NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult()), "application/xml", Encoding.UTF8);
+                    }
+
+                    string movieResults = await _mediathekSearchService.FetchMovieSearchResults(movieInfo, q, limit, offset, matchConfidenceFilter);
+                    return Content(movieResults, "application/xml", Encoding.UTF8);
+                }
+
+                // ids we don't support (tmdbid, unparsable tvdbid) without any text: empty result instead of everything
+                if (string.IsNullOrEmpty(q) && string.IsNullOrEmpty(season) &&
+                    (!string.IsNullOrEmpty(tmdbid) || !string.IsNullOrEmpty(imdbid) || (!string.IsNullOrEmpty(tvdbid) && !int.TryParse(tvdbid, out _))))
+                {
+                    return Content(NewznabUtils.SerializeRss(NewznabUtils.GetEmptyRssResult()), "application/xml", Encoding.UTF8);
+                }
+
                 if (!string.IsNullOrEmpty(tvdbid) && int.TryParse(tvdbid, out var parsedTvdbid))
                 {
                     var tvdbData = await _itemLookupService.GetShowInfoByTvdbId(parsedTvdbid);
