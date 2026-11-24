@@ -25,6 +25,7 @@ builder.Services.TryAddTransient<HttpClientLoggingHandler>();
 builder.Services.AddHostedService<RulesetBackgroundService>();
 builder.Services.AddSingleton<MediathekSearchService>();
 builder.Services.AddSingleton<ItemLookupService>();
+builder.Services.AddSingleton<MovieLookupService>();
 
 var app = builder.Build();
 
